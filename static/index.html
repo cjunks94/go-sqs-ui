@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQS UI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AWS SQS UI</h1>
+        </header>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <h2>Queues</h2>
+                <div id="queueList" class="queue-list">
+                    <div class="loading">Loading queues...</div>
+                </div>
+                <button id="refreshQueues" class="btn btn-secondary">Refresh Queues</button>
+            </div>
+            
+            <div class="content">
+                <div id="queueDetails" class="hidden">
+                    <h2 id="queueName"></h2>
+                    
+                    <div class="queue-info">
+                        <h3>Queue Attributes</h3>
+                        <div id="queueAttributes"></div>
+                    </div>
+                    
+                    <div class="message-section">
+                        <h3>Send Message</h3>
+                        <div class="send-message">
+                            <textarea id="messageBody" placeholder="Enter message body..."></textarea>
+                            <button id="sendMessage" class="btn btn-primary">Send Message</button>
+                        </div>
+                    </div>
+                    
+                    <div class="messages-section">
+                        <div class="messages-header">
+                            <h3>Messages</h3>
+                            <button id="refreshMessages" class="btn btn-secondary">Refresh</button>
+                        </div>
+                        <div id="messageList" class="message-list"></div>
+                    </div>
+                </div>
+                
+                <div id="noQueueSelected" class="no-selection">
+                    <p>Select a queue from the sidebar to view details</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
