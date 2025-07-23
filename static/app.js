@@ -187,16 +187,18 @@ function displayMessages(messages) {
         body.className = 'message-body';
         
         let formattedBody;
+        let isJSON = false;
         try {
             const parsed = JSON.parse(message.body);
-            formattedBody = JSON.stringify(parsed, null, 2);
+            formattedBody = JSON.stringify(parsed, null, 4); // Use 4 spaces for better readability
+            isJSON = true;
         } catch {
             formattedBody = message.body;
         }
         
         // Create a pre element for better JSON formatting
         const pre = document.createElement('pre');
-        pre.className = 'message-json';
+        pre.className = isJSON ? 'message-json json-formatted' : 'message-json plain-text';
         pre.textContent = formattedBody;
         body.appendChild(pre);
         
