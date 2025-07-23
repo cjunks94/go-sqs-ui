@@ -67,7 +67,7 @@ http://localhost:8080
 
 - **AWS Region**: The application uses your default AWS region. To use a different region, set the `AWS_REGION` environment variable:
   ```bash
-  AWS_REGION=us-west-2 go run main.go
+  AWS_REGION=us-west-2 go run .
   ```
 
 ## Building for Production
@@ -75,6 +75,7 @@ http://localhost:8080
 To build a standalone binary:
 
 ```bash
+# verify this
 go build -o sqs-ui main.go
 ./sqs-ui
 ```
