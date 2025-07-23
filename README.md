@@ -58,7 +58,7 @@ aws configure
 
 2. Run the application:
 ```bash
-go run main.go
+go run .
 ```
 
 3. Open your browser and navigate to:
@@ -70,7 +70,7 @@ http://localhost:8080
 
 - **Port**: Set the `PORT` environment variable to use a different port:
   ```bash
-  PORT=3000 go run main.go
+  PORT=3000 go run .
   ```
 
 - **AWS Region**: The application uses your default AWS region. To use a different region, set the `AWS_REGION` environment variable:
@@ -84,7 +84,7 @@ To build a standalone binary:
 
 ```bash
 # verify this
-go build -o sqs-ui main.go
+go build -o sqs-ui .
 ./sqs-ui
 ```
 
