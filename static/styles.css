@@ -134,41 +134,116 @@ h1 {
 
 .queue-info {
     background-color: white;
-    padding: 1rem;
+    padding: 0;
     border-radius: 4px;
     margin-bottom: 1.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
 }
 
-.queue-attributes {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+.queue-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f8f9fa;
+    border-radius: 4px 4px 0 0;
 }
 
-.attribute-label {
-    font-weight: 600;
+.queue-info-header:hover {
+    background-color: #e9ecef;
+}
+
+.queue-info-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.queue-attributes-table {
+    padding: 0.75rem 1rem;
+}
+
+.queue-attributes-table.collapsed {
+    display: none;
+}
+
+.attributes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.attributes-table td {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.attributes-table td:last-child {
+    border-bottom: none;
+}
+
+.attr-label {
+    font-weight: 500;
     color: #666;
+    width: 40%;
 }
 
-.attribute-value {
+.attr-value {
     font-family: monospace;
-    font-size: 0.9rem;
+    color: #333;
+    text-align: right;
 }
 
 .message-section {
     background-color: white;
-    padding: 1rem;
+    padding: 0;
     border-radius: 4px;
     margin-bottom: 1.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.message-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f8f9fa;
+    border-radius: 4px 4px 0 0;
+}
+
+.message-section-header:hover {
+    background-color: #e9ecef;
+}
+
+.message-section-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
 }
 
 .send-message {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.send-message.collapsed {
+    display: none;
+}
+
+.toggle-icon {
+    color: #666;
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
 }
 
 #messageBody {

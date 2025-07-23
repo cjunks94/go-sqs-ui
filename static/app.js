@@ -197,33 +197,36 @@ function displayQueueAttributes(attributes) {
     
     if (!attributes) return;
     
-    const grid = document.createElement('div');
-    grid.className = 'queue-attributes';
+    const table = document.createElement('table');
+    table.className = 'attributes-table';
     
     const importantAttrs = [
-        'ApproximateNumberOfMessages',
-        'ApproximateNumberOfMessagesNotVisible',
-        'ApproximateNumberOfMessagesDelayed',
-        'MessageRetentionPeriod',
-        'VisibilityTimeout'
+        { key: 'ApproximateNumberOfMessages', label: 'Messages' },
+        { key: 'ApproximateNumberOfMessagesNotVisible', label: 'Not Visible' },
+        { key: 'ApproximateNumberOfMessagesDelayed', label: 'Delayed' },
+        { key: 'MessageRetentionPeriod', label: 'Retention (sec)' },
+        { key: 'VisibilityTimeout', label: 'Visibility (sec)' }
     ];
     
     importantAttrs.forEach(attr => {
-        if (attributes[attr]) {
-            const label = document.createElement('div');
-            label.className = 'attribute-label';
-            label.textContent = attr + ':';
+        if (attributes[attr.key]) {
+            const row = document.createElement('tr');
             
-            const value = document.createElement('div');
-            value.className = 'attribute-value';
-            value.textContent = attributes[attr];
+            const labelCell = document.createElement('td');
+            labelCell.className = 'attr-label';
+            labelCell.textContent = attr.label;
             
-            grid.appendChild(label);
-            grid.appendChild(value);
+            const valueCell = document.createElement('td');
+            valueCell.className = 'attr-value';
+            valueCell.textContent = attributes[attr.key];
+            
+            row.appendChild(labelCell);
+            row.appendChild(valueCell);
+            table.appendChild(row);
         }
     });
     
-    container.appendChild(grid);
+    container.appendChild(table);
 }
 
 async function loadMessages() {
@@ -552,5 +555,31 @@ function toggleMessagesPause() {
     } else {
         pauseBtn.innerHTML = '⏸️ Pause';
         pauseBtn.title = 'Pause live updates';
+    }
+}
+
+function toggleSendMessage() {
+    const section = document.getElementById('sendMessageSection');
+    const icon = document.getElementById('sendToggleIcon');
+    
+    if (section.classList.contains('collapsed')) {
+        section.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        section.classList.add('collapsed');
+        icon.textContent = '▶';
+    }
+}
+
+function toggleQueueAttributes() {
+    const section = document.getElementById('queueAttributes');
+    const icon = document.getElementById('queueToggleIcon');
+    
+    if (section.classList.contains('collapsed')) {
+        section.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        section.classList.add('collapsed');
+        icon.textContent = '▶';
     }
 }

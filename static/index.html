@@ -33,13 +33,19 @@
                     <h2 id="queueName"></h2>
                     
                     <div class="queue-info">
-                        <h3>Queue Attributes</h3>
-                        <div id="queueAttributes"></div>
+                        <div class="queue-info-header" onclick="toggleQueueAttributes()">
+                            <h3>Queue Attributes</h3>
+                            <span class="toggle-icon" id="queueToggleIcon">▶</span>
+                        </div>
+                        <div id="queueAttributes" class="queue-attributes-table collapsed"></div>
                     </div>
                     
                     <div class="message-section">
-                        <h3>Send Message</h3>
-                        <div class="send-message">
+                        <div class="message-section-header" onclick="toggleSendMessage()">
+                            <h3>Send Message</h3>
+                            <span class="toggle-icon" id="sendToggleIcon">▶</span>
+                        </div>
+                        <div class="send-message collapsed" id="sendMessageSection">
                             <textarea id="messageBody" placeholder="Enter message body..."></textarea>
                             <button id="sendMessage" class="btn btn-primary">Send Message</button>
                         </div>
