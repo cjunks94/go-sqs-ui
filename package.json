@@ -1,0 +1,18 @@
+{
+  "name": "go-sqs-ui",
+  "version": "1.0.0",
+  "description": "AWS SQS UI application with Go backend and modern JavaScript frontend",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "happy-dom": "^12.0.0",
+    "vitest": "^1.0.0"
+  }
+}
