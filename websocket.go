@@ -46,9 +46,14 @@ func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 	wsm.connections[conn] = make(map[string]context.CancelFunc)
 	wsm.connectionsMu.Unlock()
 
-	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+		log.Printf("Error setting read deadline: %v", err)
+		return
+	}
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+			log.Printf("Error setting read deadline in pong handler: %v", err)
+		}
 		return nil
 	})
 
@@ -59,7 +64,7 @@ func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 			Type     string `json:"type"`
 			QueueURL string `json:"queueUrl"`
 		}
-		
+
 		if err := conn.ReadJSON(&msg); err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("WebSocket unexpected close: %v", err)
@@ -67,7 +72,10 @@ func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 			break
 		}
 
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+			log.Printf("Error setting read deadline: %v", err)
+			break
+		}
 
 		if msg.Type == "subscribe" && msg.QueueURL != "" {
 			wsm.subscribeToQueue(conn, msg.QueueURL)
@@ -78,14 +86,16 @@ func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 func (wsm *WebSocketManager) cleanupConnection(conn *websocket.Conn) {
 	wsm.connectionsMu.Lock()
 	defer wsm.connectionsMu.Unlock()
-	
+
 	if queues, exists := wsm.connections[conn]; exists {
 		for _, cancel := range queues {
 			cancel()
 		}
 		delete(wsm.connections, conn)
 	}
-	conn.Close()
+	if err := conn.Close(); err != nil {
+		log.Printf("Error closing connection: %v", err)
+	}
 }
 
 func (wsm *WebSocketManager) pingConnection(conn *websocket.Conn) {
@@ -110,7 +120,7 @@ func (wsm *WebSocketManager) subscribeToQueue(conn *websocket.Conn, queueURL str
 
 		ctx, cancel := context.WithCancel(context.Background())
 		queues[queueURL] = cancel
-		
+
 		go wsm.pollQueue(ctx, conn, queueURL)
 	}
 }
@@ -130,7 +140,7 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 				WaitTimeSeconds:     1,
 				AttributeNames:      []types.QueueAttributeName{types.QueueAttributeNameAll},
 			})
-			
+
 			if err != nil {
 				if ctx.Err() != nil {
 					return
@@ -148,11 +158,11 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 						ReceiptHandle: aws.ToString(msg.ReceiptHandle),
 						Attributes:    make(map[string]string),
 					}
-					
+
 					for k, v := range msg.Attributes {
 						message.Attributes[k] = v
 					}
-					
+
 					messages = append(messages, message)
 				}
 

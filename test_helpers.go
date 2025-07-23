@@ -33,8 +33,8 @@ func (m *MockSQSClient) AddQueue(url string) {
 
 func (m *MockSQSClient) AddMessage(queueURL, messageID, body string) {
 	msg := types.Message{
-		MessageId: aws.String(messageID),
-		Body:      aws.String(body),
+		MessageId:     aws.String(messageID),
+		Body:          aws.String(body),
 		ReceiptHandle: aws.String(fmt.Sprintf("receipt-%s", messageID)),
 		Attributes: map[string]string{
 			"SentTimestamp": "1640995200000",
@@ -51,7 +51,7 @@ func (m *MockSQSClient) ListQueues(ctx context.Context, params *sqs.ListQueuesIn
 	if err, exists := m.errors["ListQueues"]; exists {
 		return nil, err
 	}
-	
+
 	return &sqs.ListQueuesOutput{
 		QueueUrls: m.queues,
 	}, nil
@@ -61,7 +61,7 @@ func (m *MockSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQ
 	if err, exists := m.errors["GetQueueAttributes"]; exists {
 		return nil, err
 	}
-	
+
 	queueURL := aws.ToString(params.QueueUrl)
 	queueName := queueURL
 	if len(queueURL) > 0 {
@@ -72,13 +72,13 @@ func (m *MockSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQ
 			}
 		}
 	}
-	
+
 	return &sqs.GetQueueAttributesOutput{
 		Attributes: map[string]string{
-			"QueueArn": fmt.Sprintf("arn:aws:sqs:us-east-1:123456789012:%s", queueName),
+			"QueueArn":                    fmt.Sprintf("arn:aws:sqs:us-east-1:123456789012:%s", queueName),
 			"ApproximateNumberOfMessages": "5",
-			"MessageRetentionPeriod": "1209600",
-			"VisibilityTimeout": "30",
+			"MessageRetentionPeriod":      "1209600",
+			"VisibilityTimeout":           "30",
 		},
 	}, nil
 }
@@ -87,15 +87,15 @@ func (m *MockSQSClient) ReceiveMessage(ctx context.Context, params *sqs.ReceiveM
 	if err, exists := m.errors["ReceiveMessage"]; exists {
 		return nil, err
 	}
-	
+
 	queueURL := aws.ToString(params.QueueUrl)
 	messages := m.messages[queueURL]
-	
+
 	maxMessages := int(params.MaxNumberOfMessages)
 	if maxMessages > len(messages) {
 		maxMessages = len(messages)
 	}
-	
+
 	return &sqs.ReceiveMessageOutput{
 		Messages: messages[:maxMessages],
 	}, nil
@@ -105,7 +105,7 @@ func (m *MockSQSClient) SendMessage(ctx context.Context, params *sqs.SendMessage
 	if err, exists := m.errors["SendMessage"]; exists {
 		return nil, err
 	}
-	
+
 	messageID := "test-message-id"
 	return &sqs.SendMessageOutput{
 		MessageId: aws.String(messageID),
@@ -116,10 +116,10 @@ func (m *MockSQSClient) DeleteMessage(ctx context.Context, params *sqs.DeleteMes
 	if err, exists := m.errors["DeleteMessage"]; exists {
 		return nil, err
 	}
-	
+
 	queueURL := aws.ToString(params.QueueUrl)
 	receiptHandle := aws.ToString(params.ReceiptHandle)
-	
+
 	// Remove message with matching receipt handle
 	messages := m.messages[queueURL]
 	for i, msg := range messages {
@@ -128,6 +128,6 @@ func (m *MockSQSClient) DeleteMessage(ctx context.Context, params *sqs.DeleteMes
 			break
 		}
 	}
-	
+
 	return &sqs.DeleteMessageOutput{}, nil
 }

@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -26,36 +27,57 @@ type SQSHandler struct {
 }
 
 func NewSQSHandler() (*SQSHandler, error) {
+	// Try to load AWS config, but don't fail if not available
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		return nil, fmt.Errorf("unable to load SDK config: %v", err)
+		log.Printf("Warning: AWS config not available (%v), using demo mode", err)
+		return &SQSHandler{
+			client: NewDemoSQSClient(),
+		}, nil
 	}
 
+	// Test if we can actually connect to AWS
+	sqsClient := sqs.NewFromConfig(cfg)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	_, err = sqsClient.ListQueues(ctx, &sqs.ListQueuesInput{MaxResults: aws.Int32(1)})
+	if err != nil {
+		log.Printf("Warning: Cannot connect to AWS SQS (%v), using demo mode", err)
+		return &SQSHandler{
+			client: NewDemoSQSClient(),
+		}, nil
+	}
+
+	log.Printf("Successfully connected to AWS SQS")
 	return &SQSHandler{
-		client: sqs.NewFromConfig(cfg),
+		client: sqsClient,
 	}, nil
 }
 
 func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
+	log.Printf("ListQueues: Starting to fetch queues")
 	ctx := context.Background()
-	
+
 	result, err := h.client.ListQueues(ctx, &sqs.ListQueuesInput{})
 	if err != nil {
+		log.Printf("ListQueues: Error fetching queues: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	log.Printf("ListQueues: Found %d queues", len(result.QueueUrls))
 	queues := []Queue{}
 	for _, queueURL := range result.QueueUrls {
 		attrs, err := h.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
-			QueueUrl: aws.String(queueURL),
+			QueueUrl:       aws.String(queueURL),
 			AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
 		})
-		
+
 		queueName := queueURL
 		if attrs != nil && attrs.Attributes != nil {
 			if name, ok := attrs.Attributes["QueueArn"]; ok {
-					for i := len(name) - 1; i >= 0; i-- {
+				for i := len(name) - 1; i >= 0; i-- {
 					if name[i] == ':' {
 						queueName = name[i+1:]
 						break
@@ -63,37 +85,42 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-		
+
 		queue := Queue{
 			Name: queueName,
 			URL:  queueURL,
 		}
-		
+
 		if err == nil && attrs.Attributes != nil {
 			queue.Attributes = attrs.Attributes
 		}
-		
+
 		queues = append(queues, queue)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(queues)
+	if err := json.NewEncoder(w).Encode(queues); err != nil {
+		log.Printf("ListQueues: Error encoding response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("ListQueues: Successfully returned %d queues", len(queues))
 }
 
 func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
-	
+
 	ctx := context.Background()
-	
+
 	result, err := h.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-		QueueUrl:            aws.String(queueURL),
-		MaxNumberOfMessages: 10,
-		WaitTimeSeconds:     1,
-		AttributeNames:      []types.QueueAttributeName{types.QueueAttributeNameAll},
+		QueueUrl:              aws.String(queueURL),
+		MaxNumberOfMessages:   10,
+		WaitTimeSeconds:       1,
+		AttributeNames:        []types.QueueAttributeName{types.QueueAttributeNameAll},
 		MessageAttributeNames: []string{"All"},
 	})
-	
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -107,61 +134,69 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 			ReceiptHandle: aws.ToString(msg.ReceiptHandle),
 			Attributes:    make(map[string]string),
 		}
-		
+
 		for k, v := range msg.Attributes {
 			message.Attributes[k] = v
 		}
-		
+
 		messages = append(messages, message)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(messages)
+	if err := json.NewEncoder(w).Encode(messages); err != nil {
+		log.Printf("Error encoding messages response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
-	
+
 	var payload struct {
 		Body string `json:"body"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	
+
 	ctx := context.Background()
-	
+
 	result, err := h.client.SendMessage(ctx, &sqs.SendMessageInput{
 		QueueUrl:    aws.String(queueURL),
 		MessageBody: aws.String(payload.Body),
 	})
-	
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]string{
 		"messageId": aws.ToString(result.MessageId),
-	})
+	}); err != nil {
+		log.Printf("Error encoding send message response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
 	receiptHandle := vars["receiptHandle"]
-	
+
 	ctx := context.Background()
-	
+
 	_, err := h.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(queueURL),
 		ReceiptHandle: aws.String(receiptHandle),
 	})
-	
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

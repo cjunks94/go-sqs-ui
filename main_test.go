@@ -88,7 +88,11 @@ func TestIntegration_APIRoutes(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Request failed: %v", err)
 			}
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					t.Logf("Error closing response body: %v", err)
+				}
+			}()
 
 			if resp.StatusCode != tt.expectedStatus {
 				t.Errorf("Expected status %d, got %d", tt.expectedStatus, resp.StatusCode)
@@ -123,7 +127,11 @@ func TestIntegration_CORS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	// Note: This test might not pass without explicit CORS middleware
 	// but demonstrates how you would test CORS headers
@@ -145,7 +153,11 @@ func TestIntegration_ErrorHandling(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusInternalServerError {
 		t.Errorf("Expected status %d, got %d", http.StatusInternalServerError, resp.StatusCode)
@@ -168,7 +180,11 @@ func TestIntegration_ContentType(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	contentType := resp.Header.Get("Content-Type")
 	if !strings.Contains(contentType, "application/json") {
@@ -179,7 +195,7 @@ func TestIntegration_ContentType(t *testing.T) {
 // Benchmark the full API endpoint
 func BenchmarkIntegration_ListQueues(b *testing.B) {
 	mockClient := NewMockSQSClient()
-	
+
 	// Add many queues for benchmarking
 	for i := 0; i < 100; i++ {
 		mockClient.AddQueue(fmt.Sprintf("https://sqs.us-east-1.amazonaws.com/123456789012/queue-%d", i))
@@ -199,6 +215,8 @@ func BenchmarkIntegration_ListQueues(b *testing.B) {
 		if err != nil {
 			b.Fatalf("Request failed: %v", err)
 		}
-		resp.Body.Close()
+		if err := resp.Body.Close(); err != nil {
+			b.Logf("Error closing response body: %v", err)
+		}
 	}
 }
