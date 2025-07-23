@@ -3,6 +3,7 @@ let ws = null;
 let isMessagesPaused = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadAWSContext();
     loadQueues();
     setupEventListeners();
     setupWebSocket();
@@ -582,4 +583,76 @@ function toggleQueueAttributes() {
         section.classList.add('collapsed');
         icon.textContent = '▶';
     }
+}
+
+function toggleAWSContext() {
+    const section = document.getElementById('awsContextDetails');
+    const icon = document.getElementById('awsToggleIcon');
+    
+    if (section.classList.contains('collapsed')) {
+        section.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        section.classList.add('collapsed');
+        icon.textContent = '▶';
+    }
+}
+
+function toggleQueuesSection() {
+    const section = document.getElementById('queuesContent');
+    const icon = document.getElementById('queuesToggleIcon');
+    
+    if (section.classList.contains('collapsed')) {
+        section.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        section.classList.add('collapsed');
+        icon.textContent = '▶';
+    }
+}
+
+async function loadAWSContext() {
+    try {
+        const response = await fetch('/api/aws-context');
+        const context = await response.json();
+        displayAWSContext(context);
+    } catch (error) {
+        console.error('Error loading AWS context:', error);
+        document.getElementById('awsContextDetails').innerHTML = '<div class="error-message">Failed to load AWS context</div>';
+    }
+}
+
+function displayAWSContext(context) {
+    const container = document.getElementById('awsContextDetails');
+    container.innerHTML = '';
+    
+    const table = document.createElement('table');
+    table.className = 'aws-context-table';
+    
+    const fields = [
+        { label: 'Mode', value: context.mode },
+        { label: 'Region', value: context.region || 'N/A' },
+        { label: 'Profile', value: context.profile || 'default' },
+        { label: 'Account', value: context.accountId || 'N/A' }
+    ];
+    
+    fields.forEach(field => {
+        if (field.value && field.value !== 'N/A') {
+            const row = document.createElement('tr');
+            
+            const labelCell = document.createElement('td');
+            labelCell.className = 'aws-context-label';
+            labelCell.textContent = field.label;
+            
+            const valueCell = document.createElement('td');
+            valueCell.className = 'aws-context-value';
+            valueCell.textContent = field.value;
+            
+            row.appendChild(labelCell);
+            row.appendChild(valueCell);
+            table.appendChild(row);
+        }
+    });
+    
+    container.appendChild(table);
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -27,6 +28,8 @@ type SQSClientInterface interface {
 
 type SQSHandler struct {
 	client SQSClientInterface
+	config aws.Config
+	isDemo bool
 }
 
 func NewSQSHandler() (*SQSHandler, error) {
@@ -36,6 +39,8 @@ func NewSQSHandler() (*SQSHandler, error) {
 		log.Printf("Warning: AWS config not available (%v), using demo mode", err)
 		return &SQSHandler{
 			client: NewDemoSQSClient(),
+			config: aws.Config{},
+			isDemo: true,
 		}, nil
 	}
 
@@ -49,12 +54,16 @@ func NewSQSHandler() (*SQSHandler, error) {
 		log.Printf("Warning: Cannot connect to AWS SQS (%v), using demo mode", err)
 		return &SQSHandler{
 			client: NewDemoSQSClient(),
+			config: cfg,
+			isDemo: true,
 		}, nil
 	}
 
 	log.Printf("Successfully connected to AWS SQS")
 	return &SQSHandler{
 		client: sqsClient,
+		config: cfg,
+		isDemo: false,
 	}, nil
 }
 
@@ -277,4 +286,47 @@ func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
+	log.Printf("GetAWSContext: Fetching AWS context information")
+	
+	type AWSContext struct {
+		Mode      string `json:"mode"`
+		Region    string `json:"region,omitempty"`
+		Profile   string `json:"profile,omitempty"`
+		AccountID string `json:"accountId,omitempty"`
+	}
+	
+	context := AWSContext{
+		Mode: "Demo",
+	}
+	
+	if !h.isDemo {
+		context.Mode = "Live AWS"
+		context.Region = h.config.Region
+		
+		// Get profile from environment or config
+		if profile := os.Getenv("AWS_PROFILE"); profile != "" {
+			context.Profile = profile
+		}
+		
+		// Try to get account ID from credentials if available
+		if creds, err := h.config.Credentials.Retrieve(r.Context()); err == nil {
+			if creds.SessionToken != "" {
+				context.AccountID = "*** (Session)"
+			} else {
+				context.AccountID = "*** (IAM)"
+			}
+		}
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(context); err != nil {
+		log.Printf("GetAWSContext: Error encoding response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	
+	log.Printf("GetAWSContext: Successfully returned context (mode: %s)", context.Mode)
 }

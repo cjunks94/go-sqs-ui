@@ -31,6 +31,7 @@ func main() {
 	// API routes with logging middleware
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(loggingMiddleware)
+	api.HandleFunc("/aws-context", sqsHandler.GetAWSContext).Methods("GET")
 	api.HandleFunc("/queues", sqsHandler.ListQueues).Methods("GET")
 	api.HandleFunc("/queues/{queueUrl}/messages", sqsHandler.GetMessages).Methods("GET")
 	api.HandleFunc("/queues/{queueUrl}/messages", sqsHandler.SendMessage).Methods("POST")

@@ -16,17 +16,6 @@ body {
     flex-direction: column;
 }
 
-header {
-    background-color: #232f3e;
-    color: white;
-    padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-h1 {
-    font-size: 1.5rem;
-}
-
 .main-content {
     flex: 1;
     display: flex;
@@ -57,8 +46,69 @@ h1 {
 
 .sidebar h2 {
     font-size: 1.1rem;
-    color: #666;
+    color: #333;
     margin: 0;
+    font-weight: 600;
+}
+
+.aws-context-section, .queues-section {
+    margin-bottom: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.aws-context-header, .queues-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.aws-context-header:hover, .queues-header:hover {
+    background-color: #e9ecef;
+}
+
+.aws-context-header h3, .queues-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.aws-context-details, .queues-content {
+    padding: 0.75rem;
+    background-color: white;
+}
+
+.aws-context-details.collapsed, .queues-content.collapsed {
+    display: none;
+}
+
+.aws-context-table {
+    width: 100%;
+    font-size: 0.8rem;
+}
+
+.aws-context-table td {
+    padding: 0.25rem 0;
+    vertical-align: top;
+}
+
+.aws-context-label {
+    font-weight: 500;
+    color: #666;
+    width: 30%;
+}
+
+.aws-context-value {
+    font-family: monospace;
+    color: #333;
+    word-break: break-all;
 }
 
 .sidebar-close {
@@ -108,7 +158,27 @@ h1 {
 }
 
 #queueDetails {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.queue-header {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 0.75rem 1rem;
+}
+
+.queue-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+    font-weight: 600;
+    word-break: break-word;
 }
 
 #noQueueSelected {
@@ -136,7 +206,7 @@ h1 {
     background-color: white;
     padding: 0;
     border-radius: 4px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     border: 1px solid #e0e0e0;
 }
@@ -145,7 +215,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
     cursor: pointer;
     border-bottom: 1px solid #e0e0e0;
     background-color: #f8f9fa;
@@ -163,7 +233,7 @@ h1 {
 }
 
 .queue-attributes-table {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
 }
 
 .queue-attributes-table.collapsed {
@@ -201,7 +271,7 @@ h1 {
     background-color: white;
     padding: 0;
     border-radius: 4px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     border: 1px solid #e0e0e0;
 }
@@ -210,7 +280,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
     cursor: pointer;
     border-bottom: 1px solid #e0e0e0;
     background-color: #f8f9fa;
@@ -231,7 +301,7 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 1rem;
+    padding: 0.75rem;
     transition: all 0.3s ease;
     overflow: hidden;
 }
@@ -258,18 +328,25 @@ h1 {
 
 .messages-section {
     background-color: white;
-    padding: 1rem;
+    padding: 0.75rem;
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .messages-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.messages-header h3 {
+    margin: 0;
+    font-size: 1rem;
 }
 
 .messages-controls {
@@ -278,7 +355,8 @@ h1 {
 }
 
 .message-list {
-    height: 400px;
+    min-height: 400px;
+    max-height: calc(100vh - 200px);
     overflow-y: auto;
     border: 1px solid #e0e0e0;
     border-radius: 4px;

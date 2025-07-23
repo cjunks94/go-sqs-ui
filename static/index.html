@@ -8,10 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>AWS SQS UI</h1>
-        </header>
-        
         <div class="main-content">
             <button id="sidebarToggle" class="sidebar-toggle" title="Toggle Sidebar">
                 <span class="toggle-icon">☰</span>
@@ -19,18 +15,39 @@
             
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
-                    <h2>Queues</h2>
+                    <h2>AWS SQS UI</h2>
                     <button class="sidebar-close" id="sidebarClose" title="Close Sidebar">×</button>
                 </div>
-                <div id="queueList" class="queue-list">
-                    <div class="loading">Loading queues...</div>
+                
+                <div class="aws-context-section">
+                    <div class="aws-context-header" onclick="toggleAWSContext()">
+                        <h3>AWS Context</h3>
+                        <span class="toggle-icon" id="awsToggleIcon">▶</span>
+                    </div>
+                    <div id="awsContextDetails" class="aws-context-details collapsed">
+                        <div class="loading">Loading AWS context...</div>
+                    </div>
                 </div>
-                <button id="refreshQueues" class="btn btn-secondary">Refresh Queues</button>
+                
+                <div class="queues-section">
+                    <div class="queues-header" onclick="toggleQueuesSection()">
+                        <h3>Queues</h3>
+                        <span class="toggle-icon" id="queuesToggleIcon">▼</span>
+                    </div>
+                    <div id="queuesContent" class="queues-content">
+                        <div id="queueList" class="queue-list">
+                            <div class="loading">Loading queues...</div>
+                        </div>
+                        <button id="refreshQueues" class="btn btn-secondary">Refresh Queues</button>
+                    </div>
+                </div>
             </div>
             
             <div class="content">
                 <div id="queueDetails" class="hidden">
-                    <h2 id="queueName"></h2>
+                    <div class="queue-header">
+                        <h1 id="queueName"></h1>
+                    </div>
                     
                     <div class="queue-info">
                         <div class="queue-info-header" onclick="toggleQueueAttributes()">
