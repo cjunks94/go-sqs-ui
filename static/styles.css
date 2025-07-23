@@ -103,17 +103,16 @@ h1 {
 .content {
     flex: 1;
     padding: 2rem;
-    overflow: hidden;
+    overflow-y: auto;
     transition: margin-left 0.3s ease-in-out;
-    display: flex;
-    flex-direction: column;
 }
 
 #queueDetails {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
+    display: block;
+}
+
+#noQueueSelected {
+    flex: 1;
 }
 
 .sidebar.collapsed + .content {
@@ -121,16 +120,17 @@ h1 {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .no-selection {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    flex: 1;
     color: #666;
 }
+
 
 .queue-info {
     background-color: white;
@@ -188,8 +188,6 @@ h1 {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-height: 0;
 }
 
 .messages-header {
@@ -200,12 +198,11 @@ h1 {
 }
 
 .message-list {
-    flex: 1;
+    height: 400px;
     overflow-y: auto;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     background-color: #fafafa;
-    min-height: 200px;
 }
 
 .message-item {
