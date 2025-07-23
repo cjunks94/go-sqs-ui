@@ -11,6 +11,8 @@ function setupEventListeners() {
     document.getElementById('refreshQueues').addEventListener('click', loadQueues);
     document.getElementById('sendMessage').addEventListener('click', sendMessage);
     document.getElementById('refreshMessages').addEventListener('click', loadMessages);
+    document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+    document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
 }
 
 function setupWebSocket() {
@@ -244,4 +246,25 @@ function showError(message) {
     setTimeout(() => {
         errorDiv.remove();
     }, 5000);
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    
+    sidebar.classList.toggle('collapsed');
+    
+    if (sidebar.classList.contains('collapsed')) {
+        toggleBtn.classList.add('visible');
+    } else {
+        toggleBtn.classList.remove('visible');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    
+    sidebar.classList.add('collapsed');
+    toggleBtn.classList.add('visible');
 }

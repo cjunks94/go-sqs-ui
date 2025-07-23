@@ -13,8 +13,15 @@
         </header>
         
         <div class="main-content">
-            <div class="sidebar">
-                <h2>Queues</h2>
+            <button id="sidebarToggle" class="sidebar-toggle" title="Toggle Sidebar">
+                <span class="toggle-icon">☰</span>
+            </button>
+            
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>Queues</h2>
+                    <button class="sidebar-close" id="sidebarClose" title="Close Sidebar">×</button>
+                </div>
                 <div id="queueList" class="queue-list">
                     <div class="loading">Loading queues...</div>
                 </div>
