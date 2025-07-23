@@ -8,7 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupEventListeners() {
-    document.getElementById('refreshQueues').addEventListener('click', loadQueues);
+    document.getElementById('refreshQueues').addEventListener('click', () => {
+        currentOffset = 0; // Reset offset when refreshing
+        loadQueues();
+    });
     document.getElementById('sendMessage').addEventListener('click', sendMessage);
     document.getElementById('refreshMessages').addEventListener('click', loadMessages);
     document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
@@ -41,32 +44,117 @@ function setupWebSocket() {
 }
 
 async function loadQueues() {
+    const queueList = document.getElementById('queueList');
+    queueList.innerHTML = '<div class="loading">Loading queues...</div>';
+    
     try {
-        const response = await fetch('/api/queues');
+        const response = await fetch('/api/queues?limit=20');
         const queues = await response.json();
         displayQueues(queues);
+        
+        // Add "Load More" button if we got the full limit
+        if (queues.length === 20) {
+            addLoadMoreButton();
+        }
     } catch (error) {
         console.error('Error loading queues:', error);
         showError('Failed to load queues');
+        queueList.innerHTML = '<div class="error">Failed to load queues</div>';
     }
 }
 
-function displayQueues(queues) {
+function displayQueues(queues, append = false) {
     const queueList = document.getElementById('queueList');
-    queueList.innerHTML = '';
     
-    if (queues.length === 0) {
+    if (!append) {
+        queueList.innerHTML = '';
+    } else {
+        // Remove existing "Load More" button if present
+        const existingLoadMore = queueList.querySelector('.load-more-btn');
+        if (existingLoadMore) {
+            existingLoadMore.remove();
+        }
+    }
+    
+    if (queues.length === 0 && !append) {
         queueList.innerHTML = '<div class="no-queues">No queues found</div>';
         return;
     }
     
-    queues.forEach(queue => {
-        const queueItem = document.createElement('div');
-        queueItem.className = 'queue-item';
-        queueItem.textContent = queue.name;
-        queueItem.onclick = () => selectQueue(queue);
-        queueList.appendChild(queueItem);
+    // Add queues progressively with a small delay for better UX
+    queues.forEach((queue, index) => {
+        setTimeout(() => {
+            const queueItem = document.createElement('div');
+            queueItem.className = 'queue-item';
+            queueItem.textContent = queue.name;
+            queueItem.onclick = () => selectQueue(queue);
+            queueItem.style.opacity = '0';
+            queueItem.style.transform = 'translateY(10px)';
+            queueList.appendChild(queueItem);
+            
+            // Animate in
+            requestAnimationFrame(() => {
+                queueItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                queueItem.style.opacity = '1';
+                queueItem.style.transform = 'translateY(0)';
+            });
+        }, index * 50); // Stagger the animations
     });
+}
+
+let currentOffset = 0;
+
+function addLoadMoreButton() {
+    const queueList = document.getElementById('queueList');
+    const loadMoreBtn = document.createElement('button');
+    loadMoreBtn.className = 'btn btn-secondary load-more-btn';
+    loadMoreBtn.textContent = 'Load More Queues';
+    loadMoreBtn.style.width = '100%';
+    loadMoreBtn.style.marginTop = '1rem';
+    loadMoreBtn.onclick = loadMoreQueues;
+    queueList.appendChild(loadMoreBtn);
+}
+
+async function loadMoreQueues() {
+    const loadMoreBtn = document.querySelector('.load-more-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.textContent = 'Loading...';
+        loadMoreBtn.disabled = true;
+    }
+    
+    currentOffset += 20;
+    
+    try {
+        // Note: AWS SQS doesn't support offset, so we'll need to implement this differently
+        // For now, we'll just load more queues with a higher limit
+        const response = await fetch(`/api/queues?limit=${currentOffset + 20}`);
+        const allQueues = await response.json();
+        
+        // Get only the new queues (after the current offset)
+        const newQueues = allQueues.slice(currentOffset);
+        
+        if (newQueues.length > 0) {
+            displayQueues(newQueues, true);
+            
+            // Add "Load More" button again if we got the full batch
+            if (newQueues.length === 20) {
+                addLoadMoreButton();
+            }
+        } else {
+            // No more queues to load
+            if (loadMoreBtn) {
+                loadMoreBtn.textContent = 'No more queues';
+                loadMoreBtn.disabled = true;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading more queues:', error);
+        showError('Failed to load more queues');
+        if (loadMoreBtn) {
+            loadMoreBtn.textContent = 'Load More Queues';
+            loadMoreBtn.disabled = false;
+        }
+    }
 }
 
 function selectQueue(queue) {
@@ -132,13 +220,21 @@ function displayQueueAttributes(attributes) {
 async function loadMessages() {
     if (!currentQueue) return;
     
+    const messageList = document.getElementById('messageList');
+    messageList.innerHTML = '<div class="loading">Loading messages...</div>';
+    
     try {
         const response = await fetch(`/api/queues/${encodeURIComponent(currentQueue.url)}/messages`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const messages = await response.json();
         displayMessages(messages);
     } catch (error) {
         console.error('Error loading messages:', error);
-        showError('Failed to load messages');
+        messageList.innerHTML = '<div class="error-message">Failed to load messages. Please try again.</div>';
     }
 }
 
@@ -147,7 +243,7 @@ function displayMessages(messages) {
     messageList.innerHTML = '';
     
     if (messages.length === 0) {
-        messageList.innerHTML = '<div class="no-messages">No messages in queue</div>';
+        messageList.innerHTML = '<div class="no-messages">No messages found in this queue</div>';
         return;
     }
     

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -61,7 +62,17 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 	log.Printf("ListQueues: Starting to fetch queues")
 	ctx := context.Background()
 
-	result, err := h.client.ListQueues(ctx, &sqs.ListQueuesInput{})
+	// Get limit from query parameter, default to 20
+	limit := int32(20)
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
+			limit = int32(parsedLimit)
+		}
+	}
+
+	result, err := h.client.ListQueues(ctx, &sqs.ListQueuesInput{
+		MaxResults: aws.Int32(limit),
+	})
 	if err != nil {
 		log.Printf("ListQueues: Error fetching queues: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

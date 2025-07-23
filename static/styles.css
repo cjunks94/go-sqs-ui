@@ -305,6 +305,48 @@ h1 {
     text-align: center;
     color: #666;
     padding: 2rem;
+    font-style: italic;
+}
+
+.no-queues {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+    font-style: italic;
+}
+
+.no-messages {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+    font-style: italic;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin: 1rem;
+}
+
+.load-more-btn {
+    transition: all 0.2s ease;
+}
+
+.load-more-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.queue-item {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.error-message {
+    text-align: center;
+    color: #dc3545;
+    padding: 2rem;
+    font-style: italic;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    margin: 1rem;
 }
 
 .error {
