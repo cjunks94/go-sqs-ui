@@ -104,6 +104,11 @@ h1 {
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.sidebar.collapsed + .content {
+    margin-left: -300px;
 }
 
 .hidden {
@@ -182,38 +187,67 @@ h1 {
 }
 
 .message-list {
-    max-height: 400px;
+    max-height: 600px;
     overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #fafafa;
 }
 
 .message-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    background-color: white;
+    border-radius: 6px;
     padding: 1rem;
-    margin-bottom: 0.5rem;
+    margin: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #ff9900;
 }
 
 .message-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.message-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .message-id {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.message-timestamp {
+    font-size: 0.8rem;
     color: #666;
     font-family: monospace;
 }
 
 .message-body {
-    background-color: #f8f8f8;
-    padding: 0.5rem;
+    background-color: #f8f9fa;
     border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9rem;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+}
+
+.message-json {
+    margin: 0;
+    padding: 1rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #2d3748;
+    background-color: transparent;
+    white-space: pre-wrap;
     word-break: break-word;
-    margin-bottom: 0.5rem;
+    overflow-x: auto;
 }
 
 .btn {

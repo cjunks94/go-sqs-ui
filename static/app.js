@@ -151,33 +151,54 @@ function displayMessages(messages) {
         return;
     }
     
-    messages.forEach(message => {
+    messages.forEach((message, index) => {
         const messageItem = document.createElement('div');
         messageItem.className = 'message-item';
         
         const header = document.createElement('div');
         header.className = 'message-header';
         
+        const messageInfo = document.createElement('div');
+        messageInfo.className = 'message-info';
+        
         const messageId = document.createElement('div');
         messageId.className = 'message-id';
-        messageId.textContent = `ID: ${message.messageId}`;
+        messageId.textContent = `Message ${index + 1} - ID: ${message.messageId}`;
+        
+        const timestamp = document.createElement('div');
+        timestamp.className = 'message-timestamp';
+        if (message.attributes && message.attributes.SentTimestamp) {
+            const date = new Date(parseInt(message.attributes.SentTimestamp));
+            timestamp.textContent = `Sent: ${date.toLocaleString()}`;
+        }
+        
+        messageInfo.appendChild(messageId);
+        messageInfo.appendChild(timestamp);
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.textContent = 'Delete';
         deleteBtn.onclick = () => deleteMessage(message.receiptHandle);
         
-        header.appendChild(messageId);
+        header.appendChild(messageInfo);
         header.appendChild(deleteBtn);
         
         const body = document.createElement('div');
         body.className = 'message-body';
+        
+        let formattedBody;
         try {
             const parsed = JSON.parse(message.body);
-            body.textContent = JSON.stringify(parsed, null, 2);
+            formattedBody = JSON.stringify(parsed, null, 2);
         } catch {
-            body.textContent = message.body;
+            formattedBody = message.body;
         }
+        
+        // Create a pre element for better JSON formatting
+        const pre = document.createElement('pre');
+        pre.className = 'message-json';
+        pre.textContent = formattedBody;
+        body.appendChild(pre);
         
         messageItem.appendChild(header);
         messageItem.appendChild(body);
