@@ -171,6 +171,13 @@ function selectQueue(queue) {
     
     document.getElementById('queueName').textContent = queue.name;
     
+    // Clear any existing error banners
+    document.querySelectorAll('.error').forEach(error => error.remove());
+    
+    // Show loading state immediately in message area
+    const messageList = document.getElementById('messageList');
+    messageList.innerHTML = '<div class="loading">Loading messages...</div>';
+    
     displayQueueAttributes(queue.attributes);
     loadMessages();
     
