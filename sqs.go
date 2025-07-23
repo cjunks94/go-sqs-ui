@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +18,7 @@ import (
 type SQSClientInterface interface {
 	ListQueues(ctx context.Context, params *sqs.ListQueuesInput, optFns ...func(*sqs.Options)) (*sqs.ListQueuesOutput, error)
 	GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error)
+	ListQueueTags(ctx context.Context, params *sqs.ListQueueTagsInput, optFns ...func(*sqs.Options)) (*sqs.ListQueueTagsOutput, error)
 	ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
 	SendMessage(ctx context.Context, params *sqs.SendMessageInput, optFns ...func(*sqs.Options)) (*sqs.SendMessageOutput, error)
 	DeleteMessage(ctx context.Context, params *sqs.DeleteMessageInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error)
@@ -68,7 +70,49 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("ListQueues: Found %d queues", len(result.QueueUrls))
 	queues := []Queue{}
+	
+	// Define required tags for filtering
+	requiredTags := map[string][]string{
+		"businessunit": {"degrees"},
+		"product":      {"amt"},
+		"env":          {"stg", "prod"},
+	}
+	filteredCount := 0
+
 	for _, queueURL := range result.QueueUrls {
+		// Check queue tags first
+		tagsResult, err := h.client.ListQueueTags(ctx, &sqs.ListQueueTagsInput{
+			QueueUrl: aws.String(queueURL),
+		})
+		if err != nil {
+			log.Printf("ListQueues: Error fetching tags for queue %s: %v", queueURL, err)
+			continue
+		}
+
+		// Check if queue matches all required tags  
+		matchesAllTags := true
+		for tagKey, validValues := range requiredTags {
+			tagValue, exists := tagsResult.Tags[tagKey]
+			if !exists {
+				log.Printf("ListQueues: Queue %s missing required tag: %s", queueURL, tagKey)
+				matchesAllTags = false
+				break
+			}
+			if !contains(validValues, tagValue) {
+				log.Printf("ListQueues: Queue %s has invalid value '%s' for tag '%s' (expected: %v)", queueURL, tagValue, tagKey, validValues)
+				matchesAllTags = false
+				break
+			}
+		}
+
+		if !matchesAllTags {
+			continue
+		}
+		
+		filteredCount++
+		log.Printf("ListQueues: Queue %s matches all required tags", queueURL)
+
+		// Get queue attributes for matching queues
 		attrs, err := h.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 			QueueUrl:       aws.String(queueURL),
 			AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
@@ -104,7 +148,17 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("ListQueues: Successfully returned %d queues", len(queues))
+	log.Printf("ListQueues: Successfully returned %d filtered queues (out of %d total)", len(queues), len(result.QueueUrls))
+}
+
+// contains checks if a value exists in a slice (case-insensitive)
+func contains(slice []string, value string) bool {
+	for _, v := range slice {
+		if strings.EqualFold(v, value) {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {

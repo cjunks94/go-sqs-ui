@@ -57,6 +57,21 @@ func (m *MockSQSClient) ListQueues(ctx context.Context, params *sqs.ListQueuesIn
 	}, nil
 }
 
+func (m *MockSQSClient) ListQueueTags(ctx context.Context, params *sqs.ListQueueTagsInput, optFns ...func(*sqs.Options)) (*sqs.ListQueueTagsOutput, error) {
+	if err, exists := m.errors["ListQueueTags"]; exists {
+		return nil, err
+	}
+	
+	// Return mock tags that match the filter criteria
+	return &sqs.ListQueueTagsOutput{
+		Tags: map[string]string{
+			"businessunit": "degrees",
+			"product":      "amt",
+			"env":          "stg",
+		},
+	}, nil
+}
+
 func (m *MockSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error) {
 	if err, exists := m.errors["GetQueueAttributes"]; exists {
 		return nil, err

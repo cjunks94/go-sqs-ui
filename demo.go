@@ -72,6 +72,19 @@ func (d *DemoSQSClient) ListQueues(ctx context.Context, params *sqs.ListQueuesIn
 	}, nil
 }
 
+func (d *DemoSQSClient) ListQueueTags(ctx context.Context, params *sqs.ListQueueTagsInput, optFns ...func(*sqs.Options)) (*sqs.ListQueueTagsOutput, error) {
+	log.Printf("Demo: ListQueueTags called for queue %s", aws.ToString(params.QueueUrl))
+	
+	// Return demo tags that match your filter criteria
+	return &sqs.ListQueueTagsOutput{
+		Tags: map[string]string{
+			"businessunit": "degrees",
+			"product":      "amt", 
+			"env":          "stg",
+		},
+	}, nil
+}
+
 func (d *DemoSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error) {
 	queueURL := aws.ToString(params.QueueUrl)
 	queueName := queueURL
