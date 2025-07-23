@@ -34,6 +34,10 @@ cd go-sqs-ui
 2. Install dependencies:
 ```bash
 go mod download
+# if you are receiving errors regarding the go.sum file
+go mod tidy
+go mod download
+go build
 ```
 
 ## Running the Application
@@ -41,6 +45,7 @@ go mod download
 1. Ensure your AWS credentials are configured:
 ```bash
 aws configure
+# if you are having trouble go to the AWS accoutn sign in page and copy the access keys and manually export in your console
 ```
 
 2. Run the application:
