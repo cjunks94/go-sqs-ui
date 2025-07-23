@@ -176,11 +176,20 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
 
+	// Get limit from query parameter, default to 10 (SQS max per call)
+	limit := int32(10)
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 && parsedLimit <= 10 {
+			limit = int32(parsedLimit)
+		}
+	}
+
+	log.Printf("GetMessages: Fetching up to %d messages for queue %s", limit, queueURL)
 	ctx := context.Background()
 
 	result, err := h.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:              aws.String(queueURL),
-		MaxNumberOfMessages:   10,
+		MaxNumberOfMessages:   limit,
 		WaitTimeSeconds:       1,
 		AttributeNames:        []types.QueueAttributeName{types.QueueAttributeNameAll},
 		MessageAttributeNames: []string{"All"},

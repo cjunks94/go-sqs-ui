@@ -1,5 +1,6 @@
 let currentQueue = null;
 let ws = null;
+let isMessagesPaused = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadQueues();
@@ -14,6 +15,7 @@ function setupEventListeners() {
     });
     document.getElementById('sendMessage').addEventListener('click', sendMessage);
     document.getElementById('refreshMessages').addEventListener('click', loadMessages);
+    document.getElementById('pauseMessages').addEventListener('click', toggleMessagesPause);
     document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
     document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
 }
@@ -28,7 +30,7 @@ function setupWebSocket() {
     
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === 'messages' && data.queueUrl === currentQueue?.url) {
+        if (data.type === 'messages' && data.queueUrl === currentQueue?.url && !isMessagesPaused) {
             displayMessages(data.messages);
         }
     };
@@ -245,71 +247,216 @@ async function loadMessages() {
     }
 }
 
-function displayMessages(messages) {
+let allMessages = [];
+let currentMessageOffset = 0;
+
+function displayMessages(messages, append = false) {
     const messageList = document.getElementById('messageList');
-    messageList.innerHTML = '';
     
-    if (messages.length === 0) {
+    if (!append) {
+        messageList.innerHTML = '';
+        allMessages = [];
+        currentMessageOffset = 0;
+        // Remove any existing "Show More" button
+        const existingShowMore = messageList.querySelector('.show-more-messages-btn');
+        if (existingShowMore) {
+            existingShowMore.remove();
+        }
+    } else {
+        // Remove existing "Show More" button if present
+        const existingShowMore = messageList.querySelector('.show-more-messages-btn');
+        if (existingShowMore) {
+            existingShowMore.remove();
+        }
+    }
+    
+    // Add new messages to our collection
+    allMessages = append ? [...allMessages, ...messages] : messages;
+    
+    if (allMessages.length === 0 && !append) {
         messageList.innerHTML = '<div class="no-messages">No messages found in this queue</div>';
         return;
     }
     
-    messages.forEach((message, index) => {
+    // Display messages to show (either new batch or all if not appending)
+    const messagesToShow = append ? messages : allMessages;
+    
+    messagesToShow.forEach((message, index) => {
+        const actualIndex = append ? allMessages.length - messages.length + index : index;
         const messageItem = document.createElement('div');
-        messageItem.className = 'message-item';
+        messageItem.className = `message-row ${actualIndex % 2 === 0 ? 'message-row-even' : 'message-row-odd'}`;
+        messageItem.setAttribute('data-message-id', message.messageId);
         
-        const header = document.createElement('div');
-        header.className = 'message-header';
+        // Collapsed view (DataDog style)
+        const collapsedView = document.createElement('div');
+        collapsedView.className = 'message-collapsed';
         
-        const messageInfo = document.createElement('div');
-        messageInfo.className = 'message-info';
+        const expandIcon = document.createElement('span');
+        expandIcon.className = 'expand-icon';
+        expandIcon.textContent = '▶';
         
-        const messageId = document.createElement('div');
-        messageId.className = 'message-id';
-        messageId.textContent = `Message ${index + 1} - ID: ${message.messageId}`;
+        const messagePreview = document.createElement('div');
+        messagePreview.className = 'message-preview';
         
-        const timestamp = document.createElement('div');
-        timestamp.className = 'message-timestamp';
+        const timestamp = document.createElement('span');
+        timestamp.className = 'message-timestamp-compact';
         if (message.attributes && message.attributes.SentTimestamp) {
             const date = new Date(parseInt(message.attributes.SentTimestamp));
-            timestamp.textContent = `Sent: ${date.toLocaleString()}`;
+            timestamp.textContent = date.toLocaleString();
         }
         
-        messageInfo.appendChild(messageId);
-        messageInfo.appendChild(timestamp);
+        const messagePreviewText = document.createElement('span');
+        messagePreviewText.className = 'message-preview-text';
+        // Show first 100 characters of message body
+        const previewText = message.body.length > 100 ? message.body.substring(0, 100) + '...' : message.body;
+        messagePreviewText.textContent = previewText;
+        
+        const messageId = document.createElement('span');
+        messageId.className = 'message-id-compact';
+        messageId.textContent = `ID: ${message.messageId.substring(0, 8)}...`;
+        
+        messagePreview.appendChild(timestamp);
+        messagePreview.appendChild(messagePreviewText);
+        messagePreview.appendChild(messageId);
         
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.className = 'btn btn-danger btn-small';
         deleteBtn.textContent = 'Delete';
-        deleteBtn.onclick = () => deleteMessage(message.receiptHandle);
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteMessage(message.receiptHandle);
+        };
         
-        header.appendChild(messageInfo);
-        header.appendChild(deleteBtn);
+        collapsedView.appendChild(expandIcon);
+        collapsedView.appendChild(messagePreview);
+        collapsedView.appendChild(deleteBtn);
         
-        const body = document.createElement('div');
-        body.className = 'message-body';
+        // Expanded view (hidden by default)
+        const expandedView = document.createElement('div');
+        expandedView.className = 'message-expanded hidden';
+        
+        const expandedHeader = document.createElement('div');
+        expandedHeader.className = 'message-expanded-header';
+        
+        const collapseIcon = document.createElement('span');
+        collapseIcon.className = 'collapse-icon';
+        collapseIcon.textContent = '▼';
+        
+        const messageDetails = document.createElement('div');
+        messageDetails.className = 'message-details';
+        messageDetails.innerHTML = `
+            <div><strong>Message ID:</strong> ${message.messageId}</div>
+            <div><strong>Sent:</strong> ${timestamp.textContent}</div>
+            <div><strong>Receipt Handle:</strong> ${message.receiptHandle.substring(0, 50)}...</div>
+        `;
+        
+        expandedHeader.appendChild(collapseIcon);
+        expandedHeader.appendChild(messageDetails);
+        expandedHeader.appendChild(deleteBtn.cloneNode(true));
+        expandedHeader.lastChild.onclick = (e) => {
+            e.stopPropagation();
+            deleteMessage(message.receiptHandle);
+        };
+        
+        const messageBody = document.createElement('div');
+        messageBody.className = 'message-body-expanded';
         
         let formattedBody;
         let isJSON = false;
         try {
             const parsed = JSON.parse(message.body);
-            formattedBody = JSON.stringify(parsed, null, 4); // Use 4 spaces for better readability
+            formattedBody = JSON.stringify(parsed, null, 4);
             isJSON = true;
         } catch {
             formattedBody = message.body;
         }
         
-        // Create a pre element for better JSON formatting
         const pre = document.createElement('pre');
         pre.className = isJSON ? 'message-json json-formatted' : 'message-json plain-text';
         pre.textContent = formattedBody;
-        body.appendChild(pre);
+        messageBody.appendChild(pre);
         
-        messageItem.appendChild(header);
-        messageItem.appendChild(body);
+        expandedView.appendChild(expandedHeader);
+        expandedView.appendChild(messageBody);
+        
+        // Toggle functionality
+        collapsedView.onclick = () => toggleMessageExpansion(messageItem);
+        expandedHeader.onclick = () => toggleMessageExpansion(messageItem);
+        
+        messageItem.appendChild(collapsedView);
+        messageItem.appendChild(expandedView);
         
         messageList.appendChild(messageItem);
     });
+    
+    // Add "Show More" button if we got messages (indicating there might be more)
+    if (messages.length > 0) {
+        addShowMoreMessagesButton();
+    }
+}
+
+function toggleMessageExpansion(messageItem) {
+    const collapsed = messageItem.querySelector('.message-collapsed');
+    const expanded = messageItem.querySelector('.message-expanded');
+    const expandIcon = collapsed.querySelector('.expand-icon');
+    const collapseIcon = expanded.querySelector('.collapse-icon');
+    
+    if (expanded.classList.contains('hidden')) {
+        // Expand
+        collapsed.classList.add('hidden');
+        expanded.classList.remove('hidden');
+        messageItem.classList.add('expanded');
+    } else {
+        // Collapse
+        expanded.classList.add('hidden');
+        collapsed.classList.remove('hidden');
+        messageItem.classList.remove('expanded');
+    }
+}
+
+function addShowMoreMessagesButton() {
+    const messageList = document.getElementById('messageList');
+    const showMoreBtn = document.createElement('button');
+    showMoreBtn.className = 'btn btn-secondary show-more-messages-btn';
+    showMoreBtn.textContent = 'Show More Messages';
+    showMoreBtn.style.width = '100%';
+    showMoreBtn.style.marginTop = '1rem';
+    showMoreBtn.onclick = loadMoreMessages;
+    messageList.appendChild(showMoreBtn);
+}
+
+async function loadMoreMessages() {
+    const showMoreBtn = document.querySelector('.show-more-messages-btn');
+    if (showMoreBtn) {
+        showMoreBtn.textContent = 'Loading...';
+        showMoreBtn.disabled = true;
+    }
+    
+    try {
+        const response = await fetch(`/api/queues/${encodeURIComponent(currentQueue.url)}/messages?limit=10`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const messages = await response.json();
+        
+        if (messages.length > 0) {
+            displayMessages(messages, true);
+        } else {
+            // No more messages to load
+            if (showMoreBtn) {
+                showMoreBtn.textContent = 'No more messages';
+                showMoreBtn.disabled = true;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading more messages:', error);
+        if (showMoreBtn) {
+            showMoreBtn.textContent = 'Show More Messages';
+            showMoreBtn.disabled = false;
+        }
+    }
 }
 
 async function sendMessage() {
@@ -393,4 +540,17 @@ function closeSidebar() {
     
     sidebar.classList.add('collapsed');
     toggleBtn.classList.add('visible');
+}
+
+function toggleMessagesPause() {
+    isMessagesPaused = !isMessagesPaused;
+    const pauseBtn = document.getElementById('pauseMessages');
+    
+    if (isMessagesPaused) {
+        pauseBtn.innerHTML = '▶️ Resume';
+        pauseBtn.title = 'Resume live updates';
+    } else {
+        pauseBtn.innerHTML = '⏸️ Pause';
+        pauseBtn.title = 'Pause live updates';
+    }
 }

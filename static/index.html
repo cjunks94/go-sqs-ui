@@ -48,7 +48,12 @@
                     <div class="messages-section">
                         <div class="messages-header">
                             <h3>Messages</h3>
-                            <button id="refreshMessages" class="btn btn-secondary">Refresh</button>
+                            <div class="messages-controls">
+                                <button id="pauseMessages" class="btn btn-secondary" title="Pause/Resume live updates">
+                                    ⏸️ Pause
+                                </button>
+                                <button id="refreshMessages" class="btn btn-secondary">Refresh</button>
+                            </div>
                         </div>
                         <div id="messageList" class="message-list"></div>
                     </div>
