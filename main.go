@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -45,9 +46,14 @@ func main() {
 	})
 
 	// Static files with logging
+	staticSubFS, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		log.Fatal("Failed to create static subdirectory:", err)
+	}
+
 	static := r.PathPrefix("/").Subrouter()
 	static.Use(loggingMiddleware)
-	static.PathPrefix("/").Handler(http.FileServer(http.FS(staticFiles)))
+	static.PathPrefix("/").Handler(http.FileServer(http.FS(staticSubFS)))
 
 	log.Printf("Server starting on port %s", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {
