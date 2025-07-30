@@ -18,12 +18,12 @@ html.theme-dark {
   --color-surface-hover: #323944;      /* Hover state */
   
   /* === TEXT COLORS === */
-  --color-text-primary: #ffffff;       /* Primary text */
-  --color-text-secondary: #a0aec0;     /* Secondary text */
-  --color-text-tertiary: #718096;      /* Tertiary/muted text */
+  --color-text-primary: #f7fafc;       /* Primary text - brighter */
+  --color-text-secondary: #cbd5e0;     /* Secondary text - more contrast */
+  --color-text-tertiary: #a0aec0;      /* Tertiary/muted text - brighter */
   --color-text-inverse: #1a1d23;       /* Inverse (for light backgrounds) */
-  --color-text-muted: #4a5568;         /* Very muted text */
-  --color-text-disabled: #2d3748;      /* Disabled text */
+  --color-text-muted: #718096;         /* Very muted text - brighter */
+  --color-text-disabled: #4a5568;      /* Disabled text */
   
   /* === BORDER COLORS === */
   --color-border-primary: #374151;     /* Primary borders */
@@ -201,12 +201,14 @@ html.theme-dark .sidebar {
 html.theme-dark .queue-link {
   background: rgba(37, 41, 48, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e2e8f0; /* Brighter text */
 }
 
 html.theme-dark .queue-link:hover {
   background: rgba(50, 57, 68, 0.8);
   border-color: rgba(0, 210, 122, 0.3);
   box-shadow: 0 4px 12px rgba(0, 210, 122, 0.1);
+  color: #f7fafc; /* Even brighter on hover */
 }
 
 html.theme-dark .queue-link.active {
@@ -215,10 +217,46 @@ html.theme-dark .queue-link.active {
   color: var(--color-accent);
 }
 
-/* Chart and data visualization enhancements */
+html.theme-dark .queue-name {
+  color: inherit; /* Use parent color */
+}
+
+/* Refresh button styling */
+html.theme-dark #refreshQueues,
+html.theme-dark .refresh-queues {
+  background: rgba(45, 51, 64, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+html.theme-dark #refreshQueues:hover,
+html.theme-dark .refresh-queues:hover {
+  background: rgba(50, 57, 68, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* AWS Context and Queue sections enhancement */
+html.theme-dark .aws-context-section,
+html.theme-dark .queues-section {
+  background: rgba(37, 41, 48, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+html.theme-dark .aws-context-header,
+html.theme-dark .queues-header {
+  background: rgba(45, 51, 64, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.theme-dark .aws-context-header:hover,
+html.theme-dark .queues-header:hover {
+  background: rgba(50, 57, 68, 0.9);
+}
+
 html.theme-dark .aws-context-table {
-  background: var(--color-surface-secondary);
-  border: 1px solid var(--color-border-primary);
+  background: transparent;
 }
 
 html.theme-dark .aws-context-value {
@@ -239,4 +277,30 @@ html.theme-dark .message-item:hover {
   border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.4);
   transform: translateY(-1px);
+}
+
+/* Message text readability improvements */
+html.theme-dark .message-preview-text {
+  color: #e2e8f0; /* Bright text for messages */
+}
+
+html.theme-dark .message-timestamp-compact {
+  color: #a0aec0; /* Readable timestamp */
+}
+
+html.theme-dark .message-id-compact {
+  color: #718096; /* Slightly muted ID */
+}
+
+/* Messages section card styling */
+html.theme-dark .messages-section {
+  background: rgba(37, 41, 48, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Message list background */
+html.theme-dark .message-list {
+  background-color: rgba(26, 29, 35, 0.5);
+  border-color: rgba(255, 255, 255, 0.05);
 }
