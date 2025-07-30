@@ -51,6 +51,8 @@ export class WebSocketManager {
             // Validate messages data before processing
             if (Array.isArray(data.messages)) {
                 try {
+                    // For now, keep WebSocket simple - just replace messages like before
+                    // We can improve this later once basic functionality is working
                     this.messageHandler.displayMessages(data.messages);
                 } catch (error) {
                     console.error('Error displaying WebSocket messages:', error);

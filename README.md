@@ -12,7 +12,11 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 - 📊 View queue attributes (message counts, retention period, etc.)
 - 🎨 Clean, responsive UI with collapsible sidebar and DataDog-style message lists
 - ⚡ Modern ES6+ modular JavaScript architecture
-- 🧪 Comprehensive test suite with 47+ tests
+- 🧪 Comprehensive test suite with 112+ tests
+- 🔀 **AWS Context Switching**: Automatic detection and switching between demo and live AWS modes
+- 📅 **Message Ordering**: Consistent chronological ordering (newest first) with backend sorting
+- 🔍 **Enhanced DLQ Debugging**: Advanced filtering, search, and retry functionality for Dead Letter Queues
+- 🎭 **Demo Mode**: Built-in demo mode with realistic recent timestamps for development without AWS credentials
 
 ## Prerequisites
 
@@ -50,20 +54,72 @@ npm install
 
 ## Running the Application
 
+### Quick Start (Development Server)
+
+The recommended way to run during development:
+
+```bash
+# Start development server with automatic cleanup
+make dev-start
+
+# Check server status
+make dev-status
+
+# View server logs
+make dev-logs
+
+# Stop server
+make dev-stop
+
+# Or restart server
+make dev-restart
+```
+
+### Manual Start
+
 1. Ensure your AWS credentials are configured:
 ```bash
 aws configure
-# if you are having trouble go to the AWS accoutn sign in page and copy the access keys and manually export in your console
+# if you are having trouble go to the AWS account sign in page and copy the access keys and manually export in your console
 ```
 
 2. Run the application:
 ```bash
+# With automatic cleanup of any existing processes
+make run
+
+# Or directly (less safe)
 go run .
 ```
 
 3. Open your browser and navigate to:
 ```
 http://localhost:8080
+```
+
+### Development Commands
+
+```bash
+# Install dependencies
+make install
+
+# Run all tests (backend + frontend)
+make test-all
+
+# Run only backend tests
+make test
+
+# Run only frontend tests  
+make test-frontend
+
+# Kill any running processes
+make kill
+
+# Clean up build artifacts
+make clean
+
+# View all available commands
+make help
 ```
 
 ### Configuration Options
@@ -77,6 +133,45 @@ http://localhost:8080
   ```bash
   AWS_REGION=us-west-2 go run .
   ```
+
+## AWS Context Switching
+
+The application automatically detects your AWS configuration and switches between modes:
+
+### Demo Mode
+- **Triggers**: When AWS credentials are not configured or AWS SQS is unreachable
+- **Features**: 
+  - Uses built-in demo data with realistic timestamps
+  - Perfect for development and testing
+  - No AWS credentials required
+  - All UI features functional with mock data
+
+### Live AWS Mode  
+- **Triggers**: When valid AWS credentials are detected and SQS is accessible
+- **Features**:
+  - Connects to real AWS SQS queues
+  - Displays actual queue and message data
+  - Uses your configured AWS profile and region
+  - All operations affect real AWS resources
+
+### Context Information
+The UI displays current context in the sidebar:
+- **Mode**: Demo or Live AWS
+- **Region**: Current AWS region (if applicable)
+- **Profile**: Active AWS profile (if set via `AWS_PROFILE`)
+- **Account**: Account type indicator
+
+### Testing Both Modes
+```bash
+# Test Demo Mode (no AWS credentials)
+unset AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+go run .
+
+# Test Live AWS Mode (with credentials)
+export AWS_PROFILE=your-profile
+export AWS_REGION=us-east-1
+go run .
+```
 
 ## Building for Production
 
@@ -103,7 +198,7 @@ go build -o sqs-ui .
 2. **No Framework**: Kept simple with vanilla JavaScript to minimize complexity and dependencies
 3. **Responsive Design**: CSS Grid and Flexbox for a modern, responsive layout
 4. **AWS-Inspired UI**: Design inspired by AWS Console and DataDog for familiar user experience
-5. **Comprehensive Testing**: 47+ tests using Vitest with full coverage of all modules
+5. **Comprehensive Testing**: 112+ tests using Vitest with full coverage of all modules
 
 ### Goals
 
@@ -124,12 +219,14 @@ go build -o sqs-ui .
 
 ## Testing
 
+The application has comprehensive test coverage with 112+ tests covering all functionality.
+
 ### Frontend Tests
 
 Run the comprehensive JavaScript test suite:
 
 ```bash
-# Run all tests
+# Run all tests (112+ tests)
 npm test
 
 # Run tests in watch mode during development
@@ -141,6 +238,16 @@ npm run test:coverage
 # Run tests with UI (browser interface)
 npm run test:ui
 ```
+
+**Test Coverage Includes:**
+- Message ordering and chronological sorting
+- AWS context switching (demo vs live modes)
+- DLQ detection and retry functionality  
+- Message filtering and search
+- Enhanced message view with JSON formatting
+- API service error handling
+- WebSocket real-time updates
+- UI component interactions
 
 ### Backend Tests
 

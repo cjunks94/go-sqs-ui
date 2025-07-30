@@ -26,16 +26,16 @@ func NewDemoSQSClient() *DemoSQSClient {
 		messages: make(map[string][]types.Message),
 	}
 
-	// Add some demo messages
+	// Add some demo messages with recent timestamps
 	demo.messages["https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue"] = []types.Message{
 		{
 			MessageId:     aws.String("msg-001"),
 			Body:          aws.String(`{"orderId": "12345", "customerId": "cust-001", "amount": 99.99, "status": "pending"}`),
 			ReceiptHandle: aws.String("receipt-001"),
 			Attributes: map[string]string{
-				"SentTimestamp":                   "1640995200000",
+				"SentTimestamp":                   "1722268800000", // July 30, 2025 00:00:00 UTC
 				"ApproximateReceiveCount":         "1",
-				"ApproximateFirstReceiveTimestamp": "1640995210000",
+				"ApproximateFirstReceiveTimestamp": "1722268810000",
 			},
 		},
 		{
@@ -43,9 +43,9 @@ func NewDemoSQSClient() *DemoSQSClient {
 			Body:          aws.String(`{"orderId": "12346", "customerId": "cust-002", "amount": 149.99, "status": "processing"}`),
 			ReceiptHandle: aws.String("receipt-002"),
 			Attributes: map[string]string{
-				"SentTimestamp":                   "1640995260000",
+				"SentTimestamp":                   "1722182400000", // July 29, 2025 00:00:00 UTC
 				"ApproximateReceiveCount":         "1",
-				"ApproximateFirstReceiveTimestamp": "1640995270000",
+				"ApproximateFirstReceiveTimestamp": "1722182410000",
 			},
 		},
 	}
@@ -56,7 +56,7 @@ func NewDemoSQSClient() *DemoSQSClient {
 			Body:          aws.String(`{"type": "email", "recipient": "user@example.com", "subject": "Order Confirmation", "template": "order-confirmation"}`),
 			ReceiptHandle: aws.String("receipt-notif-001"),
 			Attributes: map[string]string{
-				"SentTimestamp":           "1640995300000",
+				"SentTimestamp":           "1722355200000", // July 30, 2025 24:00:00 UTC (latest)
 				"ApproximateReceiveCount": "1",
 			},
 		},
@@ -143,7 +143,7 @@ func (d *DemoSQSClient) SendMessage(ctx context.Context, params *sqs.SendMessage
 		Body:          aws.String(messageBody),
 		ReceiptHandle: aws.String(fmt.Sprintf("receipt-%s", messageID)),
 		Attributes: map[string]string{
-			"SentTimestamp":           fmt.Sprintf("%d", 1640995000+len(d.messages[queueURL])*60),
+			"SentTimestamp":           fmt.Sprintf("%d", 1722268800000+int64(len(d.messages[queueURL]))*60000), // July 30, 2025 base + minutes
 			"ApproximateReceiveCount": "0",
 		},
 	}

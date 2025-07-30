@@ -21,10 +21,15 @@ export class AWSContextHandler extends UIComponent {
     }
 
     render(context) {
+        if (!context || typeof context !== 'object') {
+            this.setContent('<div class="error-message">Invalid context data</div>');
+            return;
+        }
+
         const fields = [
             { label: 'Mode', value: context.mode },
             { label: 'Region', value: context.region || 'N/A' },
-            { label: 'Profile', value: context.profile || 'default' },
+            { label: 'Profile', value: context.profile || 'N/A' },
             { label: 'Account', value: context.accountId || 'N/A' }
         ];
 

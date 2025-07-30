@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -225,6 +226,14 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		messages = append(messages, message)
 	}
 
+	// Sort messages by SentTimestamp in descending order (newest first)
+	// This ensures consistent chronological ordering regardless of SQS return order
+	sort.Slice(messages, func(i, j int) bool {
+		timeI := getTimestampFromMessage(messages[i])
+		timeJ := getTimestampFromMessage(messages[j])
+		return timeI > timeJ // Descending order (newest first)
+	})
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(messages); err != nil {
 		log.Printf("Error encoding messages response: %v", err)
@@ -362,11 +371,13 @@ func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
 		}
 		
 		// Try to get account ID from credentials if available
-		if creds, err := h.config.Credentials.Retrieve(r.Context()); err == nil {
-			if creds.SessionToken != "" {
-				context.AccountID = "*** (Session)"
-			} else {
-				context.AccountID = "*** (IAM)"
+		if h.config.Credentials != nil {
+			if creds, err := h.config.Credentials.Retrieve(r.Context()); err == nil {
+				if creds.SessionToken != "" {
+					context.AccountID = "*** (Session)"
+				} else {
+					context.AccountID = "*** (IAM)"
+				}
 			}
 		}
 	}
@@ -379,4 +390,22 @@ func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	log.Printf("GetAWSContext: Successfully returned context (mode: %s)", context.Mode)
+}
+
+// getTimestampFromMessage extracts and parses the SentTimestamp from a message
+// Returns 0 if timestamp is missing or invalid, ensuring consistent sorting
+func getTimestampFromMessage(message Message) int64 {
+	timestampStr, exists := message.Attributes["SentTimestamp"]
+	if !exists {
+		return 0
+	}
+	
+	timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
+	if err != nil {
+		log.Printf("Warning: Invalid SentTimestamp format '%s' for message %s: %v", 
+			timestampStr, message.MessageId, err)
+		return 0
+	}
+	
+	return timestamp
 }

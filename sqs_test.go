@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/gorilla/mux"
 )
 
@@ -273,6 +275,185 @@ func TestSQSHandler_DeleteMessage(t *testing.T) {
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected status %d, got %d", tt.expectedStatus, rr.Code)
+			}
+		})
+	}
+}
+
+func TestSQSHandler_GetAWSContext(t *testing.T) {
+	tests := []struct {
+		name           string
+		isDemo         bool
+		config         aws.Config
+		envVars        map[string]string
+		expectedMode   string
+		expectedRegion string
+		expectedProfile string
+	}{
+		{
+			name:           "demo mode context",
+			isDemo:         true,
+			config:         aws.Config{},
+			envVars:        map[string]string{},
+			expectedMode:   "Demo",
+			expectedRegion: "",
+			expectedProfile: "",
+		},
+		{
+			name:   "live AWS context with region",
+			isDemo: false,
+			config: aws.Config{
+				Region: "us-east-1",
+			},
+			envVars:        map[string]string{},
+			expectedMode:   "Live AWS",
+			expectedRegion: "us-east-1",
+			expectedProfile: "",
+		},
+		{
+			name:   "live AWS context with profile",
+			isDemo: false,
+			config: aws.Config{
+				Region: "us-west-2",
+			},
+			envVars: map[string]string{
+				"AWS_PROFILE": "test-profile",
+			},
+			expectedMode:   "Live AWS",
+			expectedRegion: "us-west-2",
+			expectedProfile: "test-profile",
+		},
+		{
+			name:   "live AWS context with minimal config",
+			isDemo: false,
+			config: aws.Config{},
+			envVars:        map[string]string{},
+			expectedMode:   "Live AWS",
+			expectedRegion: "",
+			expectedProfile: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set environment variables
+			for key, value := range tt.envVars {
+				os.Setenv(key, value)
+				defer os.Unsetenv(key)
+			}
+
+			handler := &SQSHandler{
+				client: NewMockSQSClient(),
+				config: tt.config,
+				isDemo: tt.isDemo,
+			}
+
+			req := httptest.NewRequest("GET", "/api/aws-context", nil)
+			rr := httptest.NewRecorder()
+
+			handler.GetAWSContext(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
+			}
+
+			var context struct {
+				Mode      string `json:"mode"`
+				Region    string `json:"region,omitempty"`
+				Profile   string `json:"profile,omitempty"`
+				AccountID string `json:"accountId,omitempty"`
+			}
+
+			if err := json.NewDecoder(rr.Body).Decode(&context); err != nil {
+				t.Fatalf("failed to decode response: %v", err)
+			}
+
+			if context.Mode != tt.expectedMode {
+				t.Errorf("expected mode %s, got %s", tt.expectedMode, context.Mode)
+			}
+
+			if context.Region != tt.expectedRegion {
+				t.Errorf("expected region %s, got %s", tt.expectedRegion, context.Region)
+			}
+
+			if context.Profile != tt.expectedProfile {
+				t.Errorf("expected profile %s, got %s", tt.expectedProfile, context.Profile)
+			}
+
+			// For demo mode, region and profile should be empty
+			if tt.isDemo {
+				if context.Region != "" {
+					t.Errorf("demo mode should have empty region, got %s", context.Region)
+				}
+				if context.Profile != "" {
+					t.Errorf("demo mode should have empty profile, got %s", context.Profile)
+				}
+			}
+		})
+	}
+}
+
+func Test_getTimestampFromMessage(t *testing.T) {
+	tests := []struct {
+		name     string
+		message  Message
+		expected int64
+	}{
+		{
+			name: "valid timestamp",
+			message: Message{
+				MessageId: "msg1",
+				Attributes: map[string]string{
+					"SentTimestamp": "1722268800000",
+				},
+			},
+			expected: 1722268800000,
+		},
+		{
+			name: "missing timestamp",
+			message: Message{
+				MessageId:  "msg2",
+				Attributes: map[string]string{},
+			},
+			expected: 0,
+		},
+		{
+			name: "invalid timestamp format",
+			message: Message{
+				MessageId: "msg3",
+				Attributes: map[string]string{
+					"SentTimestamp": "invalid-timestamp",
+				},
+			},
+			expected: 0,
+		},
+		{
+			name: "zero timestamp",
+			message: Message{
+				MessageId: "msg4",
+				Attributes: map[string]string{
+					"SentTimestamp": "0",
+				},
+			},
+			expected: 0,
+		},
+		{
+			name: "negative timestamp",
+			message: Message{
+				MessageId: "msg5",
+				Attributes: map[string]string{
+					"SentTimestamp": "-1000",
+				},
+			},
+			expected: -1000,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getTimestampFromMessage(tt.message)
+			if result != tt.expected {
+				t.Errorf("expected %d, got %d", tt.expected, result)
 			}
 		})
 	}

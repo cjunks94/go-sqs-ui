@@ -33,11 +33,11 @@ export class MessageHandler extends UIComponent {
             this.displayMessages(messages);
         } catch (error) {
             console.error('Error loading messages:', error);
-            this.setContent('<div class="error-message">Failed to load messages. Please try again.</div>');
+            this.setContent('<div class="error-message">Failed to load messages: ' + error.message + '</div>');
         }
     }
 
-    displayMessages(messages, append = false) {
+    displayMessages(messages, append = false, prepend = false) {
         // Validate input
         if (!Array.isArray(messages)) {
             console.warn('displayMessages called with non-array:', messages);
@@ -50,37 +50,84 @@ export class MessageHandler extends UIComponent {
             return;
         }
 
-        if (!append) {
+        // For initial load (not append, not prepend), clear and rebuild 
+        if (!append && !prepend) {
             this.setContent('');
             this.appState.setMessages(messages);
             this.removeShowMoreButton();
-        } else {
+        } else if (append) {
+            // Append mode - add to existing messages
             this.removeShowMoreButton();
+            this.appState.setMessages(messages, true);
+        } else if (prepend) {
+            // Prepend mode - add new messages at the beginning
+            const currentMessages = this.appState.getMessages();
+            const newMessages = this.deduplicateMessages(messages, currentMessages);
+            if (newMessages.length === 0) {
+                return; // No new messages to add
+            }
+            this.appState.setMessages([...newMessages, ...currentMessages]);
         }
 
-        this.appState.setMessages(messages, append);
         const allMessages = this.appState.getMessages();
 
-        if (allMessages.length === 0 && !append) {
+        if (allMessages.length === 0 && !append && !prepend) {
             this.setContent('<div class="no-messages">No messages found in this queue</div>');
             return;
         }
 
-        const messagesToShow = append ? messages : allMessages;
+        // Sort messages by timestamp (newest first)
+        const sortedMessages = [...allMessages].sort((a, b) => {
+            const timeA = parseInt(a.attributes?.SentTimestamp || '0');
+            const timeB = parseInt(b.attributes?.SentTimestamp || '0');
+            return timeB - timeA;
+        });
+
+
+        // Determine which messages to display
+        let messagesToShow;
+        if (prepend) {
+            messagesToShow = this.deduplicateMessages(messages, this.getDisplayedMessages());
+        } else if (append) {
+            // For append, use all sorted messages to ensure proper order
+            messagesToShow = sortedMessages;
+        } else {
+            // For initial load, use the sorted messages
+            messagesToShow = sortedMessages;
+        }
+
         
+        // For initial loads and appends, clear the DOM completely to ensure proper order
+        if (!prepend) {
+            // Clear all existing message elements but keep other elements like "no messages" text
+            const messageItems = this.element.querySelectorAll('.message-item');
+            messageItems.forEach(item => item.remove());
+        }
+
         messagesToShow.forEach((message, index) => {
             try {
-                const actualIndex = append ? allMessages.length - messages.length + index : index;
-                const messageRow = this.createMessageRow(message, actualIndex);
+                const messageRow = this.createMessageRow(message, index);
                 if (messageRow && this.element) {
-                    this.element.appendChild(messageRow);
+                    if (prepend) {
+                        // Insert new messages at the top
+                        const firstMessage = this.element.querySelector('.message-item');
+                        if (firstMessage) {
+                            this.element.insertBefore(messageRow, firstMessage);
+                        } else {
+                            this.element.appendChild(messageRow);
+                        }
+                    } else {
+                        // For initial load and append, add in sorted order
+                        this.element.appendChild(messageRow);
+                    }
                 }
             } catch (error) {
                 console.error('Error creating message row:', error, message);
             }
         });
 
-        if (messages.length > 0) {
+        // Add "Show More" button for initial load and append operations
+        if (messages.length > 0 && !prepend) {
             this.addShowMoreButton();
         }
 
@@ -90,9 +137,76 @@ export class MessageHandler extends UIComponent {
         }, 100);
     }
 
+    /**
+     * Remove duplicate messages based on MessageId
+     * @param {Array} newMessages - New messages to check
+     * @param {Array} existingMessages - Currently displayed messages
+     * @returns {Array} Deduplicated new messages
+     */
+    deduplicateMessages(newMessages, existingMessages) {
+        if (!Array.isArray(existingMessages) || existingMessages.length === 0) {
+            return newMessages;
+        }
+
+        const existingIds = new Set(existingMessages.map(msg => msg.messageId));
+        return newMessages.filter(msg => !existingIds.has(msg.messageId));
+    }
+
+    /**
+     * Get currently displayed messages from DOM
+     * @returns {Array} Array of message objects currently in DOM
+     */
+    getDisplayedMessages() {
+        const displayedMessages = [];
+        const messageElements = this.element.querySelectorAll('.message-item');
+        
+        messageElements.forEach(element => {
+            const messageId = element.dataset.messageId;
+            if (messageId) {
+                // Find the message object in app state
+                const message = this.appState.getMessages().find(msg => msg.messageId === messageId);
+                if (message) {
+                    displayedMessages.push(message);
+                }
+            }
+        });
+        
+        return displayedMessages;
+    }
+
+    /**
+     * Manage scroll position during message updates
+     * @param {boolean} scrollToTop - Whether to scroll to top after update
+     */
+    manageScrollPosition(scrollToTop = false) {
+        if (!this.element) return;
+
+        const messageContainer = this.element.closest('.message-list') || this.element;
+        
+        if (scrollToTop) {
+            // Smooth scroll to top to show newest messages
+            messageContainer.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        // If scrollToTop is false, maintain current scroll position (default behavior)
+    }
+
+    /**
+     * Check if user is scrolled near the top (within 100px)
+     * @returns {boolean} True if user is near the top
+     */
+    isUserNearTop() {
+        if (!this.element) return true;
+
+        const messageContainer = this.element.closest('.message-list') || this.element;
+        return messageContainer.scrollTop < 100;
+    }
+
     createMessageRow(message, index) {
         const messageItem = document.createElement('div');
-        messageItem.className = `message-row ${index % 2 === 0 ? 'message-row-even' : 'message-row-odd'}`;
+        messageItem.className = `message-item message-row ${index % 2 === 0 ? 'message-row-even' : 'message-row-odd'}`;
         messageItem.setAttribute('data-message-id', message.messageId);
 
         const collapsedView = this.createCollapsedView(message);
@@ -240,6 +354,9 @@ export class MessageHandler extends UIComponent {
     }
 
     addShowMoreButton() {
+        // Remove any existing buttons first to prevent duplicates
+        this.removeShowMoreButton();
+        
         const showMoreBtn = document.createElement('button');
         showMoreBtn.className = 'btn btn-secondary show-more-messages-btn';
         showMoreBtn.textContent = 'Show More Messages';
@@ -250,10 +367,9 @@ export class MessageHandler extends UIComponent {
     }
 
     removeShowMoreButton() {
-        const existingShowMore = this.element.querySelector('.show-more-messages-btn');
-        if (existingShowMore) {
-            existingShowMore.remove();
-        }
+        // Remove all show more buttons to prevent duplicates
+        const existingShowMore = this.element.querySelectorAll('.show-more-messages-btn');
+        existingShowMore.forEach(button => button.remove());
     }
 
     async loadMoreMessages() {
@@ -279,6 +395,7 @@ export class MessageHandler extends UIComponent {
             }
         } catch (error) {
             console.error('Error loading more messages:', error);
+            this.showErrorBanner('Failed to load more messages: ' + error.message);
             if (showMoreBtn) {
                 showMoreBtn.textContent = 'Show More Messages';
                 showMoreBtn.disabled = false;
