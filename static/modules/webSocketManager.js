@@ -51,11 +51,10 @@ export class WebSocketManager {
             // Validate messages data before processing
             if (Array.isArray(data.messages)) {
                 try {
-                    // For now, keep WebSocket simple - just replace messages like before
-                    // We can improve this later once basic functionality is working
-                    this.messageHandler.displayMessages(data.messages);
+                    // Use merge strategy to preserve UI state
+                    this.messageHandler.mergeMessages(data.messages);
                 } catch (error) {
-                    console.error('Error displaying WebSocket messages:', error);
+                    console.error('Error merging WebSocket messages:', error);
                 }
             } else {
                 console.warn('WebSocket messages data is not an array:', data.messages);

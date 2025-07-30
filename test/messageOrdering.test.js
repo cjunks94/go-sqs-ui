@@ -1,6 +1,6 @@
 /**
  * Message Ordering Tests
- * Tests for ensuring messages are properly sorted by timestamp (newest first)
+ * Tests for ensuring messages are properly sorted by timestamp (oldest first)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -53,7 +53,7 @@ describe('Message Timestamp Ordering', () => {
         messageHandler = new MessageHandler(appState);
     });
 
-    it('should sort messages by SentTimestamp in descending order (newest first)', () => {
+    it('should sort messages by SentTimestamp in ascending order (oldest first)', () => {
         // Create test messages with different timestamps (current realistic dates)
         const messages = [
             {
@@ -95,9 +95,9 @@ describe('Message Timestamp Ordering', () => {
         // Extract the message IDs in display order
         const displayedOrder = Array.from(messageElements).map(el => el.dataset.messageId);
 
-        // Expected order: newest to oldest timestamp
-        // July 30 evening (msg2) -> July 30 morning (msg4) -> July 29 (msg1) -> July 28 afternoon (msg5) -> July 28 morning (msg3)
-        const expectedOrder = ['msg2', 'msg4', 'msg1', 'msg5', 'msg3'];
+        // Expected order: oldest to newest timestamp
+        // July 28 morning (msg3) -> July 28 afternoon (msg5) -> July 29 (msg1) -> July 30 morning (msg4) -> July 30 evening (msg2)
+        const expectedOrder = ['msg3', 'msg5', 'msg1', 'msg4', 'msg2'];
 
         expect(displayedOrder).toEqual(expectedOrder);
     });
@@ -129,8 +129,8 @@ describe('Message Timestamp Ordering', () => {
         // Messages with timestamps should come first, then messages without (treated as timestamp 0)
         const displayedOrder = Array.from(messageElements).map(el => el.dataset.messageId);
         
-        // Expected: msg1 (July 30), msg3 (July 29), msg2 (no timestamp - treated as 0)
-        const expectedOrder = ['msg1', 'msg3', 'msg2'];
+        // Expected: msg2 (no timestamp - treated as 0), msg3 (July 29), msg1 (July 30)
+        const expectedOrder = ['msg2', 'msg3', 'msg1'];
         expect(displayedOrder).toEqual(expectedOrder);
     });
 
@@ -156,8 +156,8 @@ describe('Message Timestamp Ordering', () => {
         // Should handle both formats correctly
         const displayedOrder = Array.from(messageElements).map(el => el.dataset.messageId);
         
-        // msg1 (July 30) should come before msg2 (July 29)
-        expect(displayedOrder).toEqual(['msg1', 'msg2']);
+        // msg2 (July 29) should come before msg1 (July 30)
+        expect(displayedOrder).toEqual(['msg2', 'msg1']);
     });
 
     it('should maintain sort order when messages have identical timestamps', () => {
@@ -187,9 +187,9 @@ describe('Message Timestamp Ordering', () => {
         // Messages with same timestamp should maintain relative order, both before older message
         const displayedOrder = Array.from(messageElements).map(el => el.dataset.messageId);
         
-        // msg1 and msg2 should both come before msg3
-        expect(displayedOrder.indexOf('msg1')).toBeLessThan(displayedOrder.indexOf('msg3'));
-        expect(displayedOrder.indexOf('msg2')).toBeLessThan(displayedOrder.indexOf('msg3'));
+        // msg3 (July 29) should come before msg1 and msg2 (July 30)
+        expect(displayedOrder.indexOf('msg3')).toBeLessThan(displayedOrder.indexOf('msg1'));
+        expect(displayedOrder.indexOf('msg3')).toBeLessThan(displayedOrder.indexOf('msg2'));
     });
 
     it('should sort messages correctly on append operations', () => {
@@ -223,10 +223,10 @@ describe('Message Timestamp Ordering', () => {
         const messageElements = mockElement.querySelectorAll('.message-item');
         expect(messageElements).toHaveLength(3);
 
-        // Should be sorted newest first across all messages
+        // Should be sorted oldest first across all messages
         const displayedOrder = Array.from(messageElements).map(el => el.dataset.messageId);
         
-        // Expected: msg2 (July 30) -> msg1 (July 29) -> msg3 (July 28)
-        expect(displayedOrder).toEqual(['msg2', 'msg1', 'msg3']);
+        // Expected: msg3 (July 28) -> msg1 (July 29) -> msg2 (July 30)
+        expect(displayedOrder).toEqual(['msg3', 'msg1', 'msg2']);
     });
 });

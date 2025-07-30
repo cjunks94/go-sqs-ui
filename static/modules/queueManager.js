@@ -50,16 +50,43 @@ export class QueueManager extends UIComponent {
     }
 
     createQueueItem(queue) {
-        const queueItem = document.createElement('div');
+        const queueItem = document.createElement('li');
         queueItem.className = 'queue-item';
-        queueItem.textContent = queue.name;
         queueItem.style.opacity = '0';
         queueItem.style.transform = 'translateY(10px)';
         
-        // Add DLQ detection and styling
-        enhanceQueueElement(queueItem, queue);
+        // Create queue link structure
+        const queueLink = document.createElement('a');
+        queueLink.className = 'queue-link';
+        queueLink.href = '#';
         
-        queueItem.onclick = () => this.selectQueue(queue, queueItem);
+        // Queue name
+        const queueName = document.createElement('div');
+        queueName.className = 'queue-name';
+        queueName.textContent = queue.name;
+        
+        // Queue metadata (message count)
+        const queueMeta = document.createElement('div');
+        queueMeta.className = 'queue-meta';
+        
+        const messageCount = document.createElement('span');
+        messageCount.className = 'queue-count';
+        messageCount.textContent = `${queue.attributes?.ApproximateNumberOfMessages || 0} messages`;
+        
+        queueMeta.appendChild(messageCount);
+        
+        // Assemble the structure
+        queueLink.appendChild(queueName);
+        queueLink.appendChild(queueMeta);
+        queueItem.appendChild(queueLink);
+        
+        // Add DLQ detection and styling (will add DLQ badge if needed)
+        enhanceQueueElement(queueMeta, queue);
+        
+        queueLink.onclick = (e) => {
+            e.preventDefault();
+            this.selectQueue(queue, queueItem);
+        };
         
         // Animate in
         requestAnimationFrame(() => {

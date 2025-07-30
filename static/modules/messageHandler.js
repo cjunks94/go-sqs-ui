@@ -76,11 +76,11 @@ export class MessageHandler extends UIComponent {
             return;
         }
 
-        // Sort messages by timestamp (newest first)
+        // Sort messages by timestamp (oldest first)
         const sortedMessages = [...allMessages].sort((a, b) => {
             const timeA = parseInt(a.attributes?.SentTimestamp || '0');
             const timeB = parseInt(b.attributes?.SentTimestamp || '0');
-            return timeB - timeA;
+            return timeA - timeB;
         });
 
 
@@ -233,6 +233,12 @@ export class MessageHandler extends UIComponent {
         const collapsedView = document.createElement('div');
         collapsedView.className = 'message-collapsed';
 
+        // Add checkbox for batch selection
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'message-checkbox';
+        checkbox.onclick = (e) => e.stopPropagation();
+
         const expandIcon = document.createElement('span');
         expandIcon.className = 'expand-icon';
         expandIcon.textContent = '▶';
@@ -249,6 +255,7 @@ export class MessageHandler extends UIComponent {
         messagePreview.appendChild(previewText);
         messagePreview.appendChild(messageId);
 
+        collapsedView.appendChild(checkbox);
         collapsedView.appendChild(expandIcon);
         collapsedView.appendChild(messagePreview);
         collapsedView.appendChild(deleteBtn);
@@ -502,5 +509,92 @@ export class MessageHandler extends UIComponent {
         if (messagesHeader) {
             messagesSection.insertBefore(filterUI, messagesHeader.nextSibling);
         }
+
+        // Check if current queue is DLQ and show/hide retry button
+        const currentQueue = this.appState.getCurrentQueue();
+        if (currentQueue) {
+            const isDLQ = currentQueue.isDLQ || false;
+            this.messageFilter.setDLQMode(isDLQ);
+        }
+    }
+
+    /**
+     * Merge new messages with existing ones, preserving UI state
+     * @param {Array} newMessages - New messages from WebSocket
+     */
+    mergeMessages(newMessages) {
+        if (!Array.isArray(newMessages)) return;
+
+        const currentMessages = this.appState.getMessages();
+        
+        // Create a map of current messages by ID for quick lookup
+        const currentMap = new Map(currentMessages.map(msg => [msg.messageId, msg]));
+        
+        // Track which messages are expanded
+        const expandedMessageIds = new Set();
+        document.querySelectorAll('.message-item.expanded').forEach(item => {
+            const messageId = item.getAttribute('data-message-id');
+            if (messageId) expandedMessageIds.add(messageId);
+        });
+        
+        // Track current scroll position
+        const messageContainer = this.element.closest('.message-list') || this.element;
+        const scrollTop = messageContainer.scrollTop;
+        
+        // Create merged message list
+        const mergedMessages = [];
+        const seenIds = new Set();
+        
+        // Add all new messages, updating existing ones
+        newMessages.forEach(newMsg => {
+            seenIds.add(newMsg.messageId);
+            mergedMessages.push(newMsg);
+        });
+        
+        // Add existing messages that aren't in the new set (deleted from queue)
+        currentMessages.forEach(msg => {
+            if (!seenIds.has(msg.messageId)) {
+                // Message was deleted from queue, don't include it
+                return;
+            }
+        });
+        
+        // Update state
+        this.appState.setMessages(mergedMessages);
+        
+        // Sort messages by timestamp (oldest first)
+        const sortedMessages = [...mergedMessages].sort((a, b) => {
+            const timeA = parseInt(a.attributes?.SentTimestamp || '0');
+            const timeB = parseInt(b.attributes?.SentTimestamp || '0');
+            return timeA - timeB;
+        });
+        
+        // Clear and rebuild the display
+        this.element.innerHTML = '';
+        
+        // Render messages
+        sortedMessages.forEach((message, index) => {
+            const messageRow = this.createMessageRow(message, index);
+            this.element.appendChild(messageRow);
+            
+            // Restore expanded state
+            if (expandedMessageIds.has(message.messageId)) {
+                const messageItem = messageRow;
+                messageItem.classList.add('expanded');
+                const expandedView = messageItem.querySelector('.message-expanded');
+                if (expandedView) {
+                    expandedView.classList.remove('hidden');
+                }
+            }
+        });
+        
+        // Apply filters if any
+        const currentFilter = this.messageFilter.getCurrentFilter();
+        if (currentFilter) {
+            this.applyFilter(currentFilter);
+        }
+        
+        // Restore scroll position
+        messageContainer.scrollTop = scrollTop;
     }
 }

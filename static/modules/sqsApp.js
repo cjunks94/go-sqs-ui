@@ -10,6 +10,7 @@ import { MessageHandler } from './messageHandler.js';
 import { MessageSender } from './messageSender.js';
 import { WebSocketManager } from './webSocketManager.js';
 import { UIToggleManager } from './uiToggleManager.js';
+import { APIService } from './apiService.js';
 
 export class SQSApp {
     constructor() {
@@ -66,6 +67,76 @@ export class SQSApp {
         window.toggleQueuesSection = () => UIToggleManager.toggleSection('queuesContent', 'queuesToggleIcon');
         window.toggleQueueAttributes = () => UIToggleManager.toggleSection('queueAttributes', 'queueToggleIcon');
         window.toggleSendMessage = () => UIToggleManager.toggleSection('sendMessageSection', 'sendToggleIcon');
+
+        // Batch operations
+        window.addEventListener('batchDelete', async (event) => {
+            const { messageIds } = event.detail;
+            await this.handleBatchDelete(messageIds);
+        });
+
+        window.addEventListener('batchRetry', async (event) => {
+            const { messageIds } = event.detail;
+            await this.handleBatchRetry(messageIds);
+        });
+    }
+
+    async handleBatchDelete(messageIds) {
+        const currentQueue = this.appState.getCurrentQueue();
+        if (!currentQueue || messageIds.length === 0) return;
+
+        try {
+            // Get messages from app state to find receipt handles
+            const messages = this.appState.getMessages();
+            const messagesToDelete = messages.filter(msg => messageIds.includes(msg.messageId));
+            
+            // Delete messages one by one (could be optimized with batch API in future)
+            for (const message of messagesToDelete) {
+                await APIService.deleteMessage(currentQueue.url, message.receiptHandle);
+            }
+            
+            // Refresh message list
+            await this.messageHandler.loadMessages();
+            
+            // Deselect all checkboxes
+            const checkboxes = document.querySelectorAll('.message-checkbox');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+        } catch (error) {
+            console.error('Error deleting messages:', error);
+            alert('Failed to delete some messages');
+        }
+    }
+
+    async handleBatchRetry(messageIds) {
+        const currentQueue = this.appState.getCurrentQueue();
+        if (!currentQueue || messageIds.length === 0) return;
+
+        try {
+            // Get messages from app state
+            const messages = this.appState.getMessages();
+            const messagesToRetry = messages.filter(msg => messageIds.includes(msg.messageId));
+            
+            // Get source queue URL from redrive policy
+            const sourceQueueUrl = currentQueue.sourceQueueUrl;
+            if (!sourceQueueUrl) {
+                alert('Could not determine source queue for retry');
+                return;
+            }
+            
+            // Retry messages one by one
+            for (const message of messagesToRetry) {
+                await APIService.retryMessage(currentQueue.url, message, sourceQueueUrl);
+            }
+            
+            // Refresh message list
+            await this.messageHandler.loadMessages();
+            
+            // Deselect all checkboxes
+            const checkboxes = document.querySelectorAll('.message-checkbox');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+        } catch (error) {
+            console.error('Error retrying messages:', error);
+            alert('Failed to retry some messages');
+        }
     }
 
     cleanup() {

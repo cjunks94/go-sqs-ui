@@ -80,19 +80,23 @@ export function getDLQIndicator() {
  */
 export function enhanceQueueElement(element, queue) {
     if (isDLQ(queue)) {
-        element.classList.add('dlq-queue');
+        // Find the parent queue-item to add the class
+        const queueItem = element.closest('.queue-item');
+        if (queueItem) {
+            queueItem.classList.add('dlq-queue');
+        }
         
-        // Add DLQ indicator
+        // Add DLQ indicator badge
         const indicator = document.createElement('span');
-        indicator.className = 'dlq-indicator';
+        indicator.className = 'dlq-badge';
         indicator.title = 'Dead Letter Queue';
         indicator.textContent = 'DLQ';
         element.appendChild(indicator);
         
         // Add source queue info if available
         const sourceQueue = getSourceQueue(queue.name);
-        if (sourceQueue) {
-            element.setAttribute('data-source-queue', sourceQueue);
+        if (sourceQueue && queueItem) {
+            queueItem.setAttribute('data-source-queue', sourceQueue);
         }
     }
 }

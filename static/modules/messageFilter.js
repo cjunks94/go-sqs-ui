@@ -128,6 +128,10 @@ export class MessageFilter {
         const container = document.createElement('div');
         container.className = 'message-filter-container';
 
+        // Search input container
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'search-input-container';
+
         const filterInput = document.createElement('input');
         filterInput.type = 'text';
         filterInput.className = 'message-filter-input';
@@ -161,8 +165,48 @@ export class MessageFilter {
             this.notifyFilterChange('');
         });
 
-        container.appendChild(filterInput);
-        container.appendChild(clearButton);
+        searchContainer.appendChild(filterInput);
+        searchContainer.appendChild(clearButton);
+
+        // Batch controls container
+        const batchControls = document.createElement('div');
+        batchControls.className = 'batch-controls';
+
+        // Select All button
+        const selectAllBtn = document.createElement('button');
+        selectAllBtn.className = 'btn btn-secondary';
+        selectAllBtn.textContent = 'Select All';
+        selectAllBtn.onclick = () => this.handleSelectAll();
+
+        // Deselect All button
+        const deselectAllBtn = document.createElement('button');
+        deselectAllBtn.className = 'btn btn-secondary';
+        deselectAllBtn.textContent = 'Deselect All';
+        deselectAllBtn.onclick = () => this.handleDeselectAll();
+
+        // Delete Selected button
+        const deleteSelectedBtn = document.createElement('button');
+        deleteSelectedBtn.className = 'btn btn-danger';
+        deleteSelectedBtn.textContent = 'Delete Selected';
+        deleteSelectedBtn.onclick = () => this.handleDeleteSelected();
+
+        // Retry Selected button (only for DLQ)
+        const retrySelectedBtn = document.createElement('button');
+        retrySelectedBtn.className = 'btn btn-success';
+        retrySelectedBtn.textContent = 'Retry Selected';
+        retrySelectedBtn.style.display = 'none'; // Hidden by default
+        retrySelectedBtn.onclick = () => this.handleRetrySelected();
+
+        batchControls.appendChild(selectAllBtn);
+        batchControls.appendChild(deselectAllBtn);
+        batchControls.appendChild(deleteSelectedBtn);
+        batchControls.appendChild(retrySelectedBtn);
+
+        container.appendChild(searchContainer);
+        container.appendChild(batchControls);
+
+        // Store references for later use
+        this.retryButton = retrySelectedBtn;
 
         return container;
     }
@@ -217,5 +261,79 @@ export class MessageFilter {
             input.value = filter;
         }
         this.notifyFilterChange(filter);
+    }
+
+    /**
+     * Handle Select All button click
+     */
+    handleSelectAll() {
+        const checkboxes = document.querySelectorAll('.message-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = true);
+    }
+
+    /**
+     * Handle Deselect All button click
+     */
+    handleDeselectAll() {
+        const checkboxes = document.querySelectorAll('.message-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+    }
+
+    /**
+     * Handle Delete Selected button click
+     */
+    handleDeleteSelected() {
+        const selectedMessages = this.getSelectedMessages();
+        if (selectedMessages.length === 0) {
+            alert('No messages selected');
+            return;
+        }
+
+        if (confirm(`Delete ${selectedMessages.length} selected messages?`)) {
+            // Trigger batch delete event
+            window.dispatchEvent(new CustomEvent('batchDelete', { 
+                detail: { messageIds: selectedMessages } 
+            }));
+        }
+    }
+
+    /**
+     * Handle Retry Selected button click
+     */
+    handleRetrySelected() {
+        const selectedMessages = this.getSelectedMessages();
+        if (selectedMessages.length === 0) {
+            alert('No messages selected');
+            return;
+        }
+
+        if (confirm(`Retry ${selectedMessages.length} selected messages?`)) {
+            // Trigger batch retry event
+            window.dispatchEvent(new CustomEvent('batchRetry', { 
+                detail: { messageIds: selectedMessages } 
+            }));
+        }
+    }
+
+    /**
+     * Get selected message IDs
+     * @returns {string[]} Array of selected message IDs
+     */
+    getSelectedMessages() {
+        const selectedCheckboxes = document.querySelectorAll('.message-checkbox:checked');
+        return Array.from(selectedCheckboxes).map(checkbox => {
+            const messageItem = checkbox.closest('.message-item');
+            return messageItem ? messageItem.getAttribute('data-message-id') : null;
+        }).filter(id => id !== null);
+    }
+
+    /**
+     * Show/hide retry button based on queue type
+     * @param {boolean} isDLQ - Whether current queue is a DLQ
+     */
+    setDLQMode(isDLQ) {
+        if (this.retryButton) {
+            this.retryButton.style.display = isDLQ ? 'inline-flex' : 'none';
+        }
     }
 }
