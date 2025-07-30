@@ -24,11 +24,12 @@ export function isDLQ(queue) {
         return true;
     }
     
-    // Check if queue has redrive policy (indicates it's a DLQ target)
-    if (queue.attributes && queue.attributes.RedrivePolicy) {
+    // Check if queue has redrive allow policy (indicates it's a DLQ)
+    // DLQs have RedriveAllowPolicy, source queues have RedrivePolicy
+    if (queue.attributes && queue.attributes.RedriveAllowPolicy) {
         try {
-            const policy = JSON.parse(queue.attributes.RedrivePolicy);
-            if (policy.deadLetterTargetArn) {
+            const policy = JSON.parse(queue.attributes.RedriveAllowPolicy);
+            if (policy.redrivePermission && policy.sourceQueueArns) {
                 return true;
             }
         } catch (e) {

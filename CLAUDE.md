@@ -64,6 +64,35 @@ Key DLQ features to prioritize:
 - Backend: Aim for 80%+ coverage
 - Integration tests for critical paths
 
+## Recent Stability Improvements
+
+### Major Bug Fixes (Latest Release)
+The following critical issues have been resolved:
+
+1. **DLQ Detection Logic Fixed** ⚠️ **Breaking Change**
+   - **Issue**: Source queues were incorrectly marked as DLQ, actual DLQ queues weren't marked
+   - **Root Cause**: Detection logic was using `RedrivePolicy` (source → DLQ) instead of `RedriveAllowPolicy` (DLQ ← source)
+   - **Fix**: Updated `dlqDetection.js` to properly identify DLQ queues
+   - **Impact**: DLQ badges now appear on correct queues only
+
+2. **Duplicate Filter UI Eliminated**
+   - **Issue**: New search filter input added every time user selected a queue
+   - **Root Cause**: `addFilterUI()` didn't check for existing filter elements
+   - **Fix**: Added cleanup logic to remove existing filters before adding new ones
+   - **Impact**: Clean, single search interface per queue
+
+3. **WebSocket Error Handling Enhanced**
+   - **Issue**: JavaScript errors when WebSocket received null/invalid message data
+   - **Root Cause**: Missing validation in message processing pipeline
+   - **Fix**: Added comprehensive data validation and error boundaries
+   - **Impact**: Robust real-time updates without console errors
+
+4. **DOM Null Pointer Safety**
+   - **Issue**: "Cannot set properties of null" errors in message display
+   - **Root Cause**: Attempting to set onclick handlers on non-existent DOM elements
+   - **Fix**: Added defensive null checks throughout UI components
+   - **Impact**: Error-free message expansion and interaction
+
 ## Project References
 
 - **Current TODOs and Planning**: See `PLAN.md`

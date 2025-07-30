@@ -6,10 +6,12 @@ This document contains the development roadmap, TODOs, and planning outputs for 
 
 ### Priority 1 - Core DLQ Functionality (Immediate)
 
-#### 1. DLQ Detection & Identification ✅
+#### 1. DLQ Detection & Identification ✅ **STABLE**
 - [x] Auto-detect DLQ queues (ending with `-dlq`, `-DLQ`, or tagged as DLQ)
 - [x] Visual indicator for DLQ queues (different color/icon)
 - [x] Display source queue relationship
+- [x] **BUG FIX**: Corrected DLQ detection logic to use `RedriveAllowPolicy` instead of `RedrivePolicy`
+- [x] **BUG FIX**: Fixed inverted DLQ badge display (DLQ queues now properly marked)
 
 #### 2. Enhanced Message View for Debugging ✅
 - [x] Expandable message detail view showing:
@@ -38,6 +40,27 @@ This document contains the development roadmap, TODOs, and planning outputs for 
 - [x] Filter by message attributes
 - [x] Filter by error type/reason (if available in attributes)
 - [ ] Save/load filter presets
+
+## Recent Stability Improvements ✅ **STABLE**
+
+### Bug Fixes (Latest Release)
+- [x] **DLQ Detection Logic Fix**: Corrected fundamental issue where source queues were incorrectly marked as DLQ
+  - Fixed detection to use `RedriveAllowPolicy` (DLQ characteristic) instead of `RedrivePolicy` (source queue characteristic)
+  - Updated tests to reflect correct behavior
+- [x] **Duplicate Filter UI Fix**: Prevented multiple search filter inputs from being added on queue selection
+- [x] **WebSocket Error Handling**: Added comprehensive error handling for WebSocket message processing
+  - Null/undefined data validation
+  - Array type checking for message data
+  - DOM element existence validation
+- [x] **UI Null Pointer Safety**: Added defensive programming to prevent null pointer exceptions
+  - Safe DOM element access with null checks
+  - Try/catch blocks around DOM manipulation
+  - Graceful fallback for missing elements
+
+### Test Coverage
+- [x] All 94 frontend tests passing
+- [x] All Go backend tests passing
+- [x] Added test for corrected DLQ detection behavior
 
 ### Priority 2 - Advanced DLQ Features
 

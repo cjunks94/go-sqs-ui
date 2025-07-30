@@ -30,7 +30,7 @@ describe('DLQ Detection', () => {
         it('should detect queues with dlq in attributes', () => {
             expect(isDLQ({ 
                 name: 'failed-messages',
-                attributes: { 'RedrivePolicy': '{"deadLetterTargetArn":"arn:aws:sqs:us-east-1:123456789012:my-queue"}' }
+                attributes: { 'RedriveAllowPolicy': '{"redrivePermission":"byQueue","sourceQueueArns":["arn:aws:sqs:us-east-1:123456789012:source-queue"]}' }
             })).toBe(true);
         });
 
@@ -39,6 +39,13 @@ describe('DLQ Detection', () => {
             expect(isDLQ({ name: 'user-notifications' })).toBe(false);
             expect(isDLQ({ name: 'dlq-monitor' })).toBe(false);
             expect(isDLQ({ name: 'handle-dlq-messages' })).toBe(false);
+        });
+
+        it('should not detect source queues with RedrivePolicy as DLQ', () => {
+            expect(isDLQ({ 
+                name: 'source-queue',
+                attributes: { 'RedrivePolicy': '{"deadLetterTargetArn":"arn:aws:sqs:us-east-1:123456789012:my-dlq","maxReceiveCount":3}' }
+            })).toBe(false);
         });
     });
 

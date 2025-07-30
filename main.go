@@ -51,9 +51,8 @@ func main() {
 		log.Fatal("Failed to create static subdirectory:", err)
 	}
 
-	static := r.PathPrefix("/").Subrouter()
-	static.Use(loggingMiddleware)
-	static.PathPrefix("/").Handler(http.FileServer(http.FS(staticSubFS)))
+	// Serve static files (this will handle root path too)
+	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.FS(staticSubFS))))
 
 	log.Printf("Server starting on port %s", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {

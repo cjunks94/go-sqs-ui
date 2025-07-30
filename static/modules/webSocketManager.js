@@ -38,11 +38,26 @@ export class WebSocketManager {
     }
 
     handleMessage(data) {
+        if (!data || typeof data !== 'object') {
+            console.warn('Invalid WebSocket message data:', data);
+            return;
+        }
+
         const currentQueue = this.appState.getCurrentQueue();
         if (data.type === 'messages' && 
             data.queueUrl === currentQueue?.url && 
             !this.appState.isMessagesPausedState()) {
-            this.messageHandler.displayMessages(data.messages);
+            
+            // Validate messages data before processing
+            if (Array.isArray(data.messages)) {
+                try {
+                    this.messageHandler.displayMessages(data.messages);
+                } catch (error) {
+                    console.error('Error displaying WebSocket messages:', error);
+                }
+            } else {
+                console.warn('WebSocket messages data is not an array:', data.messages);
+            }
         }
     }
 

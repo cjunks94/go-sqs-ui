@@ -38,6 +38,18 @@ export class MessageHandler extends UIComponent {
     }
 
     displayMessages(messages, append = false) {
+        // Validate input
+        if (!Array.isArray(messages)) {
+            console.warn('displayMessages called with non-array:', messages);
+            return;
+        }
+
+        // Ensure we have a valid DOM element
+        if (!this.element) {
+            console.error('Message handler element not found');
+            return;
+        }
+
         if (!append) {
             this.setContent('');
             this.appState.setMessages(messages);
@@ -57,9 +69,15 @@ export class MessageHandler extends UIComponent {
         const messagesToShow = append ? messages : allMessages;
         
         messagesToShow.forEach((message, index) => {
-            const actualIndex = append ? allMessages.length - messages.length + index : index;
-            const messageRow = this.createMessageRow(message, actualIndex);
-            this.element.appendChild(messageRow);
+            try {
+                const actualIndex = append ? allMessages.length - messages.length + index : index;
+                const messageRow = this.createMessageRow(message, actualIndex);
+                if (messageRow && this.element) {
+                    this.element.appendChild(messageRow);
+                }
+            } catch (error) {
+                console.error('Error creating message row:', error, message);
+            }
         });
 
         if (messages.length > 0) {
@@ -81,7 +99,15 @@ export class MessageHandler extends UIComponent {
         const expandedView = this.createExpandedView(message);
 
         collapsedView.onclick = () => this.toggleMessageExpansion(messageItem);
-        expandedView.querySelector('.message-expanded-header').onclick = () => this.toggleMessageExpansion(messageItem);
+        
+        // Add click handler to expanded view - check if header exists first
+        const expandedHeader = expandedView.querySelector('.message-expanded-header');
+        if (expandedHeader) {
+            expandedHeader.onclick = () => this.toggleMessageExpansion(messageItem);
+        } else {
+            // If no specific header, make the entire expanded view clickable to collapse
+            expandedView.onclick = () => this.toggleMessageExpansion(messageItem);
+        }
 
         messageItem.appendChild(collapsedView);
         messageItem.appendChild(expandedView);
@@ -346,6 +372,12 @@ export class MessageHandler extends UIComponent {
     addFilterUI() {
         const messagesSection = document.querySelector('.messages-section');
         if (!messagesSection) return;
+        
+        // Remove any existing filter UI to prevent duplicates
+        const existingFilter = messagesSection.querySelector('.message-filter-container');
+        if (existingFilter) {
+            existingFilter.remove();
+        }
         
         const filterUI = this.messageFilter.createFilterUI();
         const messagesHeader = messagesSection.querySelector('.messages-header');
