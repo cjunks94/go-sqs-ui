@@ -14,9 +14,11 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 - ⚡ Modern ES6+ modular JavaScript architecture
 - 🧪 Comprehensive test suite with 112+ tests
 - 🔀 **AWS Context Switching**: Automatic detection and switching between demo and live AWS modes
-- 📅 **Message Ordering**: Consistent chronological ordering (newest first) with backend sorting
+- 📅 **Message Ordering**: Consistent chronological ordering (oldest first) for stable message viewing
 - 🔍 **Enhanced DLQ Debugging**: Advanced filtering, search, and retry functionality for Dead Letter Queues
 - 🎭 **Demo Mode**: Built-in demo mode with realistic recent timestamps for development without AWS credentials
+- ✅ **Batch Operations**: Select multiple messages for batch delete or retry operations
+- 🔧 **Smart Message Updates**: WebSocket updates preserve UI state (expanded messages, scroll position)
 
 ## Prerequisites
 
@@ -302,14 +304,16 @@ go test -v ./sqs_test.go
 
 Feel free to open issues or submit pull requests. Some areas for improvement:
 
-- [ ] Add message filtering and search
+- [x] Add message filtering and search (Completed)
 - [ ] Support for message attributes
 - [ ] Queue creation and deletion
-- [ ] Batch operations
+- [x] Batch operations (Completed)
 - [ ] Message visibility timeout adjustment
-- [ ] Dead letter queue management
+- [x] Dead letter queue management (Completed)
 - [ ] CloudWatch metrics integration
 - [ ] Add end-to-end tests
+- [ ] Export messages to CSV/JSON
+- [ ] Queue purge functionality
 
 ## License
 

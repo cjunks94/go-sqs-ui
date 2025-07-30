@@ -29,9 +29,11 @@ This document contains the development roadmap, TODOs, and planning outputs for 
 - [x] Preserve original message attributes
 - [x] Show retry status in real-time via WebSocket
 
-#### 4. Bulk DLQ Operations
-- [ ] "Retry All" button for entire DLQ
-- [ ] Batch retry with configurable batch size
+#### 4. Bulk DLQ Operations ✅
+- [x] Select multiple messages with checkboxes
+- [x] "Select All" / "Deselect All" buttons
+- [x] Batch delete selected messages
+- [x] Batch retry selected messages (DLQ only)
 - [ ] Progress indicator for bulk operations
 - [ ] Ability to pause/resume bulk retry
 
@@ -56,11 +58,21 @@ This document contains the development roadmap, TODOs, and planning outputs for 
   - Safe DOM element access with null checks
   - Try/catch blocks around DOM manipulation
   - Graceful fallback for missing elements
+- [x] **Queue Display Styling Fix**: Fixed sidebar queue items to use proper HTML structure with CSS classes
+  - Added queue-link, queue-name, and queue-meta elements
+  - Properly styled hover effects and visual separation
+  - Fixed DLQ badge positioning
+- [x] **Message Rotation Fix**: Eliminated constant message cycling that made tracking difficult
+  - Implemented intelligent message merging instead of replacement
+  - Preserves UI state (expanded messages, scroll position)
+  - Messages now sorted oldest-first for stability
 
 ### Test Coverage
-- [x] All 94 frontend tests passing
+- [x] All 112 frontend tests passing (updated)
 - [x] All Go backend tests passing
 - [x] Added test for corrected DLQ detection behavior
+- [x] Added tests for message ordering (oldest first)
+- [x] Full test coverage for all new features
 
 ### Priority 2 - Advanced DLQ Features
 
@@ -166,8 +178,11 @@ This document contains the development roadmap, TODOs, and planning outputs for 
    - Copy functionality
 3. **Message Retry** - One-click retry from DLQ to source queue with status feedback
 4. **Message Filtering** - Real-time search by content or attributes (e.g., "ApproximateReceiveCount:5")
+5. **Batch Operations** - Select multiple messages for bulk delete or retry operations
+6. **Stable Message Display** - Messages sorted oldest-first with intelligent merging to prevent rotation
+7. **Improved Queue Styling** - Professional sidebar with proper hover effects and message counts
 
-Total test coverage: 93 tests passing
+Total test coverage: 112 tests passing
 
 ## Planning Session Outputs
 
