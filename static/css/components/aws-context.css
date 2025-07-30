@@ -1,0 +1,275 @@
+/**
+ * AWS Context Component
+ * AWS context display and queue information styling
+ */
+
+/* === AWS CONTEXT SECTION === */
+
+.aws-context-section {
+  margin-bottom: var(--spacing-lg);
+  background-color: var(--color-surface-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.aws-context-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-surface-secondary);
+  border-bottom: 1px solid var(--color-border-tertiary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.aws-context-header:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.aws-context-header h3 {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.aws-context-details {
+  padding: var(--spacing-md);
+  background-color: var(--color-surface-primary);
+  transition: all var(--transition-normal);
+}
+
+.aws-context-details.collapsed {
+  display: none;
+}
+
+.aws-context-table {
+  width: 100%;
+  font-size: var(--font-size-xs);
+  border-collapse: collapse;
+}
+
+.aws-context-table td {
+  padding: var(--spacing-xs) 0;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border-tertiary);
+}
+
+.aws-context-table td:last-child {
+  border-bottom: none;
+}
+
+.aws-context-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  width: 30%;
+  padding-right: var(--spacing-sm);
+}
+
+.aws-context-value {
+  font-family: var(--font-family-monospace);
+  color: var(--color-text-primary);
+  word-break: break-all;
+  font-size: var(--font-size-xs);
+}
+
+/* === QUEUE INFO SECTION === */
+
+.queue-info {
+  background-color: var(--color-surface-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.queue-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border-tertiary);
+  background-color: var(--color-surface-secondary);
+  transition: background-color var(--transition-fast);
+}
+
+.queue-info-header:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.queue-info-header h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.queue-attributes-table {
+  padding: var(--spacing-md);
+  background-color: var(--color-surface-primary);
+}
+
+.queue-attributes-table.collapsed {
+  display: none;
+}
+
+.attributes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.attributes-table td {
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--color-border-tertiary);
+  vertical-align: top;
+}
+
+.attributes-table td:last-child {
+  border-bottom: none;
+}
+
+.attr-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  width: 40%;
+  padding-right: var(--spacing-md);
+}
+
+.attr-value {
+  font-family: var(--font-family-monospace);
+  color: var(--color-text-primary);
+  text-align: right;
+  font-size: var(--font-size-xs);
+}
+
+/* === MESSAGE SECTION === */
+
+.message-section {
+  background-color: var(--color-surface-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.message-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border-tertiary);
+  background-color: var(--color-surface-secondary);
+  transition: background-color var(--transition-fast);
+}
+
+.message-section-header:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.message-section-header h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* === QUEUE HEADER === */
+
+.queue-header {
+  background-color: var(--color-surface-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.queue-header h1 {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  word-break: break-word;
+  line-height: var(--line-height-tight);
+}
+
+/* === NO SELECTION STATE === */
+
+#noQueueSelected {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface-primary);
+  border-radius: var(--radius-lg);
+  margin: var(--spacing-lg);
+}
+
+.no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+  text-align: center;
+  padding: var(--spacing-3xl);
+}
+
+/* === TOGGLE ICONS === */
+
+.toggle-icon {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+  line-height: 1;
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aws-context-header:hover .toggle-icon,
+.queue-info-header:hover .toggle-icon,
+.message-section-header:hover .toggle-icon {
+  color: var(--color-text-secondary);
+}
+
+/* === RESPONSIVE DESIGN === */
+
+@media (max-width: 768px) {
+  .aws-context-table,
+  .attributes-table {
+    font-size: var(--font-size-xs);
+  }
+  
+  .aws-context-label,
+  .attr-label {
+    width: 35%;
+  }
+  
+  .queue-header {
+    padding: var(--spacing-md);
+  }
+  
+  .queue-header h1 {
+    font-size: var(--font-size-xl);
+  }
+  
+  .no-selection {
+    padding: var(--spacing-2xl);
+    font-size: var(--font-size-md);
+  }
+}
