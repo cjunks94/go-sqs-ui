@@ -583,6 +583,11 @@ body {
     background-color: #c82333;
 }
 
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
 .loading {
     text-align: center;
     color: #666;

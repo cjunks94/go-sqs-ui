@@ -2,8 +2,12 @@
  * Enhanced Message View
  * Provides detailed message viewing for debugging DLQ messages
  */
+import { MessageRetry } from './messageRetry.js';
 
 export class EnhancedMessageView {
+    constructor(appState) {
+        this.messageRetry = new MessageRetry(appState);
+    }
     /**
      * Create an enhanced view of a message with all debugging information
      * @param {Object} message - Message object

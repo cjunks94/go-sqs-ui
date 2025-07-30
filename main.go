@@ -36,6 +36,7 @@ func main() {
 	api.HandleFunc("/queues/{queueUrl}/messages", sqsHandler.GetMessages).Methods("GET")
 	api.HandleFunc("/queues/{queueUrl}/messages", sqsHandler.SendMessage).Methods("POST")
 	api.HandleFunc("/queues/{queueUrl}/messages/{receiptHandle}", sqsHandler.DeleteMessage).Methods("DELETE")
+	api.HandleFunc("/queues/{queueUrl}/retry", sqsHandler.RetryMessage).Methods("POST")
 
 	// WebSocket route (no middleware to avoid hijacker issues)
 	r.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {

@@ -52,4 +52,14 @@ export class APIService {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
     }
+
+    static async retryMessage(sourceQueueUrl, message, targetQueueUrl) {
+        return this.request(`/api/queues/${encodeURIComponent(sourceQueueUrl)}/retry`, {
+            method: 'POST',
+            body: JSON.stringify({
+                message: message,
+                targetQueueUrl: targetQueueUrl
+            })
+        });
+    }
 }

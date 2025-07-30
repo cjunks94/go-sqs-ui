@@ -5,12 +5,14 @@
 import { UIComponent } from './uiComponent.js';
 import { APIService } from './apiService.js';
 import { EnhancedMessageView } from './enhancedMessageView.js';
+import { MessageRetry } from './messageRetry.js';
 
 export class MessageHandler extends UIComponent {
     constructor(appState) {
         super('#messageList');
         this.appState = appState;
-        this.enhancedView = new EnhancedMessageView();
+        this.enhancedView = new EnhancedMessageView(appState);
+        this.messageRetry = new MessageRetry(appState);
     }
 
     async loadMessages() {
@@ -56,6 +58,11 @@ export class MessageHandler extends UIComponent {
         if (messages.length > 0) {
             this.addShowMoreButton();
         }
+
+        // Attach retry handlers after messages are displayed
+        setTimeout(() => {
+            this.messageRetry.attachRetryHandlers(this.appState.getMessages());
+        }, 100);
     }
 
     createMessageRow(message, index) {

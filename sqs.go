@@ -288,6 +288,56 @@ func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	sourceQueueURL := vars["queueUrl"]
+
+	var payload struct {
+		Message        Message `json:"message"`
+		TargetQueueURL string  `json:"targetQueueUrl"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+
+	// Send message to target queue
+	result, err := h.client.SendMessage(ctx, &sqs.SendMessageInput{
+		QueueUrl:    aws.String(payload.TargetQueueURL),
+		MessageBody: aws.String(payload.Message.Body),
+	})
+
+	if err != nil {
+		log.Printf("RetryMessage: Error sending to target queue: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Delete from source queue (DLQ)
+	_, err = h.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(sourceQueueURL),
+		ReceiptHandle: aws.String(payload.Message.ReceiptHandle),
+	})
+
+	if err != nil {
+		log.Printf("RetryMessage: Warning - failed to delete from source queue: %v", err)
+		// Don't fail the request, message was successfully retried
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]string{
+		"messageId": aws.ToString(result.MessageId),
+		"status":    "retried",
+	}); err != nil {
+		log.Printf("Error encoding retry response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
 func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
 	log.Printf("GetAWSContext: Fetching AWS context information")
 	
