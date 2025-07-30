@@ -96,6 +96,7 @@ export class QueueManager extends UIComponent {
         if (window.app) {
             window.app.queueAttributesHandler.display(queue.attributes);
             window.app.messageHandler.loadMessages();
+            window.app.messageHandler.addFilterUI();
             window.app.webSocketManager.subscribe(queue.url);
         }
     }

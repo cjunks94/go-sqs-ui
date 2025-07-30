@@ -6,6 +6,7 @@ import { UIComponent } from './uiComponent.js';
 import { APIService } from './apiService.js';
 import { EnhancedMessageView } from './enhancedMessageView.js';
 import { MessageRetry } from './messageRetry.js';
+import { MessageFilter } from './messageFilter.js';
 
 export class MessageHandler extends UIComponent {
     constructor(appState) {
@@ -13,6 +14,12 @@ export class MessageHandler extends UIComponent {
         this.appState = appState;
         this.enhancedView = new EnhancedMessageView(appState);
         this.messageRetry = new MessageRetry(appState);
+        this.messageFilter = new MessageFilter();
+        
+        // Listen for filter changes
+        this.messageFilter.onFilterChange((filter) => {
+            this.applyFilter(filter);
+        });
     }
 
     async loadMessages() {
@@ -277,5 +284,74 @@ export class MessageHandler extends UIComponent {
         setTimeout(() => {
             errorDiv.remove();
         }, 5000);
+    }
+
+    /**
+     * Apply filter to messages
+     * @param {string} filter - Filter query
+     */
+    applyFilter(filter) {
+        const allMessages = this.appState.getMessages();
+        const filteredMessages = this.messageFilter.filterMessages(allMessages, filter);
+        
+        // Clear current display
+        this.setContent('');
+        this.removeShowMoreButton();
+        
+        if (filteredMessages.length === 0) {
+            this.setContent('<div class="no-results">No messages match your filter</div>');
+            return;
+        }
+        
+        // Display filtered messages
+        filteredMessages.forEach((message, index) => {
+            const messageRow = this.createMessageRow(message, index);
+            
+            // Highlight matches if there's a filter
+            if (filter) {
+                this.highlightMessageContent(messageRow, filter);
+            }
+            
+            this.element.appendChild(messageRow);
+        });
+        
+        // Re-attach retry handlers
+        setTimeout(() => {
+            this.messageRetry.attachRetryHandlers(filteredMessages);
+        }, 100);
+    }
+
+    /**
+     * Highlight matching content in message row
+     * @param {HTMLElement} messageRow - Message row element
+     * @param {string} filter - Filter query
+     */
+    highlightMessageContent(messageRow, filter) {
+        const { textFilter } = this.messageFilter.parseFilterQuery(filter);
+        if (!textFilter) return;
+        
+        // Highlight in preview text
+        const previewText = messageRow.querySelector('.message-preview-text');
+        if (previewText) {
+            previewText.innerHTML = this.messageFilter.highlightMatches(
+                previewText.textContent, 
+                textFilter
+            );
+        }
+    }
+
+    /**
+     * Add filter UI to messages section
+     */
+    addFilterUI() {
+        const messagesSection = document.querySelector('.messages-section');
+        if (!messagesSection) return;
+        
+        const filterUI = this.messageFilter.createFilterUI();
+        const messagesHeader = messagesSection.querySelector('.messages-header');
+        
+        if (messagesHeader) {
+            messagesSection.insertBefore(filterUI, messagesHeader.nextSibling);
+        }
     }
 }
