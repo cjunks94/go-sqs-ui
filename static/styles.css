@@ -705,3 +705,194 @@ body {
     background-color: white;
     color: #dc3545;
 }
+
+/* Enhanced Message View */
+.enhanced-message-view {
+    padding: 1rem;
+}
+
+.message-metadata {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.metadata-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.metadata-row:last-child {
+    border-bottom: none;
+}
+
+.metadata-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.metadata-value {
+    color: #212529;
+    font-size: 0.9rem;
+}
+
+.monospace {
+    font-family: 'SF Mono', Monaco, Consolas, 'Courier New', monospace;
+}
+
+.truncate {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.receive-count-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.receive-count-badge.normal {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.receive-count-badge.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.receive-count-badge.danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.message-attributes {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.message-attributes h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.attributes-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.attribute-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.attribute-row:last-child {
+    border-bottom: none;
+}
+
+.attribute-key {
+    font-weight: 500;
+    color: #666;
+}
+
+.attribute-value {
+    color: #333;
+    word-break: break-all;
+}
+
+.no-attributes {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.message-body-section {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.body-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.body-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.message-body-content {
+    margin: 0;
+    padding: 1rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    background-color: #f8f9fa;
+}
+
+.message-body-content.json-highlighted {
+    background-color: #282c34;
+    color: #abb2bf;
+}
+
+.json-key {
+    color: #e06c75;
+}
+
+.json-string {
+    color: #98c379;
+}
+
+.json-number {
+    color: #d19a66;
+}
+
+.json-boolean {
+    color: #56b6c2;
+}
+
+.json-null {
+    color: #c678dd;
+}
+
+.message-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.retry-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.retry-btn:hover {
+    background-color: #218838;
+}
+
+.copy-body-btn.copied,
+.copy-all-btn.copied {
+    background-color: #28a745;
+    color: white;
+}

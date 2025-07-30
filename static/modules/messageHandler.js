@@ -4,11 +4,13 @@
  */
 import { UIComponent } from './uiComponent.js';
 import { APIService } from './apiService.js';
+import { EnhancedMessageView } from './enhancedMessageView.js';
 
 export class MessageHandler extends UIComponent {
     constructor(appState) {
         super('#messageList');
         this.appState = appState;
+        this.enhancedView = new EnhancedMessageView();
     }
 
     async loadMessages() {
@@ -104,24 +106,9 @@ export class MessageHandler extends UIComponent {
         const expandedView = document.createElement('div');
         expandedView.className = 'message-expanded hidden';
 
-        const expandedHeader = document.createElement('div');
-        expandedHeader.className = 'message-expanded-header';
-
-        const collapseIcon = document.createElement('span');
-        collapseIcon.className = 'collapse-icon';
-        collapseIcon.textContent = '▼';
-
-        const messageDetails = this.createMessageDetails(message);
-        const deleteBtn = this.createDeleteButton(message);
-
-        expandedHeader.appendChild(collapseIcon);
-        expandedHeader.appendChild(messageDetails);
-        expandedHeader.appendChild(deleteBtn);
-
-        const messageBody = this.createMessageBody(message);
-
-        expandedView.appendChild(expandedHeader);
-        expandedView.appendChild(messageBody);
+        // Use enhanced view for better debugging
+        const enhancedContent = this.enhancedView.createEnhancedView(message);
+        expandedView.appendChild(enhancedContent);
 
         return expandedView;
     }
