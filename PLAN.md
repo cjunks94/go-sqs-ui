@@ -6,26 +6,26 @@ This document contains the development roadmap, TODOs, and planning outputs for 
 
 ### Priority 1 - Core DLQ Functionality (Immediate)
 
-#### 1. DLQ Detection & Identification
-- [ ] Auto-detect DLQ queues (ending with `-dlq`, `-DLQ`, or tagged as DLQ)
-- [ ] Visual indicator for DLQ queues (different color/icon)
-- [ ] Display source queue relationship
+#### 1. DLQ Detection & Identification ✅
+- [x] Auto-detect DLQ queues (ending with `-dlq`, `-DLQ`, or tagged as DLQ)
+- [x] Visual indicator for DLQ queues (different color/icon)
+- [x] Display source queue relationship
 
-#### 2. Enhanced Message View for Debugging
-- [ ] Expandable message detail view showing:
-  - [ ] Full message body (formatted JSON)
-  - [ ] All message attributes
-  - [ ] Message metadata (MessageId, ReceiptHandle, etc.)
-  - [ ] Approximate receive count
-  - [ ] First receive timestamp
-- [ ] Syntax highlighting for JSON payloads
-- [ ] Copy button for message content
+#### 2. Enhanced Message View for Debugging ✅
+- [x] Expandable message detail view showing:
+  - [x] Full message body (formatted JSON)
+  - [x] All message attributes
+  - [x] Message metadata (MessageId, ReceiptHandle, etc.)
+  - [x] Approximate receive count
+  - [x] First receive timestamp
+- [x] Syntax highlighting for JSON payloads
+- [x] Copy button for message content
 
-#### 3. Single Message Retry
-- [ ] "Retry" button for each DLQ message
-- [ ] Option to retry to original queue or different queue
-- [ ] Preserve original message attributes
-- [ ] Show retry status in real-time via WebSocket
+#### 3. Single Message Retry ✅
+- [x] "Retry" button for each DLQ message
+- [x] Option to retry to original queue or different queue
+- [x] Preserve original message attributes
+- [x] Show retry status in real-time via WebSocket
 
 #### 4. Bulk DLQ Operations
 - [ ] "Retry All" button for entire DLQ
@@ -33,10 +33,10 @@ This document contains the development roadmap, TODOs, and planning outputs for 
 - [ ] Progress indicator for bulk operations
 - [ ] Ability to pause/resume bulk retry
 
-#### 5. Message Filtering & Search
-- [ ] Filter messages by content (substring search)
-- [ ] Filter by message attributes
-- [ ] Filter by error type/reason (if available in attributes)
+#### 5. Message Filtering & Search ✅
+- [x] Filter messages by content (substring search)
+- [x] Filter by message attributes
+- [x] Filter by error type/reason (if available in attributes)
 - [ ] Save/load filter presets
 
 ### Priority 2 - Advanced DLQ Features
@@ -127,7 +127,24 @@ This document contains the development roadmap, TODOs, and planning outputs for 
 - Project setup complete ✓
 - Modular architecture in place ✓
 - WebSocket infrastructure ready ✓
-- Need to implement DLQ-specific features
+- DLQ-specific features implemented ✓
+  - DLQ detection and visual identification ✓
+  - Enhanced message view with all metadata ✓
+  - Single message retry functionality ✓
+  - Message filtering and search ✓
+
+## Completed Features (MVP Ready)
+
+1. **DLQ Detection** - Automatically identifies DLQ queues with visual indicators
+2. **Enhanced Message View** - Detailed debugging information including:
+   - Receive count badges (normal/warning/danger)
+   - All message attributes
+   - JSON syntax highlighting
+   - Copy functionality
+3. **Message Retry** - One-click retry from DLQ to source queue with status feedback
+4. **Message Filtering** - Real-time search by content or attributes (e.g., "ApproximateReceiveCount:5")
+
+Total test coverage: 93 tests passing
 
 ## Planning Session Outputs
 
