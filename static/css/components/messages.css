@@ -82,6 +82,8 @@
   overflow: hidden;
   transition: all var(--transition-fast);
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+  position: relative;
 }
 
 .message-item:hover {

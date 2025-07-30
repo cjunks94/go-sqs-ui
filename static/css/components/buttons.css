@@ -56,8 +56,8 @@
 .btn-primary:hover {
   background-color: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn-primary:active {
@@ -74,8 +74,8 @@
 .btn-secondary:hover {
   background-color: var(--color-surface-hover);
   border-color: var(--color-border-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn-secondary:active {
@@ -91,8 +91,8 @@
 .btn-success:hover {
   background-color: var(--color-success-dark);
   border-color: var(--color-success-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn-success:active {
@@ -109,8 +109,8 @@
 .btn-danger:hover {
   background-color: var(--color-error-dark);
   border-color: var(--color-error-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn-danger:active {
@@ -127,8 +127,8 @@
 .btn-warning:hover {
   background-color: var(--color-warning-dark);
   border-color: var(--color-warning-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn-warning:active {

@@ -4,7 +4,7 @@
  */
 
 :root,
-body.theme-light {
+html.theme-light {
   /* === BACKGROUND COLORS === */
   --color-bg-primary: #f5f5f5;
   --color-bg-secondary: #ffffff;

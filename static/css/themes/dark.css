@@ -4,7 +4,7 @@
  * Features deep backgrounds with green and blue accents
  */
 
-body.theme-dark {
+html.theme-dark {
   /* === BACKGROUND COLORS === */
   --color-bg-primary: #1a1d23;        /* Deep dark background */
   --color-bg-secondary: #252930;       /* Card/surface background */
@@ -92,83 +92,151 @@ body.theme-dark {
 }
 
 /* Selection styling for dark theme */
-body.theme-dark ::selection {
+html.theme-dark ::selection {
   background-color: var(--color-selection-bg);
   color: var(--color-selection-text);
 }
 
 /* Focus ring for accessibility (green accent) */
-body.theme-dark *:focus-visible {
+html.theme-dark *:focus-visible {
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
   box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 /* Scrollbar styling for dark theme */
-body.theme-dark ::-webkit-scrollbar {
+html.theme-dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-body.theme-dark ::-webkit-scrollbar-track {
+html.theme-dark ::-webkit-scrollbar-track {
   background: var(--color-bg-primary);
 }
 
-body.theme-dark ::-webkit-scrollbar-thumb {
+html.theme-dark ::-webkit-scrollbar-thumb {
   background: var(--color-border-primary);
   border-radius: var(--radius-sm);
 }
 
-body.theme-dark ::-webkit-scrollbar-thumb:hover {
+html.theme-dark ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-hover);
 }
 
 /* Enhanced contrast for better readability */
-body.theme-dark .message-preview-text {
+html.theme-dark .message-preview-text {
   color: var(--color-text-secondary);
 }
 
-body.theme-dark .message-timestamp-compact {
+html.theme-dark .message-timestamp-compact {
   color: var(--color-text-tertiary);
 }
 
-body.theme-dark .message-id-compact {
+html.theme-dark .message-id-compact {
   color: var(--color-text-tertiary);
 }
 
 /* Success/error states with proper contrast */
-body.theme-dark .btn-success {
-  background: var(--gradient-success);
-  border-color: var(--color-success);
-  color: var(--color-text-inverse);
+/* Enhanced button styles for dark theme */
+html.theme-dark .btn {
+  border: 1px solid var(--color-border-secondary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-body.theme-dark .btn-danger {
-  background-color: var(--color-error);
-  border-color: var(--color-error-light);
+html.theme-dark .btn:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+html.theme-dark .btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+html.theme-dark .btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+html.theme-dark .btn-secondary {
+  background-color: var(--color-surface-secondary);
+  border-color: var(--color-border-secondary);
   color: var(--color-text-primary);
 }
 
+html.theme-dark .btn-secondary:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border-hover);
+}
+
+html.theme-dark .btn-success {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+  color: #ffffff;
+}
+
+html.theme-dark .btn-success:hover {
+  background-color: var(--color-success-dark);
+  border-color: var(--color-success-dark);
+}
+
+html.theme-dark .btn-danger {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  color: #ffffff;
+}
+
+html.theme-dark .btn-danger:hover {
+  background-color: var(--color-error-dark);
+  border-color: var(--color-error-dark);
+}
+
+/* Glass morphism for sidebar and surfaces */
+html.theme-dark .sidebar {
+  background: rgba(26, 29, 35, 0.95);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.theme-dark .queue-link {
+  background: rgba(37, 41, 48, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+html.theme-dark .queue-link:hover {
+  background: rgba(50, 57, 68, 0.8);
+  border-color: rgba(0, 210, 122, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 210, 122, 0.1);
+}
+
+html.theme-dark .queue-link.active {
+  background: rgba(0, 210, 122, 0.15);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
 /* Chart and data visualization enhancements */
-body.theme-dark .aws-context-table {
+html.theme-dark .aws-context-table {
   background: var(--color-surface-secondary);
   border: 1px solid var(--color-border-primary);
 }
 
-body.theme-dark .aws-context-value {
+html.theme-dark .aws-context-value {
   color: var(--color-success);
   font-weight: var(--font-weight-medium);
 }
 
 /* Enhanced card styling for dashboard feel */
-body.theme-dark .message-item {
-  background: var(--color-surface-primary);
-  border: 1px solid var(--color-border-primary);
-  box-shadow: var(--shadow-sm);
+html.theme-dark .message-item {
+  background: rgba(37, 41, 48, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
 }
 
-body.theme-dark .message-item:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-border-hover);
-  box-shadow: var(--shadow-md);
+html.theme-dark .message-item:hover {
+  background: rgba(45, 51, 64, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
 }
