@@ -671,3 +671,37 @@ body {
     text-align: center;
     line-height: 1.2rem;
 }
+
+/* DLQ Styling */
+.dlq-queue {
+    border-color: #dc3545;
+    position: relative;
+}
+
+.dlq-queue:hover {
+    background-color: #fff5f5;
+    border-color: #dc3545;
+}
+
+.dlq-queue.active {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.dlq-indicator {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: #dc3545;
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.dlq-queue.active .dlq-indicator {
+    background-color: white;
+    color: #dc3545;
+}

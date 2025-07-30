@@ -4,6 +4,7 @@
  */
 import { UIComponent } from './uiComponent.js';
 import { APIService } from './apiService.js';
+import { enhanceQueueElement } from './dlqDetection.js';
 
 export class QueueManager extends UIComponent {
     constructor(appState) {
@@ -54,6 +55,9 @@ export class QueueManager extends UIComponent {
         queueItem.textContent = queue.name;
         queueItem.style.opacity = '0';
         queueItem.style.transform = 'translateY(10px)';
+        
+        // Add DLQ detection and styling
+        enhanceQueueElement(queueItem, queue);
         
         queueItem.onclick = () => this.selectQueue(queue, queueItem);
         
