@@ -10,6 +10,7 @@
     "test:watch": "vitest --watch"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
     "@vitest/coverage-v8": "^1.0.0",
     "@vitest/ui": "^1.0.0",
     "happy-dom": "^12.0.0",

@@ -54,6 +54,29 @@ go build
 npm install
 ```
 
+## Quick Start: DLQ Debugging
+
+If you're here to debug Dead Letter Queues in your staging environment, follow these steps:
+
+```bash
+# 1. Set your AWS credentials for staging
+export AWS_PROFILE=staging-profile
+export AWS_REGION=us-east-1
+
+# 2. Start the application
+make dev-start
+
+# 3. Open http://localhost:8080
+```
+
+The UI will automatically:
+- Filter queues by your configured tags (businessunit:degrees, product:amt, env:stg|prod)
+- Identify and mark DLQ queues with visual badges
+- Enable one-click retry for failed messages
+- Provide real-time updates via WebSocket
+
+See the [User Guide](USER_GUIDE.md) for detailed DLQ debugging workflows.
+
 ## Running the Application
 
 ### Quick Start (Development Server)
@@ -265,6 +288,23 @@ go test -cover ./...
 # Run specific test file
 go test -v ./sqs_test.go
 ```
+
+### UI Automation Tests (Playwright)
+
+The project includes Playwright test scripts for UI automation:
+
+```bash
+# Install Playwright browsers (first time only)
+npx playwright install
+
+# Run Playwright tests
+node test/playwright/playwright-test.js
+
+# Run simplified test suite
+node test/playwright/playwright-test-simple.js
+```
+
+See [TEST_REPORT.md](TEST_REPORT.md) for comprehensive testing documentation.
 
 ## Development
 

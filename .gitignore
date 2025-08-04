@@ -54,4 +54,10 @@ coverage/
 *.lcov
 
 # npm package lock (optional - some teams commit this)
-package-lock.json
+# package-lock.json
+
+# Test artifacts
+test-screenshots/
+test-guide.json
+/tmp/go-sqs-ui.log
+/tmp/go-sqs-ui.pid
