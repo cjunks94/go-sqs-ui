@@ -44,17 +44,22 @@ export class WebSocketManager {
         }
 
         const currentQueue = this.appState.getCurrentQueue();
-        if (data.type === 'messages' && 
+        if ((data.type === 'messages' || data.type === 'initial_messages') && 
             data.queueUrl === currentQueue?.url && 
             !this.appState.isMessagesPausedState()) {
             
             // Validate messages data before processing
             if (Array.isArray(data.messages)) {
                 try {
-                    // Use merge strategy to preserve UI state
-                    this.messageHandler.mergeMessages(data.messages);
+                    if (data.type === 'initial_messages') {
+                        // Initial load - replace all messages
+                        this.messageHandler.displayMessages(data.messages);
+                    } else {
+                        // Incremental update - add new messages only
+                        this.messageHandler.addNewMessages(data.messages);
+                    }
                 } catch (error) {
-                    console.error('Error merging WebSocket messages:', error);
+                    console.error('Error processing WebSocket messages:', error);
                 }
             } else {
                 console.warn('WebSocket messages data is not an array:', data.messages);

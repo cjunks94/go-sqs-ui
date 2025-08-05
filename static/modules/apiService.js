@@ -62,4 +62,24 @@ export class APIService {
             })
         });
     }
+
+    /**
+     * Get queue statistics
+     * @param {string} queueUrl - Queue URL
+     * @returns {Promise<Object>} Queue statistics
+     */
+    static async getQueueStatistics(queueUrl) {
+        return this.request(`/api/queues/${encodeURIComponent(queueUrl)}/statistics`);
+    }
+
+    /**
+     * Get DLQ-specific statistics
+     * @param {string} queueUrl - DLQ URL
+     * @returns {Promise<Object>} DLQ statistics
+     */
+    static async getDLQStatistics(queueUrl) {
+        // For now, this uses the same endpoint but could be separated
+        const stats = await this.getQueueStatistics(queueUrl);
+        return stats.dlqStatistics || {};
+    }
 }

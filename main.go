@@ -34,10 +34,11 @@ func main() {
 	api.Use(loggingMiddleware)
 	api.HandleFunc("/aws-context", sqsHandler.GetAWSContext).Methods("GET")
 	api.HandleFunc("/queues", sqsHandler.ListQueues).Methods("GET")
-	api.HandleFunc("/queues/{queueUrl}/messages", sqsHandler.GetMessages).Methods("GET")
-	api.HandleFunc("/queues/{queueUrl}/messages", sqsHandler.SendMessage).Methods("POST")
-	api.HandleFunc("/queues/{queueUrl}/messages/{receiptHandle}", sqsHandler.DeleteMessage).Methods("DELETE")
-	api.HandleFunc("/queues/{queueUrl}/retry", sqsHandler.RetryMessage).Methods("POST")
+	api.HandleFunc("/queues/{queueUrl:.*}/messages", sqsHandler.GetMessages).Methods("GET")
+	api.HandleFunc("/queues/{queueUrl:.*}/messages", sqsHandler.SendMessage).Methods("POST")
+	api.HandleFunc("/queues/{queueUrl:.*}/messages/{receiptHandle}", sqsHandler.DeleteMessage).Methods("DELETE")
+	api.HandleFunc("/queues/{queueUrl:.*}/retry", sqsHandler.RetryMessage).Methods("POST")
+	api.HandleFunc("/queues/{queueUrl:.*}/statistics", sqsHandler.GetQueueStatistics).Methods("GET")
 
 	// WebSocket route (no middleware to avoid hijacker issues)
 	r.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {

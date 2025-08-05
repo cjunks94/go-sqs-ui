@@ -11,9 +11,11 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
+    "@types/node": "^24.2.0",
     "@vitest/coverage-v8": "^1.0.0",
     "@vitest/ui": "^1.0.0",
     "happy-dom": "^12.0.0",
+    "typescript": "^5.9.2",
     "vitest": "^1.0.0"
   }
 }

@@ -458,3 +458,307 @@ func Test_getTimestampFromMessage(t *testing.T) {
 		})
 	}
 }
+
+// Test pagination support for GetMessages
+func TestSQSHandler_GetMessagesWithPagination(t *testing.T) {
+	tests := []struct {
+		name           string
+		queryParams    string
+		setupMock      func(*MockSQSClient)
+		expectedStatus int
+		expectedCount  int
+		validateBody   func(*testing.T, []byte)
+	}{
+		{
+			name:        "default pagination (10 messages)",
+			queryParams: "",
+			setupMock: func(mock *MockSQSClient) {
+				// Add 15 messages to mock
+				for i := 1; i <= 15; i++ {
+					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue", 
+						fmt.Sprintf("msg-%d", i), 
+						fmt.Sprintf("Message body %d", i))
+				}
+			},
+			expectedStatus: http.StatusOK,
+			expectedCount:  10, // Default limit
+		},
+		{
+			name:        "custom limit of 5",
+			queryParams: "?limit=5",
+			setupMock: func(mock *MockSQSClient) {
+				for i := 1; i <= 10; i++ {
+					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+						fmt.Sprintf("msg-%d", i),
+						fmt.Sprintf("Message body %d", i))
+				}
+			},
+			expectedStatus: http.StatusOK,
+			expectedCount:  5,
+		},
+		{
+			name:        "limit exceeding max (should cap at 10)",
+			queryParams: "?limit=50",
+			setupMock: func(mock *MockSQSClient) {
+				for i := 1; i <= 20; i++ {
+					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+						fmt.Sprintf("msg-%d", i),
+						fmt.Sprintf("Message body %d", i))
+				}
+			},
+			expectedStatus: http.StatusOK,
+			expectedCount:  10, // Should cap at max
+		},
+		{
+			name:        "invalid limit parameter",
+			queryParams: "?limit=invalid",
+			setupMock: func(mock *MockSQSClient) {
+				for i := 1; i <= 5; i++ {
+					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+						fmt.Sprintf("msg-%d", i),
+						fmt.Sprintf("Message body %d", i))
+				}
+			},
+			expectedStatus: http.StatusOK,
+			expectedCount:  5, // Should use default
+		},
+		{
+			name:        "negative limit (should use default)",
+			queryParams: "?limit=-5",
+			setupMock: func(mock *MockSQSClient) {
+				for i := 1; i <= 5; i++ {
+					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+						fmt.Sprintf("msg-%d", i),
+						fmt.Sprintf("Message body %d", i))
+				}
+			},
+			expectedStatus: http.StatusOK,
+			expectedCount:  5, // Should use default
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := NewMockSQSClient()
+			tt.setupMock(mockClient)
+
+			handler := &SQSHandler{client: mockClient}
+
+			req := httptest.NewRequest("GET", "/api/queues/{queueUrl}/messages"+tt.queryParams, nil)
+			req = mux.SetURLVars(req, map[string]string{
+				"queueUrl": "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+			})
+			rr := httptest.NewRecorder()
+
+			handler.GetMessages(rr, req)
+
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, rr.Code)
+			}
+
+			if tt.expectedStatus == http.StatusOK {
+				var messages []Message
+				if err := json.NewDecoder(rr.Body).Decode(&messages); err != nil {
+					t.Fatalf("failed to decode response: %v", err)
+				}
+
+				if len(messages) != tt.expectedCount {
+					t.Errorf("expected %d messages, got %d", tt.expectedCount, len(messages))
+				}
+
+				if tt.validateBody != nil {
+					tt.validateBody(t, rr.Body.Bytes())
+				}
+			}
+		})
+	}
+}
+
+// Test new endpoint for queue statistics
+func TestSQSHandler_GetQueueStatistics(t *testing.T) {
+	tests := []struct {
+		name           string
+		queueURL       string
+		setupMock      func(*MockSQSClient)
+		expectedStatus int
+		validateBody   func(*testing.T, []byte)
+	}{
+		{
+			name:     "get statistics for regular queue",
+			queueURL: "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+			setupMock: func(mock *MockSQSClient) {
+				// Add queue with attributes
+				mock.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue")
+				// Add some messages with varying timestamps
+				mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+					"msg-1", "Old message")
+				mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+					"msg-2", "New message")
+			},
+			expectedStatus: http.StatusOK,
+			validateBody: func(t *testing.T, body []byte) {
+				var stats map[string]interface{}
+				if err := json.Unmarshal(body, &stats); err != nil {
+					t.Fatalf("failed to unmarshal response: %v", err)
+				}
+				
+				// Check for expected statistics fields
+				expectedFields := []string{"totalMessages", "messagesInFlight", "queueName"}
+				for _, field := range expectedFields {
+					if _, ok := stats[field]; !ok {
+						t.Errorf("missing expected field: %s", field)
+					}
+				}
+			},
+		},
+		{
+			name:     "get statistics for DLQ",
+			queueURL: "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue-dlq",
+			setupMock: func(mock *MockSQSClient) {
+				// Add DLQ with redrive allow policy
+				mock.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue-dlq")
+				// Add messages with high receive counts
+				for i := 1; i <= 5; i++ {
+					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue-dlq",
+						fmt.Sprintf("msg-%d", i),
+						fmt.Sprintf("Failed message %d", i))
+				}
+			},
+			expectedStatus: http.StatusOK,
+			validateBody: func(t *testing.T, body []byte) {
+				var stats map[string]interface{}
+				if err := json.Unmarshal(body, &stats); err != nil {
+					t.Fatalf("failed to unmarshal response: %v", err)
+				}
+				
+				// Check for DLQ-specific statistics
+				if _, ok := stats["isDLQ"]; !ok {
+					t.Error("missing isDLQ field for DLQ queue")
+				}
+			},
+		},
+		{
+			name:     "queue not found",
+			queueURL: "https://sqs.us-east-1.amazonaws.com/123456789012/non-existent",
+			setupMock: func(mock *MockSQSClient) {
+				mock.SetError("GetQueueAttributes", fmt.Errorf("queue not found"))
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := NewMockSQSClient()
+			tt.setupMock(mockClient)
+
+			handler := &SQSHandler{client: mockClient}
+
+			// Note: This assumes we'll add a new endpoint /api/queues/{queueUrl}/statistics
+			req := httptest.NewRequest("GET", "/api/queues/{queueUrl}/statistics", nil)
+			req = mux.SetURLVars(req, map[string]string{
+				"queueUrl": tt.queueURL,
+			})
+			rr := httptest.NewRecorder()
+
+			// We'll need to implement this handler method
+			handler.GetQueueStatistics(rr, req)
+
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, rr.Code)
+			}
+
+			if tt.validateBody != nil && tt.expectedStatus == http.StatusOK {
+				tt.validateBody(t, rr.Body.Bytes())
+			}
+		})
+	}
+}
+
+// Test enhanced message retrieval with offset for pagination
+func TestSQSHandler_GetMessagesWithOffset(t *testing.T) {
+	tests := []struct {
+		name           string
+		queryParams    string
+		totalMessages  int
+		expectedStatus int
+		expectedStart  int
+		expectedEnd    int
+	}{
+		{
+			name:          "first page",
+			queryParams:   "?limit=10&offset=0",
+			totalMessages: 30,
+			expectedStatus: http.StatusOK,
+			expectedStart: 1,
+			expectedEnd:   10,
+		},
+		{
+			name:          "second page",
+			queryParams:   "?limit=10&offset=10",
+			totalMessages: 30,
+			expectedStatus: http.StatusOK,
+			expectedStart: 11,
+			expectedEnd:   20,
+		},
+		{
+			name:          "last page with partial results",
+			queryParams:   "?limit=10&offset=25",
+			totalMessages: 30,
+			expectedStatus: http.StatusOK,
+			expectedStart: 26,
+			expectedEnd:   30,
+		},
+		{
+			name:          "offset beyond available messages",
+			queryParams:   "?limit=10&offset=50",
+			totalMessages: 30,
+			expectedStatus: http.StatusOK,
+			expectedStart: 0,
+			expectedEnd:   0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := NewMockSQSClient()
+			
+			// Add messages to mock
+			for i := 1; i <= tt.totalMessages; i++ {
+				mockClient.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+					fmt.Sprintf("msg-%d", i),
+					fmt.Sprintf("Message body %d", i))
+			}
+
+			handler := &SQSHandler{client: mockClient}
+
+			req := httptest.NewRequest("GET", "/api/queues/{queueUrl}/messages"+tt.queryParams, nil)
+			req = mux.SetURLVars(req, map[string]string{
+				"queueUrl": "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+			})
+			rr := httptest.NewRecorder()
+
+			handler.GetMessages(rr, req)
+
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, rr.Code)
+			}
+
+			if tt.expectedStatus == http.StatusOK {
+				var messages []Message
+				if err := json.NewDecoder(rr.Body).Decode(&messages); err != nil {
+					t.Fatalf("failed to decode response: %v", err)
+				}
+
+				expectedCount := tt.expectedEnd - tt.expectedStart + 1
+				if tt.expectedStart == 0 {
+					expectedCount = 0
+				}
+
+				if len(messages) != expectedCount {
+					t.Errorf("expected %d messages, got %d", expectedCount, len(messages))
+				}
+			}
+		})
+	}
+}

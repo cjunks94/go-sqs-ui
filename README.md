@@ -4,15 +4,26 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 
 ## Features
 
+### Core Functionality
 - 📋 List SQS queues with tag-based filtering (businessunit:degrees, product:amt, env:stg|prod)
-- 📨 View messages in queues with real-time updates and pagination
+- 📨 View messages in queues with real-time updates
 - ✉️ Send messages to queues
 - 🗑️ Delete messages from queues
 - 🔄 Real-time message updates via WebSockets with pause/resume functionality
 - 📊 View queue attributes (message counts, retention period, etc.)
 - 🎨 Clean, responsive UI with collapsible sidebar and DataDog-style message lists
+
+### Enhanced Queue Viewing (New!)
+- 📄 **Message Pagination**: "Show More" button for browsing large message sets
+- 🔍 **Advanced Filtering**: Real-time filtering by message content and attributes (e.g., `ApproximateReceiveCount:5`)
+- ⌨️ **Keyboard Navigation**: Comprehensive keyboard shortcuts for power users (press `?` to see all)
+- 📊 **Queue Statistics**: Real-time queue metrics and DLQ-specific analytics
+- 💾 **Message Export**: Export messages to JSON/CSV formats with filter support
+- 🖼️ **Queue Browser**: Full-screen modal for detailed message browsing with pagination
+
+### Technical Features
 - ⚡ Modern ES6+ modular JavaScript architecture
-- 🧪 Comprehensive test suite with 112+ tests
+- 🧪 Comprehensive test suite with 230+ tests
 - 🔀 **AWS Context Switching**: Automatic detection and switching between demo and live AWS modes
 - 📅 **Message Ordering**: Consistent chronological ordering (oldest first) for stable message viewing
 - 🔍 **Enhanced DLQ Debugging**: Advanced filtering, search, and retry functionality for Dead Letter Queues
@@ -166,6 +177,28 @@ DISABLE_TAG_FILTER=true make dev-start
 FILTER_BUSINESS_UNIT=myunit FILTER_PRODUCT=myapp FILTER_ENV=dev,test make dev-start
 ```
 
+## Keyboard Shortcuts
+
+Navigate and control the application efficiently with keyboard shortcuts:
+
+### Navigation
+- `j` / `k` - Navigate down/up through messages
+- `Enter` - Expand/collapse selected message
+- `g g` - Jump to top (press g twice)
+- `G` - Jump to bottom
+
+### Actions
+- `/` - Focus search/filter box
+- `r` - Refresh messages
+- `n` / `p` - Next/Previous page
+- `e` - Export messages
+- `b` - Toggle queue browser
+- `s` - Toggle statistics panel
+
+### Utility
+- `?` - Show keyboard shortcuts help
+- `Escape` - Clear focus/close modals
+
 ## AWS Context Switching
 
 The application automatically detects AWS credentials and switches between Demo and Live modes. The current mode is displayed in the sidebar.
@@ -211,7 +244,9 @@ go build -o sqs-ui .
 - `GET /api/aws-context` - Get AWS connection context information
 - `GET /api/queues?limit=20` - List queues with tag-based filtering and pagination
 - `GET /api/queues/{queueUrl}/messages?limit=10` - Get messages from a queue with pagination
+- `GET /api/queues/{queueUrl}/statistics` - Get queue statistics and metrics
 - `POST /api/queues/{queueUrl}/messages` - Send a message to a queue
+- `POST /api/queues/{queueUrl}/retry` - Retry a message from DLQ to source queue
 - `DELETE /api/queues/{queueUrl}/messages/{receiptHandle}` - Delete a message
 - `WS /ws` - WebSocket endpoint for real-time updates
 

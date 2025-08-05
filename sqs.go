@@ -264,6 +264,14 @@ func contains(slice []string, value string) bool {
 func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
+	
+	// Fix for Gorilla mux eating one slash in https://
+	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
+		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
+	}
+	
+	log.Printf("GetMessages: Raw queueUrl from route: %s", queueURL)
+	log.Printf("GetMessages: Full request URL: %s", r.URL.String())
 
 	// Get limit from query parameter, default to 10 (SQS max per call)
 	limit := int32(10)
@@ -324,6 +332,11 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
+	
+	// Fix for Gorilla mux eating one slash in https://
+	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
+		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
+	}
 
 	var payload struct {
 		Body string `json:"body"`
@@ -359,6 +372,11 @@ func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
+	
+	// Fix for Gorilla mux eating one slash in https://
+	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
+		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
+	}
 	receiptHandle := vars["receiptHandle"]
 
 	ctx := context.Background()
@@ -379,6 +397,11 @@ func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sourceQueueURL := vars["queueUrl"]
+	
+	// Fix for Gorilla mux eating one slash in https://
+	if strings.HasPrefix(sourceQueueURL, "https:/") && !strings.HasPrefix(sourceQueueURL, "https://") {
+		sourceQueueURL = strings.Replace(sourceQueueURL, "https:/", "https://", 1)
+	}
 
 	var payload struct {
 		Message        Message `json:"message"`
@@ -487,4 +510,120 @@ func getTimestampFromMessage(message Message) int64 {
 	}
 	
 	return timestamp
+}
+
+// GetQueueStatistics returns statistics for a queue
+func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	queueURL := vars["queueUrl"]
+	
+	// Fix for Gorilla mux eating one slash in https://
+	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
+		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
+	}
+	
+	log.Printf("GetQueueStatistics: Fetching statistics for queue %s", queueURL)
+	ctx := context.Background()
+	
+	// Get queue attributes
+	attrs, err := h.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+		QueueUrl:       aws.String(queueURL),
+		AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
+	})
+	
+	if err != nil {
+		log.Printf("GetQueueStatistics: Error fetching queue attributes: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	// Extract queue name from ARN
+	queueName := queueURL
+	if arn, ok := attrs.Attributes["QueueArn"]; ok {
+		parts := strings.Split(arn, ":")
+		if len(parts) > 0 {
+			queueName = parts[len(parts)-1]
+		}
+	}
+	
+	// Check if it's a DLQ
+	isDLQ := strings.HasSuffix(queueName, "-dlq") || 
+		strings.HasSuffix(queueName, "-DLQ") ||
+		attrs.Attributes["RedriveAllowPolicy"] != ""
+	
+	// Build statistics response
+	stats := map[string]interface{}{
+		"queueName":        queueName,
+		"totalMessages":    parseIntSafe(attrs.Attributes["ApproximateNumberOfMessages"]),
+		"messagesInFlight": parseIntSafe(attrs.Attributes["ApproximateNumberOfMessagesNotVisible"]),
+		"messagesDelayed":  parseIntSafe(attrs.Attributes["ApproximateNumberOfMessagesDelayed"]),
+		"isDLQ":           isDLQ,
+	}
+	
+	// Add timestamps if available
+	if created := attrs.Attributes["CreatedTimestamp"]; created != "" {
+		stats["createdTimestamp"] = parseIntSafe(created) * 1000
+	}
+	
+	if modified := attrs.Attributes["LastModifiedTimestamp"]; modified != "" {
+		stats["lastModifiedTimestamp"] = parseIntSafe(modified) * 1000
+	}
+	
+	// Calculate message age if possible
+	if oldestAge := attrs.Attributes["ApproximateAgeOfOldestMessage"]; oldestAge != "" {
+		stats["oldestMessageAge"] = parseIntSafe(oldestAge) * 1000
+	}
+	
+	// For DLQ, try to get additional statistics
+	if isDLQ {
+		// Sample a few messages to calculate DLQ-specific stats
+		messages, err := h.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+			QueueUrl:              aws.String(queueURL),
+			MaxNumberOfMessages:   10,
+			AttributeNames:        []types.QueueAttributeName{types.QueueAttributeNameAll},
+			MessageAttributeNames: []string{"All"},
+		})
+		
+		if err == nil && len(messages.Messages) > 0 {
+			totalReceiveCount := 0
+			maxReceiveCount := 0
+			errorTypes := make(map[string]int)
+			
+			for _, msg := range messages.Messages {
+				if receiveCount := msg.Attributes["ApproximateReceiveCount"]; receiveCount != "" {
+					count := parseIntSafe(receiveCount)
+					totalReceiveCount += count
+					if count > maxReceiveCount {
+						maxReceiveCount = count
+					}
+				}
+				
+				// Try to extract error type from message attributes
+				if errorType, ok := msg.MessageAttributes["ErrorType"]; ok && errorType.StringValue != nil {
+					errorTypes[*errorType.StringValue]++
+				}
+			}
+			
+			stats["dlqStatistics"] = map[string]interface{}{
+				"sampleSize":          len(messages.Messages),
+				"averageReceiveCount": float64(totalReceiveCount) / float64(len(messages.Messages)),
+				"maxReceiveCount":     maxReceiveCount,
+				"errorTypes":         errorTypes,
+			}
+		}
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(stats); err != nil {
+		log.Printf("Error encoding statistics response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// Helper function to safely parse int from string
+func parseIntSafe(s string) int {
+	if i, err := strconv.Atoi(s); err == nil {
+		return i
+	}
+	return 0
 }

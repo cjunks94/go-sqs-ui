@@ -25,12 +25,16 @@ type WebSocketManager struct {
 	sqsClient     SQSClientInterface
 	connections   map[*websocket.Conn]map[string]context.CancelFunc
 	connectionsMu sync.RWMutex
+	// Track sent messages per connection per queue
+	sentMessages   map[*websocket.Conn]map[string]map[string]bool
+	sentMessagesMu sync.RWMutex
 }
 
 func NewWebSocketManager(sqsClient SQSClientInterface) *WebSocketManager {
 	return &WebSocketManager{
-		sqsClient:   sqsClient,
-		connections: make(map[*websocket.Conn]map[string]context.CancelFunc),
+		sqsClient:    sqsClient,
+		connections:  make(map[*websocket.Conn]map[string]context.CancelFunc),
+		sentMessages: make(map[*websocket.Conn]map[string]map[string]bool),
 	}
 }
 
@@ -45,6 +49,10 @@ func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 	wsm.connectionsMu.Lock()
 	wsm.connections[conn] = make(map[string]context.CancelFunc)
 	wsm.connectionsMu.Unlock()
+
+	wsm.sentMessagesMu.Lock()
+	wsm.sentMessages[conn] = make(map[string]map[string]bool)
+	wsm.sentMessagesMu.Unlock()
 
 	if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
 		log.Printf("Error setting read deadline: %v", err)
@@ -85,14 +93,18 @@ func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 
 func (wsm *WebSocketManager) cleanupConnection(conn *websocket.Conn) {
 	wsm.connectionsMu.Lock()
-	defer wsm.connectionsMu.Unlock()
-
 	if queues, exists := wsm.connections[conn]; exists {
 		for _, cancel := range queues {
 			cancel()
 		}
 		delete(wsm.connections, conn)
 	}
+	wsm.connectionsMu.Unlock()
+
+	wsm.sentMessagesMu.Lock()
+	delete(wsm.sentMessages, conn)
+	wsm.sentMessagesMu.Unlock()
+
 	if err := conn.Close(); err != nil {
 		log.Printf("Error closing connection: %v", err)
 	}
@@ -118,6 +130,14 @@ func (wsm *WebSocketManager) subscribeToQueue(conn *websocket.Conn, queueURL str
 			cancel()
 		}
 
+		// Clear sent messages for this queue when resubscribing
+		wsm.sentMessagesMu.Lock()
+		if wsm.sentMessages[conn] == nil {
+			wsm.sentMessages[conn] = make(map[string]map[string]bool)
+		}
+		wsm.sentMessages[conn][queueURL] = make(map[string]bool)
+		wsm.sentMessagesMu.Unlock()
+
 		ctx, cancel := context.WithCancel(context.Background())
 		queues[queueURL] = cancel
 
@@ -129,31 +149,41 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			result, err := wsm.sqsClient.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-				QueueUrl:            aws.String(queueURL),
-				MaxNumberOfMessages: 10,
-				WaitTimeSeconds:     1,
-				AttributeNames:      []types.QueueAttributeName{types.QueueAttributeNameAll},
-			})
+	// Send initial load of messages
+	isInitialLoad := true
 
-			if err != nil {
-				if ctx.Err() != nil {
-					return
-				}
-				log.Printf("Error polling queue %s: %v", queueURL, err)
-				continue
+	// Poll immediately for initial load
+	pollFunc := func() bool {
+		result, err := wsm.sqsClient.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+			QueueUrl:            aws.String(queueURL),
+			MaxNumberOfMessages: 10,
+			WaitTimeSeconds:     1,
+			AttributeNames:      []types.QueueAttributeName{types.QueueAttributeNameAll},
+		})
+
+		if err != nil {
+			if ctx.Err() != nil {
+				return true // Exit
 			}
+			log.Printf("Error polling queue %s: %v", queueURL, err)
+			return false // Continue
+		}
 
-			if len(result.Messages) > 0 {
-				messages := []Message{}
-				for _, msg := range result.Messages {
+		if len(result.Messages) > 0 {
+			wsm.sentMessagesMu.RLock()
+			sentMap := wsm.sentMessages[conn][queueURL]
+			wsm.sentMessagesMu.RUnlock()
+
+			messages := []Message{}
+			newMessageIds := []string{}
+
+			for _, msg := range result.Messages {
+				messageId := aws.ToString(msg.MessageId)
+				
+				// Only include messages we haven't sent before (unless it's the initial load)
+				if isInitialLoad || !sentMap[messageId] {
 					message := Message{
-						MessageId:     aws.ToString(msg.MessageId),
+						MessageId:     messageId,
 						Body:          aws.ToString(msg.Body),
 						ReceiptHandle: aws.ToString(msg.ReceiptHandle),
 						Attributes:    make(map[string]string),
@@ -164,15 +194,64 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 					}
 
 					messages = append(messages, message)
+					newMessageIds = append(newMessageIds, messageId)
+				}
+			}
+
+			// Only send if we have new messages or it's the initial load
+			if len(messages) > 0 {
+				messageType := "messages"
+				if isInitialLoad {
+					messageType = "initial_messages"
 				}
 
 				if err := conn.WriteJSON(map[string]interface{}{
-					"type":     "messages",
+					"type":     messageType,
 					"queueUrl": queueURL,
 					"messages": messages,
 				}); err != nil {
-					return
+					return true // Exit
 				}
+
+				// Update sent messages tracking
+				wsm.sentMessagesMu.Lock()
+				if wsm.sentMessages[conn] != nil && wsm.sentMessages[conn][queueURL] != nil {
+					for _, id := range newMessageIds {
+						wsm.sentMessages[conn][queueURL][id] = true
+					}
+				}
+				wsm.sentMessagesMu.Unlock()
+			}
+
+			isInitialLoad = false
+		} else if isInitialLoad {
+			// Send empty initial load if no messages
+			if err := conn.WriteJSON(map[string]interface{}{
+				"type":     "initial_messages",
+				"queueUrl": queueURL,
+				"messages": []Message{},
+			}); err != nil {
+				return true // Exit
+			}
+			isInitialLoad = false
+		}
+		
+		return false // Continue
+	}
+
+	// Poll immediately
+	if pollFunc() {
+		return
+	}
+
+	// Then continue polling on timer
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if pollFunc() {
+				return
 			}
 		}
 	}

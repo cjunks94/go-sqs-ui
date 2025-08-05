@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -26,16 +27,17 @@ func NewDemoSQSClient() *DemoSQSClient {
 		messages: make(map[string][]types.Message),
 	}
 
-	// Add some demo messages with recent timestamps
+	// Add some demo messages with recent timestamps (August 2025)
+	now := time.Now()
 	demo.messages["https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue"] = []types.Message{
 		{
 			MessageId:     aws.String("msg-001"),
 			Body:          aws.String(`{"orderId": "12345", "customerId": "cust-001", "amount": 99.99, "status": "pending"}`),
 			ReceiptHandle: aws.String("receipt-001"),
 			Attributes: map[string]string{
-				"SentTimestamp":                   "1722268800000", // July 30, 2025 00:00:00 UTC
+				"SentTimestamp":                   fmt.Sprintf("%d", now.Add(-1*time.Hour).UnixMilli()),
 				"ApproximateReceiveCount":         "1",
-				"ApproximateFirstReceiveTimestamp": "1722268810000",
+				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-50*time.Minute).UnixMilli()),
 			},
 		},
 		{
@@ -43,9 +45,9 @@ func NewDemoSQSClient() *DemoSQSClient {
 			Body:          aws.String(`{"orderId": "12346", "customerId": "cust-002", "amount": 149.99, "status": "processing"}`),
 			ReceiptHandle: aws.String("receipt-002"),
 			Attributes: map[string]string{
-				"SentTimestamp":                   "1722182400000", // July 29, 2025 00:00:00 UTC
+				"SentTimestamp":                   fmt.Sprintf("%d", now.Add(-2*time.Hour).UnixMilli()),
 				"ApproximateReceiveCount":         "1",
-				"ApproximateFirstReceiveTimestamp": "1722182410000",
+				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-110*time.Minute).UnixMilli()),
 			},
 		},
 	}
@@ -56,7 +58,7 @@ func NewDemoSQSClient() *DemoSQSClient {
 			Body:          aws.String(`{"type": "email", "recipient": "user@example.com", "subject": "Order Confirmation", "template": "order-confirmation"}`),
 			ReceiptHandle: aws.String("receipt-notif-001"),
 			Attributes: map[string]string{
-				"SentTimestamp":           "1722355200000", // July 30, 2025 24:00:00 UTC (latest)
+				"SentTimestamp":           fmt.Sprintf("%d", now.Add(-30*time.Minute).UnixMilli()),
 				"ApproximateReceiveCount": "1",
 			},
 		},
@@ -119,6 +121,14 @@ func (d *DemoSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQ
 func (d *DemoSQSClient) ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
 	queueURL := aws.ToString(params.QueueUrl)
 	messages := d.messages[queueURL]
+	
+	log.Printf("Demo: ReceiveMessage called for queue %s, found %d messages", queueURL, len(messages))
+
+	if len(messages) == 0 {
+		return &sqs.ReceiveMessageOutput{
+			Messages: []types.Message{},
+		}, nil
+	}
 
 	maxMessages := int(params.MaxNumberOfMessages)
 	if maxMessages > len(messages) {

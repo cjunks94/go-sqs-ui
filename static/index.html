@@ -23,6 +23,11 @@
     <link rel="stylesheet" href="css/components/aws-context.css">
     <link rel="stylesheet" href="css/components/enhanced-message.css">
     <link rel="stylesheet" href="css/components/theme-toggle.css">
+    <link rel="stylesheet" href="css/components/pagination.css">
+    <link rel="stylesheet" href="css/components/queue-browser.css">
+    <link rel="stylesheet" href="css/components/statistics.css">
+    <link rel="stylesheet" href="css/components/keyboard.css">
+    <link rel="stylesheet" href="css/components/export.css">
 </head>
 <body>
     <div class="container">
@@ -65,6 +70,9 @@
                 <div id="queueDetails" class="hidden">
                     <div class="queue-header">
                         <h1 id="queueName"></h1>
+                        <button class="btn btn-secondary browse-queue-button" title="Browse Queue">
+                            Browse Queue
+                        </button>
                     </div>
                     
                     <div class="queue-info">
@@ -73,6 +81,13 @@
                             <span class="toggle-icon" id="queueToggleIcon">▶</span>
                         </div>
                         <div id="queueAttributes" class="queue-attributes-table collapsed"></div>
+                    </div>
+                    
+                    <div class="queue-statistics-panel hidden" id="queueStatisticsPanel">
+                        <h3>Queue Statistics</h3>
+                        <div class="statistics-content">
+                            <div class="loading">Loading statistics...</div>
+                        </div>
                     </div>
                     
                     <div class="message-section">
@@ -90,6 +105,9 @@
                         <div class="messages-header">
                             <h3>Messages</h3>
                             <div class="messages-controls">
+                                <button id="exportMessages" class="btn btn-secondary export-button" title="Export Messages">
+                                    Export
+                                </button>
                                 <button id="pauseMessages" class="btn btn-secondary" title="Pause/Resume live updates">
                                     ⏸️ Pause
                                 </button>
@@ -97,6 +115,7 @@
                             </div>
                         </div>
                         <div id="messageList" class="message-list"></div>
+                        <div id="paginationContainer" class="pagination-container"></div>
                     </div>
                 </div>
                 
@@ -106,6 +125,14 @@
             </div>
         </div>
     </div>
+    
+    <!-- Keyboard shortcuts help indicator -->
+    <div class="keyboard-shortcuts-indicator" title="Press ? for keyboard shortcuts">
+        <kbd>?</kbd>
+    </div>
+    
+    <!-- Modal containers for dynamic content -->
+    <div id="modalContainer"></div>
     
     <script type="module" src="modules/themeManager.js"></script>
     <script type="module" src="app.js"></script>

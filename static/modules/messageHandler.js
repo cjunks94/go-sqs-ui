@@ -76,11 +76,11 @@ export class MessageHandler extends UIComponent {
             return;
         }
 
-        // Sort messages by timestamp (oldest first)
+        // Sort messages by timestamp (newest first)
         const sortedMessages = [...allMessages].sort((a, b) => {
             const timeA = parseInt(a.attributes?.SentTimestamp || '0');
             const timeB = parseInt(b.attributes?.SentTimestamp || '0');
-            return timeA - timeB;
+            return timeB - timeA;
         });
 
 
@@ -515,6 +515,51 @@ export class MessageHandler extends UIComponent {
         if (currentQueue) {
             const isDLQ = currentQueue.isDLQ || false;
             this.messageFilter.setDLQMode(isDLQ);
+        }
+    }
+
+    /**
+     * Add new messages that weren't previously displayed
+     * @param {Array} newMessages - New messages from WebSocket
+     */
+    addNewMessages(newMessages) {
+        if (!Array.isArray(newMessages) || newMessages.length === 0) return;
+
+        const currentMessages = this.appState.getMessages();
+        
+        // Create a map of current messages by ID for quick lookup
+        const currentMap = new Map(currentMessages.map(msg => [msg.messageId, msg]));
+        
+        // Filter out messages we already have
+        const reallyNewMessages = newMessages.filter(msg => !currentMap.has(msg.messageId));
+        
+        if (reallyNewMessages.length === 0) return;
+
+        // Add new messages to state
+        const updatedMessages = [...reallyNewMessages, ...currentMessages];
+        this.appState.setMessages(updatedMessages);
+
+        // Sort all messages by timestamp (newest first)
+        const sortedMessages = updatedMessages.sort((a, b) => {
+            const timeA = parseInt(a.attributes?.SentTimestamp || '0');
+            const timeB = parseInt(b.attributes?.SentTimestamp || '0');
+            return timeB - timeA;
+        });
+
+        // Clear and redisplay all messages in proper order
+        this.element.innerHTML = '';
+        sortedMessages.forEach((message, index) => {
+            const messageRow = this.createMessageRow(message, index);
+            this.element.appendChild(messageRow);
+        });
+
+        // Re-attach handlers and add show more button
+        setTimeout(() => {
+            this.messageRetry.attachRetryHandlers(sortedMessages);
+        }, 100);
+        
+        if (sortedMessages.length > 0) {
+            this.addShowMoreButton();
         }
     }
 

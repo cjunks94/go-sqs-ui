@@ -11,6 +11,11 @@ import { MessageSender } from './messageSender.js';
 import { WebSocketManager } from './webSocketManager.js';
 import { UIToggleManager } from './uiToggleManager.js';
 import { APIService } from './apiService.js';
+import { Pagination } from './pagination.js';
+import { QueueBrowser } from './queueBrowser.js';
+import { QueueStatistics } from './queueStatistics.js';
+import { MessageExport } from './messageExport.js';
+import { KeyboardNavigation } from './keyboardNavigation.js';
 
 export class SQSApp {
     constructor() {
@@ -21,6 +26,13 @@ export class SQSApp {
         this.messageHandler = new MessageHandler(this.appState);
         this.messageSender = new MessageSender(this.appState, this.messageHandler);
         this.webSocketManager = new WebSocketManager(this.appState, this.messageHandler);
+        
+        // New enhanced modules
+        this.pagination = null; // Will be initialized when needed
+        this.queueBrowser = new QueueBrowser(this.appState);
+        this.queueStatistics = new QueueStatistics(this.appState);
+        this.messageExport = new MessageExport(this.appState);
+        this.keyboardNavigation = new KeyboardNavigation(this.appState);
     }
 
     async init() {
@@ -29,6 +41,9 @@ export class SQSApp {
             await this.queueManager.loadQueues();
             this.setupEventListeners();
             this.webSocketManager.connect();
+            
+            // Initialize keyboard navigation
+            this.keyboardNavigation.init();
         } catch (error) {
             console.error('Error initializing application:', error);
         }
@@ -52,6 +67,22 @@ export class SQSApp {
         document.getElementById('pauseMessages').addEventListener('click', () => {
             UIToggleManager.toggleMessagesPause(this.appState);
         });
+        
+        // Export button
+        const exportBtn = document.getElementById('exportMessages');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.messageExport.exportCurrentView();
+            });
+        }
+        
+        // Browse queue button
+        const browseBtn = document.querySelector('.browse-queue-button');
+        if (browseBtn) {
+            browseBtn.addEventListener('click', () => {
+                this.queueBrowser.open();
+            });
+        }
 
         // UI toggles
         document.getElementById('sidebarToggle').addEventListener('click', () => {
