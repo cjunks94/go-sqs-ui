@@ -34,9 +34,30 @@ type SQSHandler struct {
 }
 
 func NewSQSHandler() (*SQSHandler, error) {
-	// Try to load AWS config, but don't fail if not available
+	// Check for forced mode environment variables
+	forceDemoMode := os.Getenv("FORCE_DEMO_MODE") == "true"
+	forceLiveMode := os.Getenv("FORCE_LIVE_MODE") == "true"
+	
+	if forceDemoMode && forceLiveMode {
+		log.Fatal("Cannot set both FORCE_DEMO_MODE and FORCE_LIVE_MODE")
+	}
+	
+	// If demo mode is forced, use it regardless of AWS config
+	if forceDemoMode {
+		log.Printf("Using demo mode (FORCE_DEMO_MODE=true)")
+		return &SQSHandler{
+			client: NewDemoSQSClient(),
+			config: aws.Config{},
+			isDemo: true,
+		}, nil
+	}
+	
+	// Try to load AWS config
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
+		if forceLiveMode {
+			log.Fatalf("FORCE_LIVE_MODE is set but AWS config not available: %v", err)
+		}
 		log.Printf("Warning: AWS config not available (%v), using demo mode", err)
 		return &SQSHandler{
 			client: NewDemoSQSClient(),
@@ -52,6 +73,9 @@ func NewSQSHandler() (*SQSHandler, error) {
 	
 	_, err = sqsClient.ListQueues(ctx, &sqs.ListQueuesInput{MaxResults: aws.Int32(1)})
 	if err != nil {
+		if forceLiveMode {
+			log.Fatalf("FORCE_LIVE_MODE is set but cannot connect to AWS SQS: %v", err)
+		}
 		log.Printf("Warning: Cannot connect to AWS SQS (%v), using demo mode", err)
 		return &SQSHandler{
 			client: NewDemoSQSClient(),
@@ -92,16 +116,71 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 	log.Printf("ListQueues: Found %d queues", len(result.QueueUrls))
 	queues := []Queue{}
 	
-	// Define required tags for filtering
-	requiredTags := map[string][]string{
-		"businessunit": {"degrees"},
-		"product":      {"amt"},
-		"env":          {"stg", "prod"},
+	// Check if tag filtering is disabled
+	disableTagFilter := os.Getenv("DISABLE_TAG_FILTER") == "true"
+	
+	// Define required tags for filtering (configurable via environment)
+	requiredTags := map[string][]string{}
+	
+	if !disableTagFilter {
+		// Use custom tags if provided, otherwise use defaults
+		if businessUnit := os.Getenv("FILTER_BUSINESS_UNIT"); businessUnit != "" {
+			requiredTags["businessunit"] = strings.Split(businessUnit, ",")
+		} else {
+			requiredTags["businessunit"] = []string{"degrees"}
+		}
+		
+		if product := os.Getenv("FILTER_PRODUCT"); product != "" {
+			requiredTags["product"] = strings.Split(product, ",")
+		} else {
+			requiredTags["product"] = []string{"amt"}
+		}
+		
+		if env := os.Getenv("FILTER_ENV"); env != "" {
+			requiredTags["env"] = strings.Split(env, ",")
+		} else {
+			requiredTags["env"] = []string{"stg", "prod"}
+		}
+		
+		log.Printf("ListQueues: Tag filtering enabled with: %+v", requiredTags)
+	} else {
+		log.Printf("ListQueues: Tag filtering disabled (DISABLE_TAG_FILTER=true)")
 	}
+	
 	filteredCount := 0
 
 	for _, queueURL := range result.QueueUrls {
-		// Check queue tags first
+		// Skip tag checking if filtering is disabled
+		if disableTagFilter {
+			queue := Queue{
+				Name: queueURL,
+				URL:  queueURL,
+			}
+			
+			// Get queue attributes
+			attrs, err := h.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+				QueueUrl:       aws.String(queueURL),
+				AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
+			})
+			
+			if err == nil && attrs.Attributes != nil {
+				queue.Attributes = attrs.Attributes
+				// Extract queue name from ARN
+				if name, ok := attrs.Attributes["QueueArn"]; ok {
+					for i := len(name) - 1; i >= 0; i-- {
+						if name[i] == ':' {
+							queue.Name = name[i+1:]
+							break
+						}
+					}
+				}
+			}
+			
+			queues = append(queues, queue)
+			continue
+		}
+		
+		// Check queue tags if filtering is enabled
 		tagsResult, err := h.client.ListQueueTags(ctx, &sqs.ListQueueTagsInput{
 			QueueUrl: aws.String(queueURL),
 		})

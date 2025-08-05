@@ -102,24 +102,14 @@ make dev-restart
 
 ### Manual Start
 
-1. Ensure your AWS credentials are configured:
-```bash
-aws configure
-# if you are having trouble go to the AWS account sign in page and copy the access keys and manually export in your console
-```
-
-2. Run the application:
 ```bash
 # With automatic cleanup of any existing processes
 make run
 
-# Or directly (less safe)
+# Or directly
 go run .
-```
 
-3. Open your browser and navigate to:
-```
-http://localhost:8080
+# Then open http://localhost:8080
 ```
 
 ### Development Commands
@@ -149,61 +139,44 @@ make help
 
 ### Configuration Options
 
-- **Port**: Set the `PORT` environment variable to use a different port:
-  ```bash
-  PORT=3000 go run .
-  ```
+#### Basic Configuration
+- `PORT` - Server port (default: 8080)
+- `AWS_REGION` - AWS region (default: from AWS config)
+- `AWS_PROFILE` - AWS profile to use
 
-- **AWS Region**: The application uses your default AWS region. To use a different region, set the `AWS_REGION` environment variable:
-  ```bash
-  AWS_REGION=us-west-2 go run .
-  ```
+#### Mode Control
+- `FORCE_DEMO_MODE=true` - Always use demo mode, even with AWS credentials
+- `FORCE_LIVE_MODE=true` - Force live mode (fails if no AWS credentials)
+
+#### Queue Filtering
+- `DISABLE_TAG_FILTER=true` - Show all queues without tag filtering
+- `FILTER_BUSINESS_UNIT` - Custom businessunit values (comma-separated)
+- `FILTER_PRODUCT` - Custom product values (comma-separated)
+- `FILTER_ENV` - Custom env values (comma-separated)
+
+Example:
+```bash
+# Force demo mode
+FORCE_DEMO_MODE=true make dev-start
+
+# Show all queues without filtering
+DISABLE_TAG_FILTER=true make dev-start
+
+# Custom tag filters
+FILTER_BUSINESS_UNIT=myunit FILTER_PRODUCT=myapp FILTER_ENV=dev,test make dev-start
+```
 
 ## AWS Context Switching
 
-The application automatically detects your AWS configuration and switches between modes:
+The application automatically detects AWS credentials and switches between Demo and Live modes. The current mode is displayed in the sidebar.
 
-### Demo Mode
-- **Triggers**: When AWS credentials are not configured or AWS SQS is unreachable
-- **Features**: 
-  - Uses built-in demo data with realistic timestamps
-  - Perfect for development and testing
-  - No AWS credentials required
-  - All UI features functional with mock data
-
-### Live AWS Mode  
-- **Triggers**: When valid AWS credentials are detected and SQS is accessible
-- **Features**:
-  - Connects to real AWS SQS queues
-  - Displays actual queue and message data
-  - Uses your configured AWS profile and region
-  - All operations affect real AWS resources
-
-### Context Information
-The UI displays current context in the sidebar:
-- **Mode**: Demo or Live AWS
-- **Region**: Current AWS region (if applicable)
-- **Profile**: Active AWS profile (if set via `AWS_PROFILE`)
-- **Account**: Account type indicator
-
-### Testing Both Modes
-```bash
-# Test Demo Mode (no AWS credentials)
-unset AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
-go run .
-
-# Test Live AWS Mode (with credentials)
-export AWS_PROFILE=your-profile
-export AWS_REGION=us-east-1
-go run .
-```
+- **Demo Mode**: Used when AWS credentials are unavailable or `FORCE_DEMO_MODE=true`
+- **Live AWS Mode**: Used when valid AWS credentials are detected
+- **Force Mode**: Use environment variables to override automatic detection
 
 ## Building for Production
 
-To build a standalone binary:
-
 ```bash
-# verify this
 go build -o sqs-ui .
 ./sqs-ui
 ```

@@ -90,17 +90,18 @@ function restart_server() {
     start_server
 }
 
-# Set up trap to cleanup on script exit
-trap cleanup EXIT INT TERM
-
 case "${1:-start}" in
     start)
+        # Don't trap EXIT for start command - we want the server to keep running
+        trap cleanup INT TERM
         start_server
         ;;
     stop)
+        trap cleanup EXIT INT TERM
         stop_server
         ;;
     restart)
+        trap cleanup EXIT INT TERM
         restart_server
         ;;
     status)
