@@ -5,31 +5,20 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 ## Features
 
 ### Core Functionality
-- 📋 List SQS queues with tag-based filtering (businessunit:degrees, product:amt, env:stg|prod)
-- 📨 View messages in queues with real-time updates
-- ✉️ Send messages to queues
-- 🗑️ Delete messages from queues
-- 🔄 Real-time message updates via WebSockets with pause/resume functionality
-- 📊 View queue attributes (message counts, retention period, etc.)
-- 🎨 Clean, responsive UI with collapsible sidebar and DataDog-style message lists
+- 📋 List and filter SQS queues with tag-based filtering
+- 📨 View, send, and delete messages with real-time WebSocket updates
+- 🔄 Dead Letter Queue (DLQ) management with retry capabilities
+- 📊 Queue attributes and statistics dashboard
+- 🎨 Clean, responsive UI with collapsible sidebar
 
-### Enhanced Queue Viewing (New!)
-- 📄 **Message Pagination**: "Show More" button for browsing large message sets
-- 🔍 **Advanced Filtering**: Real-time filtering by message content and attributes (e.g., `ApproximateReceiveCount:5`)
-- ⌨️ **Keyboard Navigation**: Comprehensive keyboard shortcuts for power users (press `?` to see all)
-- 📊 **Queue Statistics**: Real-time queue metrics and DLQ-specific analytics
-- 💾 **Message Export**: Export messages to JSON/CSV formats with filter support
-- 🖼️ **Queue Browser**: Full-screen modal for detailed message browsing with pagination
-
-### Technical Features
-- ⚡ Modern ES6+ modular JavaScript architecture
-- 🧪 Comprehensive test suite with 230+ tests
-- 🔀 **AWS Context Switching**: Automatic detection and switching between demo and live AWS modes
-- 📅 **Message Ordering**: Consistent chronological ordering (oldest first) for stable message viewing
-- 🔍 **Enhanced DLQ Debugging**: Advanced filtering, search, and retry functionality for Dead Letter Queues
-- 🎭 **Demo Mode**: Built-in demo mode with realistic recent timestamps for development without AWS credentials
-- ✅ **Batch Operations**: Select multiple messages for batch delete or retry operations
-- 🔧 **Smart Message Updates**: WebSocket updates preserve UI state (expanded messages, scroll position)
+### Advanced Capabilities
+- 📄 **Message Pagination**: Efficient browsing of large message sets
+- 🔍 **Smart Filtering**: Real-time search by content and attributes
+- ⌨️ **Keyboard Navigation**: Full keyboard shortcut support (press `?` for help)
+- 💾 **Export**: Download messages in JSON/CSV formats
+- 🖼️ **Queue Browser**: Full-screen message viewing modal
+- ✅ **Batch Operations**: Multi-select for bulk actions
+- 🎭 **Demo Mode**: Fully functional demo without AWS credentials
 
 ## Prerequisites
 
@@ -56,10 +45,6 @@ cd go-sqs-ui
 ```bash
 # Go dependencies
 go mod download
-# if you are receiving errors regarding the go.sum file
-go mod tidy
-go mod download
-go build
 
 # Frontend dependencies (for testing and development)
 npm install
@@ -252,7 +237,7 @@ go build -o sqs-ui .
 
 ## Testing
 
-The application has comprehensive test coverage with 112+ tests covering all functionality.
+The application includes comprehensive test coverage with 230+ tests across frontend and backend.
 
 ### Frontend Tests
 
@@ -350,18 +335,14 @@ See [TEST_REPORT.md](TEST_REPORT.md) for comprehensive testing documentation.
 
 ## Contributing
 
-Feel free to open issues or submit pull requests. Some areas for improvement:
+Contributions are welcome! Please feel free to submit pull requests or open issues.
 
-- [x] Add message filtering and search (Completed)
-- [ ] Support for message attributes
-- [ ] Queue creation and deletion
-- [x] Batch operations (Completed)
-- [ ] Message visibility timeout adjustment
-- [x] Dead letter queue management (Completed)
-- [ ] CloudWatch metrics integration
-- [ ] Add end-to-end tests
-- [ ] Export messages to CSV/JSON
-- [ ] Queue purge functionality
+### Potential Enhancements
+- Support for message attributes
+- Queue creation and deletion
+- Message visibility timeout adjustment
+- CloudWatch metrics integration
+- Queue purge functionality
 
 ## License
 

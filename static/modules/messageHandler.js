@@ -40,13 +40,11 @@ export class MessageHandler extends UIComponent {
     displayMessages(messages, append = false, prepend = false) {
         // Validate input
         if (!Array.isArray(messages)) {
-            console.warn('displayMessages called with non-array:', messages);
             return;
         }
 
         // Ensure we have a valid DOM element
         if (!this.element) {
-            console.error('Message handler element not found');
             return;
         }
 

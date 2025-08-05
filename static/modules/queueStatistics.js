@@ -104,7 +104,6 @@ export class QueueStatistics {
                 }
             } catch (error) {
                 // API might not be implemented yet, use basic stats
-                console.log('Enhanced statistics not available, using basic stats');
             }
             
             // Update display

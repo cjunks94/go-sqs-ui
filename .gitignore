@@ -59,5 +59,16 @@ coverage/
 # Test artifacts
 test-screenshots/
 test-guide.json
+test-mvp.html
 /tmp/go-sqs-ui.log
 /tmp/go-sqs-ui.pid
+test-results/
+playwright-report/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Server logs
+server.log

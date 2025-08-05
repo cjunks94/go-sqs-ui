@@ -16,7 +16,6 @@ export class MessageExport {
     exportCurrentView() {
         const messages = this.appState.getMessages();
         if (!messages || messages.length === 0) {
-            console.warn('No messages to export');
             return null;
         }
 
@@ -193,7 +192,6 @@ export class MessageExport {
                     break;
                 }
             } catch (error) {
-                console.error('Error fetching messages:', error);
                 hasMore = false;
             }
         }

@@ -15,7 +15,7 @@ export class WebSocketManager {
         this.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
         this.ws.onopen = () => {
-            console.log('WebSocket connected');
+            // WebSocket connected
         };
 
         this.ws.onmessage = (event) => {
@@ -32,14 +32,14 @@ export class WebSocketManager {
         };
 
         this.ws.onclose = () => {
-            console.log('WebSocket disconnected');
+            // WebSocket disconnected - attempt reconnect
             setTimeout(() => this.connect(), this.reconnectDelay);
         };
     }
 
     handleMessage(data) {
         if (!data || typeof data !== 'object') {
-            console.warn('Invalid WebSocket message data:', data);
+            // Invalid WebSocket message data
             return;
         }
 
@@ -62,7 +62,7 @@ export class WebSocketManager {
                     console.error('Error processing WebSocket messages:', error);
                 }
             } else {
-                console.warn('WebSocket messages data is not an array:', data.messages);
+                // WebSocket messages data is not an array
             }
         }
     }
