@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Run lint-staged for incremental linting
+npx lint-staged
+
+# Run Go linter on changed Go files
+CHANGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
+if [ -n "$CHANGED_GO_FILES" ]; then
+  echo "Running golangci-lint on changed Go files..."
+  golangci-lint run $CHANGED_GO_FILES
+fi
+
+echo "✅ Pre-commit checks passed!"

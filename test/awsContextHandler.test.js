@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { AWSContextHandler } from '../static/modules/awsContextHandler.js';
 
 // Mock the APIService

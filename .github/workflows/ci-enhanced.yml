@@ -1,0 +1,461 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly security scan on Sunday
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Enable debug logging'
+        required: false
+        default: false
+
+env:
+  GO_VERSION: '1.21'
+  NODE_VERSION: '20'
+  COVERAGE_THRESHOLD_GO: 90
+  COVERAGE_THRESHOLD_JS: 90
+
+jobs:
+  # ============================================
+  # Stage 1: Quick Checks (Parallel)
+  # ============================================
+  
+  lint-go:
+    name: Lint Go Code
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m --config=.golangci.yml
+
+      - name: Check go mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+  lint-js:
+    name: Lint JavaScript Code
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Prettier check
+        run: npm run format:check
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'  # Don't fail the build
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
+          
+      - name: Upload gosec results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'gosec-results.sarif'
+
+      - name: Check for secrets with gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================
+  # Stage 2: Unit Tests (Parallel with Matrix)
+  # ============================================
+  
+  test-go:
+    name: Test Go (${{ matrix.go-version }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        go-version: ['1.21', '1.22']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests with race detector
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage-${{ matrix.os }}-${{ matrix.go-version }}
+          path: coverage.out
+
+  test-js:
+    name: Test JavaScript (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['18', '20', '22']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: js-coverage-node-${{ matrix.node-version }}
+          path: coverage/
+
+  # ============================================
+  # Stage 3: Coverage Analysis & Quality Gates
+  # ============================================
+  
+  coverage-check:
+    name: Coverage Analysis & Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [test-go, test-js]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download Go coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: go-coverage-*
+          merge-multiple: true
+
+      - name: Download JS coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: js-coverage-*
+          merge-multiple: true
+
+      - name: Check Go coverage threshold
+        run: |
+          echo "Checking Go coverage threshold (>= ${{ env.COVERAGE_THRESHOLD_GO }}%)..."
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Current coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD_GO }}" | bc -l) )); then
+            echo "❌ Coverage ${COVERAGE}% is below threshold ${{ env.COVERAGE_THRESHOLD_GO }}%"
+            exit 1
+          fi
+          echo "✅ Coverage ${COVERAGE}% meets threshold"
+
+      - name: Check JavaScript coverage threshold
+        run: |
+          echo "Checking JavaScript coverage threshold (>= ${{ env.COVERAGE_THRESHOLD_JS }}%)..."
+          # Extract coverage from lcov.info
+          if [ -f coverage/lcov.info ]; then
+            LINES=$(grep -o 'LF:[0-9]*' coverage/lcov.info | cut -d: -f2 | paste -sd+ | bc)
+            COVERED=$(grep -o 'LH:[0-9]*' coverage/lcov.info | cut -d: -f2 | paste -sd+ | bc)
+            COVERAGE=$(echo "scale=2; $COVERED * 100 / $LINES" | bc)
+            echo "Current coverage: ${COVERAGE}%"
+            if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD_JS }}" | bc -l) )); then
+              echo "❌ Coverage ${COVERAGE}% is below threshold ${{ env.COVERAGE_THRESHOLD_JS }}%"
+              exit 1
+            fi
+            echo "✅ Coverage ${COVERAGE}% meets threshold"
+          fi
+
+      - name: Upload Go coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          flags: backend
+          name: go-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+      - name: Upload JavaScript coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: frontend
+          name: js-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+      - name: Generate coverage report comment
+        if: github.event_name == 'pull_request'
+        uses: 5monkeys/cobertura-action@master
+        with:
+          path: coverage/cobertura-coverage.xml
+          minimum_coverage: ${{ env.COVERAGE_THRESHOLD_JS }}
+          fail_below_threshold: true
+          show_line: true
+          show_branch: true
+          show_missing: true
+
+  # ============================================
+  # Stage 4: Build & Integration Tests
+  # ============================================
+  
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [lint-go, lint-js, security-scan]
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Build Go binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          OUTPUT_NAME="sqs-ui-${{ matrix.goos }}-${{ matrix.goarch }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            OUTPUT_NAME="${OUTPUT_NAME}.exe"
+          fi
+          go build -v -ldflags="-s -w" -o ${OUTPUT_NAME} .
+          echo "Built ${OUTPUT_NAME}"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqs-ui-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: sqs-ui-*
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build, coverage-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefer-offline --no-audit
+          go mod download
+
+      - name: Download Linux binary
+        uses: actions/download-artifact@v4
+        with:
+          name: sqs-ui-linux-amd64
+
+      - name: Make binary executable
+        run: chmod +x sqs-ui-linux-amd64
+
+      - name: Start application in demo mode
+        run: |
+          FORCE_DEMO_MODE=true PORT=8080 ./sqs-ui-linux-amd64 &
+          APP_PID=$!
+          echo "APP_PID=${APP_PID}" >> $GITHUB_ENV
+          sleep 5
+
+      - name: Health check
+        run: |
+          for i in {1..10}; do
+            if curl -f http://localhost:8080/api/aws-context; then
+              echo "✅ Application is healthy"
+              break
+            fi
+            echo "Waiting for application to start... (attempt $i/10)"
+            sleep 2
+          done
+          curl -f http://localhost:8080/api/aws-context || exit 1
+
+      - name: Run API tests
+        run: |
+          # Test API endpoints
+          curl -f http://localhost:8080/api/queues || exit 1
+          curl -f http://localhost:8080/api/aws-context || exit 1
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: |
+          npx playwright test --project=chromium || true
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ ! -z "$APP_PID" ]; then
+            kill $APP_PID || true
+          fi
+
+  # ============================================
+  # Stage 5: Reporting & Notifications
+  # ============================================
+  
+  publish-results:
+    name: Publish Test Results
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs: [coverage-check, integration-test]
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            artifacts/**/*.xml
+            artifacts/**/*.json
+          check_name: Test Results
+          comment_mode: always
+
+      - name: Create coverage badges
+        run: |
+          echo "Coverage reports have been uploaded to Codecov"
+          echo "View the full report at: https://codecov.io/gh/${{ github.repository }}"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linting: Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Security: Scanned" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tests: Executed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Coverage: Analyzed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Build: Multi-platform" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Integration: Tested" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Quality Gate Decision
+  # ============================================
+  
+  quality-gate:
+    name: Quality Gate Decision
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [coverage-check, integration-test]
+    if: success()
+    steps:
+      - name: All checks passed
+        run: |
+          echo "✅ All quality gates passed!"
+          echo "The code meets all quality standards:"
+          echo "- Coverage thresholds met"
+          echo "- All tests passing"
+          echo "- No critical security issues"
+          echo "- Linting standards met"

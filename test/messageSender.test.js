@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { MessageSender } from '../static/modules/messageSender.js';
 import { AppState } from '../static/modules/appState.js';
 import { APIService } from '../static/modules/apiService.js';

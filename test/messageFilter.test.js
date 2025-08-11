@@ -3,6 +3,7 @@
  * Tests for filtering and searching messages
  */
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { MessageFilter } from '../static/modules/messageFilter.js';
 
 describe('MessageFilter', () => {

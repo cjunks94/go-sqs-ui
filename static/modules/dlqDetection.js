@@ -32,7 +32,7 @@ export function isDLQ(queue) {
             if (policy.redrivePermission && policy.sourceQueueArns) {
                 return true;
             }
-        } catch (e) {
+        } catch (_e) {
             // Invalid JSON, not a DLQ
         }
     }

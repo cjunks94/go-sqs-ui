@@ -1,0 +1,19 @@
+{
+  "*.js": [
+    "eslint --fix --max-warnings 0",
+    "prettier --write"
+  ],
+  "*.{html,css}": [
+    "prettier --write"
+  ],
+  "*.{json,yml,yaml}": [
+    "prettier --write"
+  ],
+  "*.go": [
+    "gofmt -w",
+    "goimports -w"
+  ],
+  "*.md": [
+    "prettier --write"
+  ]
+}

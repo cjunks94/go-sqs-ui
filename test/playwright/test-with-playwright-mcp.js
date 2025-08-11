@@ -17,7 +17,7 @@ async function runTest(name, testFn) {
       status: 'passed',
       result
     });
-    console.log(`  ✓ Passed`);
+    console.log('  ✓ Passed');
     return result;
   } catch (error) {
     testResults.tests.push({

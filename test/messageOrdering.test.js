@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { MessageHandler } from '../static/modules/messageHandler.js';
 import { AppState } from '../static/modules/appState.js';
 

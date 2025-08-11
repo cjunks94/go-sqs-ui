@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { AppState } from '../static/modules/appState.js';
 
 describe('AppState', () => {

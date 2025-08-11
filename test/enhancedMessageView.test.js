@@ -3,6 +3,7 @@
  * Tests for improved message debugging features
  */
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { EnhancedMessageView } from '../static/modules/enhancedMessageView.js';
 
 describe('EnhancedMessageView', () => {

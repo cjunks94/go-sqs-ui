@@ -79,7 +79,7 @@ export class KeyboardNavigation {
         
         // Check for multi-key completion
         if (this.multiKeyBuffer) {
-            const combo = this.multiKeyBuffer + ' ' + event.key;
+            const combo = `${this.multiKeyBuffer  } ${  event.key}`;
             const shortcut = this.shortcuts.get(combo);
             if (shortcut) {
                 event.preventDefault();

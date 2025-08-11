@@ -3,6 +3,7 @@
  * Tests for identifying and handling Dead Letter Queues
  */
 import { describe, it, expect } from 'vitest';
+
 import { isDLQ, getSourceQueue, getDLQIndicator } from '../static/modules/dlqDetection.js';
 
 describe('DLQ Detection', () => {

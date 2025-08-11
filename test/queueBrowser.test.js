@@ -3,6 +3,7 @@
  * Tests for the dedicated queue browser mode functionality
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
 import { APIService } from '@/apiService.js';
 
 // Mock the APIService

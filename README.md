@@ -1,5 +1,10 @@
 # Go SQS UI
 
+[![CI](https://github.com/cjunks94/go-sqs-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/cjunks94/go-sqs-ui/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/cjunks94/go-sqs-ui/branch/main/graph/badge.svg)](https://codecov.io/gh/cjunks94/go-sqs-ui)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cjunks94/go-sqs-ui)](https://goreportcard.com/report/github.com/cjunks94/go-sqs-ui)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A lightweight, web-based UI for managing AWS SQS queues built with Go and vanilla JavaScript.
 
 ## Features
@@ -298,6 +303,40 @@ node test/playwright/playwright-test-simple.js
 ```
 
 See [TEST_REPORT.md](TEST_REPORT.md) for comprehensive testing documentation.
+
+## Code Quality
+
+This project maintains high code quality standards with comprehensive testing and linting:
+
+### 🧪 Testing & Coverage
+- **Backend**: Go tests with 80%+ coverage target
+- **Frontend**: Vitest with 85%+ coverage target
+- **Coverage Reports**: HTML, LCOV, and Cobertura formats
+- **CI Integration**: Automated testing on every push/PR
+
+### 🔍 Linting & Formatting
+- **Go**: golangci-lint with 25+ linters enabled
+- **JavaScript**: ESLint 9 with modern flat config
+- **Formatting**: Prettier for consistent code style
+- **Pre-commit Hooks**: Automatic linting via husky
+
+### 📊 Quality Commands
+```bash
+# Run all linters
+make lint-all
+
+# Auto-fix issues
+make fix
+
+# Run tests with coverage
+make test-all-coverage
+
+# View coverage reports
+make coverage-open
+
+# Format all code
+make fmt-all
+```
 
 ## Development
 

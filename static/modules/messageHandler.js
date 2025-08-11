@@ -33,7 +33,7 @@ export class MessageHandler extends UIComponent {
             this.displayMessages(messages);
         } catch (error) {
             console.error('Error loading messages:', error);
-            this.setContent('<div class="error-message">Failed to load messages: ' + error.message + '</div>');
+            this.setContent(`<div class="error-message">Failed to load messages: ${  error.message  }</div>`);
         }
     }
 
@@ -285,7 +285,7 @@ export class MessageHandler extends UIComponent {
     createPreviewText(message) {
         const messagePreviewText = document.createElement('span');
         messagePreviewText.className = 'message-preview-text';
-        const previewText = message.body.length > 100 ? message.body.substring(0, 100) + '...' : message.body;
+        const previewText = message.body.length > 100 ? `${message.body.substring(0, 100)  }...` : message.body;
         messagePreviewText.textContent = previewText;
         return messagePreviewText;
     }
@@ -400,7 +400,7 @@ export class MessageHandler extends UIComponent {
             }
         } catch (error) {
             console.error('Error loading more messages:', error);
-            this.showErrorBanner('Failed to load more messages: ' + error.message);
+            this.showErrorBanner(`Failed to load more messages: ${  error.message}`);
             if (showMoreBtn) {
                 showMoreBtn.textContent = 'Show More Messages';
                 showMoreBtn.disabled = false;

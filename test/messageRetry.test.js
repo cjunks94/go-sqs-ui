@@ -3,6 +3,7 @@
  * Tests for retrying DLQ messages
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { MessageRetry } from '../static/modules/messageRetry.js';
 import { APIService } from '../static/modules/apiService.js';
 

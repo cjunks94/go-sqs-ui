@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { UIToggleManager } from '../static/modules/uiToggleManager.js';
 import { AppState } from '../static/modules/appState.js';
 

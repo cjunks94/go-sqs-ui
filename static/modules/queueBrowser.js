@@ -228,7 +228,7 @@ export class QueueBrowser {
         if (!body) return '';
         const maxLength = 100;
         if (body.length <= maxLength) return body;
-        return body.substring(0, maxLength) + '...';
+        return `${body.substring(0, maxLength)  }...`;
     }
 
     /**

@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+go-sqs-ui
+sqs-ui
+
+# Coverage
+coverage/
+*.coverage
+*.lcov
+coverage.html
+coverage.out
+
+# Test artifacts
+test-results/
+playwright-report/
+test-screenshots/
+
+# Logs
+*.log
+
+# Go
+*.go
+go.mod
+go.sum
+
+# Generated files
+package-lock.json
+
+# Git
+.git/
+.gitignore
