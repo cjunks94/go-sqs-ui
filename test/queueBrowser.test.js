@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { APIService } from '@/apiService.js';
+import { QueueBrowser } from '@/queueBrowser.js';
 
 // Mock the APIService
 vi.mock('@/apiService.js');
@@ -156,8 +157,6 @@ vi.mock('@/queueBrowser.js', () => ({
         }));
     })
 }));
-
-import { QueueBrowser } from '@/queueBrowser.js';
 
 describe('QueueBrowser', () => {
     let queueBrowser;

@@ -30,7 +30,7 @@ export class MessageRetry {
             }
         }
 
-        return await APIService.retryMessage(currentQueue.url, message, targetQueue);
+        return APIService.retryMessage(currentQueue.url, message, targetQueue);
     }
 
     /**

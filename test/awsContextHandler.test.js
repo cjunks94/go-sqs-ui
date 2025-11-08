@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { AWSContextHandler } from '../static/modules/awsContextHandler.js';
+import { APIService } from '../static/modules/apiService.js';
 
 // Mock the APIService
 vi.mock('../static/modules/apiService.js', () => ({
@@ -13,8 +14,6 @@ vi.mock('../static/modules/apiService.js', () => ({
         getAWSContext: vi.fn()
     }
 }));
-
-import { APIService } from '../static/modules/apiService.js';
 
 describe('AWSContextHandler', () => {
     let contextHandler;

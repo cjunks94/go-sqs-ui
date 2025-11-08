@@ -7,11 +7,11 @@ import (
 
 func TestQueueType(t *testing.T) {
 	queue := Queue{
-		Name:       "test-queue",
-		URL:        "https://sqs.us-east-1.amazonaws.com/123456789/test-queue",
+		Name: "test-queue",
+		URL:  "https://sqs.us-east-1.amazonaws.com/123456789/test-queue",
 		Attributes: map[string]string{
 			"ApproximateNumberOfMessages": "10",
-			"CreatedTimestamp":             "1234567890",
+			"CreatedTimestamp":            "1234567890",
 		},
 	}
 
@@ -39,13 +39,13 @@ func TestQueueType(t *testing.T) {
 
 	// Check attributes
 	if len(unmarshaledQueue.Attributes) != len(queue.Attributes) {
-		t.Errorf("Attributes count mismatch: got %d, want %d", 
+		t.Errorf("Attributes count mismatch: got %d, want %d",
 			len(unmarshaledQueue.Attributes), len(queue.Attributes))
 	}
 
 	for key, value := range queue.Attributes {
 		if unmarshaledQueue.Attributes[key] != value {
-			t.Errorf("Attribute %s mismatch: got %s, want %s", 
+			t.Errorf("Attribute %s mismatch: got %s, want %s",
 				key, unmarshaledQueue.Attributes[key], value)
 		}
 	}
@@ -78,29 +78,29 @@ func TestMessageType(t *testing.T) {
 
 	// Verify fields
 	if unmarshaledMessage.MessageId != message.MessageId {
-		t.Errorf("MessageId mismatch: got %s, want %s", 
+		t.Errorf("MessageId mismatch: got %s, want %s",
 			unmarshaledMessage.MessageId, message.MessageId)
 	}
 
 	if unmarshaledMessage.ReceiptHandle != message.ReceiptHandle {
-		t.Errorf("ReceiptHandle mismatch: got %s, want %s", 
+		t.Errorf("ReceiptHandle mismatch: got %s, want %s",
 			unmarshaledMessage.ReceiptHandle, message.ReceiptHandle)
 	}
 
 	if unmarshaledMessage.Body != message.Body {
-		t.Errorf("Body mismatch: got %s, want %s", 
+		t.Errorf("Body mismatch: got %s, want %s",
 			unmarshaledMessage.Body, message.Body)
 	}
 
 	// Check attributes
 	if len(unmarshaledMessage.Attributes) != len(message.Attributes) {
-		t.Errorf("Attributes count mismatch: got %d, want %d", 
+		t.Errorf("Attributes count mismatch: got %d, want %d",
 			len(unmarshaledMessage.Attributes), len(message.Attributes))
 	}
 
 	for key, value := range message.Attributes {
 		if unmarshaledMessage.Attributes[key] != value {
-			t.Errorf("Attribute %s mismatch: got %s, want %s", 
+			t.Errorf("Attribute %s mismatch: got %s, want %s",
 				key, unmarshaledMessage.Attributes[key], value)
 		}
 	}
@@ -186,13 +186,13 @@ func TestMessageWithSpecialCharacters(t *testing.T) {
 
 	// Verify body is preserved correctly
 	if unmarshaledMessage.Body != specialBody {
-		t.Errorf("Body with special characters mismatch:\ngot:  %s\nwant: %s", 
+		t.Errorf("Body with special characters mismatch:\ngot:  %s\nwant: %s",
 			unmarshaledMessage.Body, specialBody)
 	}
 
 	// Verify attributes with special characters
 	if unmarshaledMessage.Attributes["Special-Char"] != message.Attributes["Special-Char"] {
-		t.Errorf("Attribute with special characters mismatch: got %s, want %s", 
+		t.Errorf("Attribute with special characters mismatch: got %s, want %s",
 			unmarshaledMessage.Attributes["Special-Char"], message.Attributes["Special-Char"])
 	}
 }
@@ -227,7 +227,7 @@ func TestLargeMessage(t *testing.T) {
 
 	// Verify size is preserved
 	if len(unmarshaledMessage.Body) != len(message.Body) {
-		t.Errorf("Large message body size mismatch: got %d, want %d", 
+		t.Errorf("Large message body size mismatch: got %d, want %d",
 			len(unmarshaledMessage.Body), len(message.Body))
 	}
 }

@@ -191,7 +191,7 @@ export class MessageExport {
                     console.warn('Limiting export to 1000 messages');
                     break;
                 }
-            } catch (error) {
+            } catch (_error) {
                 hasMore = false;
             }
         }
@@ -373,20 +373,22 @@ export class MessageExport {
             case 'current-csv':
                 this.exportAsCSV();
                 break;
-            case 'filtered':
+            case 'filtered': {
                 const filter = document.querySelector('.filter-input')?.value || '';
                 this.exportFiltered(filter);
                 break;
+            }
             case 'all':
                 await this.exportAll();
                 break;
-            case 'statistics':
+            case 'statistics': {
                 // Get statistics from statistics module if available
                 const stats = window.app?.queueStatistics?.getStatistics();
                 if (stats) {
                     this.exportStatistics(stats);
                 }
                 break;
+            }
         }
     }
 }

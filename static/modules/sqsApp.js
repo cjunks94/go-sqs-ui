@@ -11,7 +11,6 @@ import { MessageSender } from './messageSender.js';
 import { WebSocketManager } from './webSocketManager.js';
 import { UIToggleManager } from './uiToggleManager.js';
 import { APIService } from './apiService.js';
-import { Pagination } from './pagination.js';
 import { QueueBrowser } from './queueBrowser.js';
 import { QueueStatistics } from './queueStatistics.js';
 import { MessageExport } from './messageExport.js';

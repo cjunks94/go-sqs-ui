@@ -146,7 +146,7 @@ export class QueueBrowser {
      * @param {number} offset - Offset for pagination
      * @returns {Promise<Object>} Response with messages and total count
      */
-    async fetchMessagesWithPagination(queueUrl, limit, offset) {
+    async fetchMessagesWithPagination(queueUrl, limit, _offset) {
         // First, try to get messages with the standard API
         const messages = await APIService.getMessages(queueUrl, limit);
         

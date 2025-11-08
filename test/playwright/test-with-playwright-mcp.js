@@ -8,7 +8,7 @@ const testResults = {
   tests: []
 };
 
-async function runTest(name, testFn) {
+async function _runTest(name, testFn) {
   console.log(`Running: ${name}`);
   try {
     const result = await testFn();

@@ -569,10 +569,7 @@ export class MessageHandler extends UIComponent {
         if (!Array.isArray(newMessages)) return;
 
         const currentMessages = this.appState.getMessages();
-        
-        // Create a map of current messages by ID for quick lookup
-        const currentMap = new Map(currentMessages.map(msg => [msg.messageId, msg]));
-        
+
         // Track which messages are expanded
         const expandedMessageIds = new Set();
         document.querySelectorAll('.message-item.expanded').forEach(item => {

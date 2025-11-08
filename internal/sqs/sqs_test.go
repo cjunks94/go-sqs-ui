@@ -284,21 +284,21 @@ func TestSQSHandler_DeleteMessage(t *testing.T) {
 
 func TestSQSHandler_GetAWSContext(t *testing.T) {
 	tests := []struct {
-		name           string
-		isDemo         bool
-		config         aws.Config
-		envVars        map[string]string
-		expectedMode   string
-		expectedRegion string
+		name            string
+		isDemo          bool
+		config          aws.Config
+		envVars         map[string]string
+		expectedMode    string
+		expectedRegion  string
 		expectedProfile string
 	}{
 		{
-			name:           "demo mode context",
-			isDemo:         true,
-			config:         aws.Config{},
-			envVars:        map[string]string{},
-			expectedMode:   "Demo",
-			expectedRegion: "",
+			name:            "demo mode context",
+			isDemo:          true,
+			config:          aws.Config{},
+			envVars:         map[string]string{},
+			expectedMode:    "Demo",
+			expectedRegion:  "",
 			expectedProfile: "",
 		},
 		{
@@ -307,9 +307,9 @@ func TestSQSHandler_GetAWSContext(t *testing.T) {
 			config: aws.Config{
 				Region: "us-east-1",
 			},
-			envVars:        map[string]string{},
-			expectedMode:   "Live AWS",
-			expectedRegion: "us-east-1",
+			envVars:         map[string]string{},
+			expectedMode:    "Live AWS",
+			expectedRegion:  "us-east-1",
 			expectedProfile: "",
 		},
 		{
@@ -321,17 +321,17 @@ func TestSQSHandler_GetAWSContext(t *testing.T) {
 			envVars: map[string]string{
 				"AWS_PROFILE": "test-profile",
 			},
-			expectedMode:   "Live AWS",
-			expectedRegion: "us-west-2",
+			expectedMode:    "Live AWS",
+			expectedRegion:  "us-west-2",
 			expectedProfile: "test-profile",
 		},
 		{
-			name:   "live AWS context with minimal config",
-			isDemo: false,
-			config: aws.Config{},
-			envVars:        map[string]string{},
-			expectedMode:   "Live AWS",
-			expectedRegion: "",
+			name:            "live AWS context with minimal config",
+			isDemo:          false,
+			config:          aws.Config{},
+			envVars:         map[string]string{},
+			expectedMode:    "Live AWS",
+			expectedRegion:  "",
 			expectedProfile: "",
 		},
 	}
@@ -477,8 +477,8 @@ func TestSQSHandler_GetMessagesWithPagination(t *testing.T) {
 			setupMock: func(mock *helpers.MockSQSClient) {
 				// Add 15 messages to mock
 				for i := 1; i <= 15; i++ {
-					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue", 
-						fmt.Sprintf("msg-%d", i), 
+					mock.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",
+						fmt.Sprintf("msg-%d", i),
 						fmt.Sprintf("Message body %d", i))
 				}
 			},
@@ -603,7 +603,7 @@ func TestSQSHandler_GetQueueStatistics(t *testing.T) {
 				if err := json.Unmarshal(body, &stats); err != nil {
 					t.Fatalf("failed to unmarshal response: %v", err)
 				}
-				
+
 				// Check for expected statistics fields
 				expectedFields := []string{"totalMessages", "messagesInFlight", "queueName"}
 				for _, field := range expectedFields {
@@ -632,7 +632,7 @@ func TestSQSHandler_GetQueueStatistics(t *testing.T) {
 				if err := json.Unmarshal(body, &stats); err != nil {
 					t.Fatalf("failed to unmarshal response: %v", err)
 				}
-				
+
 				// Check for DLQ-specific statistics
 				if _, ok := stats["isDLQ"]; !ok {
 					t.Error("missing isDLQ field for DLQ queue")
@@ -688,43 +688,43 @@ func TestSQSHandler_GetMessagesWithOffset(t *testing.T) {
 		expectedEnd    int
 	}{
 		{
-			name:          "first page",
-			queryParams:   "?limit=10&offset=0",
-			totalMessages: 30,
+			name:           "first page",
+			queryParams:    "?limit=10&offset=0",
+			totalMessages:  30,
 			expectedStatus: http.StatusOK,
-			expectedStart: 1,
-			expectedEnd:   10,
+			expectedStart:  1,
+			expectedEnd:    10,
 		},
 		{
-			name:          "second page",
-			queryParams:   "?limit=10&offset=10",
-			totalMessages: 30,
+			name:           "second page",
+			queryParams:    "?limit=10&offset=10",
+			totalMessages:  30,
 			expectedStatus: http.StatusOK,
-			expectedStart: 11,
-			expectedEnd:   20,
+			expectedStart:  11,
+			expectedEnd:    20,
 		},
 		{
-			name:          "last page with partial results",
-			queryParams:   "?limit=10&offset=25",
-			totalMessages: 30,
+			name:           "last page with partial results",
+			queryParams:    "?limit=10&offset=25",
+			totalMessages:  30,
 			expectedStatus: http.StatusOK,
-			expectedStart: 26,
-			expectedEnd:   30,
+			expectedStart:  26,
+			expectedEnd:    30,
 		},
 		{
-			name:          "offset beyond available messages",
-			queryParams:   "?limit=10&offset=50",
-			totalMessages: 30,
+			name:           "offset beyond available messages",
+			queryParams:    "?limit=10&offset=50",
+			totalMessages:  30,
 			expectedStatus: http.StatusOK,
-			expectedStart: 0,
-			expectedEnd:   0,
+			expectedStart:  0,
+			expectedEnd:    0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockClient := helpers.NewMockSQSClient()
-			
+
 			// Add messages to mock
 			for i := 1; i <= tt.totalMessages; i++ {
 				mockClient.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue",

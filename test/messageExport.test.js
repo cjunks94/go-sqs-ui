@@ -123,7 +123,7 @@ vi.mock('@/messageExport.js', () => ({
             });
         });
         
-        this.fetchAllMessages = vi.fn(async (queueUrl) => {
+        this.fetchAllMessages = vi.fn(async (_queueUrl) => {
             // Mock fetching all messages
             return Array.from({ length: 100 }, (_, i) => ({
                 messageId: `msg-${i + 1}`,

@@ -43,11 +43,11 @@ func NewSQSHandler() (*SQSHandler, error) {
 	// Check for forced mode environment variables
 	forceDemoMode := os.Getenv("FORCE_DEMO_MODE") == "true"
 	forceLiveMode := os.Getenv("FORCE_LIVE_MODE") == "true"
-	
+
 	if forceDemoMode && forceLiveMode {
 		log.Fatal("Cannot set both FORCE_DEMO_MODE and FORCE_LIVE_MODE")
 	}
-	
+
 	// If demo mode is forced, use it regardless of AWS config
 	if forceDemoMode {
 		log.Printf("Using demo mode (FORCE_DEMO_MODE=true)")
@@ -57,7 +57,7 @@ func NewSQSHandler() (*SQSHandler, error) {
 			isDemo: true,
 		}, nil
 	}
-	
+
 	// Try to load AWS config
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -76,7 +76,7 @@ func NewSQSHandler() (*SQSHandler, error) {
 	sqsClient := sqs.NewFromConfig(cfg)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	_, err = sqsClient.ListQueues(ctx, &sqs.ListQueuesInput{MaxResults: aws.Int32(1)})
 	if err != nil {
 		if forceLiveMode {
@@ -122,13 +122,13 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("ListQueues: Found %d queues", len(result.QueueUrls))
 	queues := []internal_types.Queue{}
-	
+
 	// Check if tag filtering is disabled
 	disableTagFilter := os.Getenv("DISABLE_TAG_FILTER") == "true"
-	
+
 	// Define required tags for filtering (configurable via environment)
 	requiredTags := map[string][]string{}
-	
+
 	if !disableTagFilter {
 		// Use custom tags if provided, otherwise use defaults
 		if businessUnit := os.Getenv("FILTER_BUSINESS_UNIT"); businessUnit != "" {
@@ -136,24 +136,24 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 		} else {
 			requiredTags["businessunit"] = []string{"degrees"}
 		}
-		
+
 		if product := os.Getenv("FILTER_PRODUCT"); product != "" {
 			requiredTags["product"] = strings.Split(product, ",")
 		} else {
 			requiredTags["product"] = []string{"amt"}
 		}
-		
+
 		if env := os.Getenv("FILTER_ENV"); env != "" {
 			requiredTags["env"] = strings.Split(env, ",")
 		} else {
 			requiredTags["env"] = []string{"stg", "prod"}
 		}
-		
+
 		log.Printf("ListQueues: Tag filtering enabled with: %+v", requiredTags)
 	} else {
 		log.Printf("ListQueues: Tag filtering disabled (DISABLE_TAG_FILTER=true)")
 	}
-	
+
 	filteredCount := 0
 
 	for _, queueURL := range result.QueueUrls {
@@ -163,13 +163,13 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 				Name: queueURL,
 				URL:  queueURL,
 			}
-			
+
 			// Get queue attributes
 			attrs, err := h.Client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 				QueueUrl:       aws.String(queueURL),
 				AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
 			})
-			
+
 			if err == nil && attrs.Attributes != nil {
 				queue.Attributes = attrs.Attributes
 				// Extract queue name from ARN
@@ -182,11 +182,11 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 			}
-			
+
 			queues = append(queues, queue)
 			continue
 		}
-		
+
 		// Check queue tags if filtering is enabled
 		tagsResult, err := h.Client.ListQueueTags(ctx, &sqs.ListQueueTagsInput{
 			QueueUrl: aws.String(queueURL),
@@ -196,7 +196,7 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Check if queue matches all required tags  
+		// Check if queue matches all required tags
 		matchesAllTags := true
 		for tagKey, validValues := range requiredTags {
 			tagValue, exists := tagsResult.Tags[tagKey]
@@ -215,7 +215,7 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 		if !matchesAllTags {
 			continue
 		}
-		
+
 		filteredCount++
 		log.Printf("ListQueues: Queue %s matches all required tags", queueURL)
 
@@ -272,12 +272,12 @@ func contains(slice []string, value string) bool {
 func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
-	
+
 	// Fix for Gorilla mux eating one slash in https://
 	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
 		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
 	}
-	
+
 	log.Printf("GetMessages: Raw queueUrl from route: %s", queueURL)
 	log.Printf("GetMessages: Full request URL: %s", r.URL.String())
 
@@ -365,7 +365,7 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
-	
+
 	// Fix for Gorilla mux eating one slash in https://
 	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
 		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
@@ -406,7 +406,7 @@ func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
-	
+
 	// Fix for Gorilla mux eating one slash in https://
 	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
 		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
@@ -432,7 +432,7 @@ func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sourceQueueURL := vars["queueUrl"]
-	
+
 	// Fix for Gorilla mux eating one slash in https://
 	if strings.HasPrefix(sourceQueueURL, "https:/") && !strings.HasPrefix(sourceQueueURL, "https://") {
 		sourceQueueURL = strings.Replace(sourceQueueURL, "https:/", "https://", 1)
@@ -440,7 +440,7 @@ func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 
 	var payload struct {
 		Message        internal_types.Message `json:"message"`
-		TargetQueueURL string  `json:"targetQueueUrl"`
+		TargetQueueURL string                 `json:"targetQueueUrl"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -487,27 +487,27 @@ func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 // GetAWSContext handles HTTP requests to retrieve AWS context information including region and mode.
 func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
 	log.Printf("GetAWSContext: Fetching AWS context information")
-	
+
 	type AWSContext struct {
 		Mode      string `json:"mode"`
 		Region    string `json:"region,omitempty"`
 		Profile   string `json:"profile,omitempty"`
 		AccountID string `json:"accountId,omitempty"`
 	}
-	
+
 	context := AWSContext{
 		Mode: "Demo",
 	}
-	
+
 	if !h.isDemo {
 		context.Mode = "Live AWS"
 		context.Region = h.config.Region
-		
+
 		// Get profile from environment or config
 		if profile := os.Getenv("AWS_PROFILE"); profile != "" {
 			context.Profile = profile
 		}
-		
+
 		// Try to get account ID from credentials if available
 		if h.config.Credentials != nil {
 			if creds, err := h.config.Credentials.Retrieve(r.Context()); err == nil {
@@ -519,14 +519,14 @@ func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(context); err != nil {
 		log.Printf("GetAWSContext: Error encoding response: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	
+
 	log.Printf("GetAWSContext: Successfully returned context (mode: %s)", context.Mode)
 }
 
@@ -537,14 +537,14 @@ func getTimestampFromMessage(message internal_types.Message) int64 {
 	if !exists {
 		return 0
 	}
-	
+
 	timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {
-		log.Printf("Warning: Invalid SentTimestamp format '%s' for message %s: %v", 
+		log.Printf("Warning: Invalid SentTimestamp format '%s' for message %s: %v",
 			timestampStr, message.MessageId, err)
 		return 0
 	}
-	
+
 	return timestamp
 }
 
@@ -552,27 +552,27 @@ func getTimestampFromMessage(message internal_types.Message) int64 {
 func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
-	
+
 	// Fix for Gorilla mux eating one slash in https://
 	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
 		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
 	}
-	
+
 	log.Printf("GetQueueStatistics: Fetching statistics for queue %s", queueURL)
 	ctx := context.Background()
-	
+
 	// Get queue attributes
 	attrs, err := h.Client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		QueueUrl:       aws.String(queueURL),
 		AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
 	})
-	
+
 	if err != nil {
 		log.Printf("GetQueueStatistics: Error fetching queue attributes: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Extract queue name from ARN
 	queueName := queueURL
 	if arn, ok := attrs.Attributes["QueueArn"]; ok {
@@ -581,35 +581,35 @@ func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) 
 			queueName = parts[len(parts)-1]
 		}
 	}
-	
+
 	// Check if it's a DLQ
-	isDLQ := strings.HasSuffix(queueName, "-dlq") || 
+	isDLQ := strings.HasSuffix(queueName, "-dlq") ||
 		strings.HasSuffix(queueName, "-DLQ") ||
 		attrs.Attributes["RedriveAllowPolicy"] != ""
-	
+
 	// Build statistics response
 	stats := map[string]interface{}{
 		"queueName":        queueName,
 		"totalMessages":    parseIntSafe(attrs.Attributes["ApproximateNumberOfMessages"]),
 		"messagesInFlight": parseIntSafe(attrs.Attributes["ApproximateNumberOfMessagesNotVisible"]),
 		"messagesDelayed":  parseIntSafe(attrs.Attributes["ApproximateNumberOfMessagesDelayed"]),
-		"isDLQ":           isDLQ,
+		"isDLQ":            isDLQ,
 	}
-	
+
 	// Add timestamps if available
 	if created := attrs.Attributes["CreatedTimestamp"]; created != "" {
 		stats["createdTimestamp"] = parseIntSafe(created) * 1000
 	}
-	
+
 	if modified := attrs.Attributes["LastModifiedTimestamp"]; modified != "" {
 		stats["lastModifiedTimestamp"] = parseIntSafe(modified) * 1000
 	}
-	
+
 	// Calculate message age if possible
 	if oldestAge := attrs.Attributes["ApproximateAgeOfOldestMessage"]; oldestAge != "" {
 		stats["oldestMessageAge"] = parseIntSafe(oldestAge) * 1000
 	}
-	
+
 	// For DLQ, try to get additional statistics
 	if isDLQ {
 		// Sample a few messages to calculate DLQ-specific stats
@@ -619,12 +619,12 @@ func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) 
 			AttributeNames:        []types.QueueAttributeName{types.QueueAttributeNameAll},
 			MessageAttributeNames: []string{"All"},
 		})
-		
+
 		if err == nil && len(messages.Messages) > 0 {
 			totalReceiveCount := 0
 			maxReceiveCount := 0
 			errorTypes := make(map[string]int)
-			
+
 			for _, msg := range messages.Messages {
 				if receiveCount := msg.Attributes["ApproximateReceiveCount"]; receiveCount != "" {
 					count := parseIntSafe(receiveCount)
@@ -633,22 +633,22 @@ func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) 
 						maxReceiveCount = count
 					}
 				}
-				
+
 				// Try to extract error type from message attributes
 				if errorType, ok := msg.MessageAttributes["ErrorType"]; ok && errorType.StringValue != nil {
 					errorTypes[*errorType.StringValue]++
 				}
 			}
-			
+
 			stats["dlqStatistics"] = map[string]interface{}{
 				"sampleSize":          len(messages.Messages),
 				"averageReceiveCount": float64(totalReceiveCount) / float64(len(messages.Messages)),
 				"maxReceiveCount":     maxReceiveCount,
-				"errorTypes":         errorTypes,
+				"errorTypes":          errorTypes,
 			}
 		}
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(stats); err != nil {
 		log.Printf("Error encoding statistics response: %v", err)

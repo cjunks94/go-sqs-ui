@@ -68,7 +68,7 @@ func (m *MockSQSClient) ListQueueTags(ctx context.Context, params *sqs.ListQueue
 	if err, exists := m.errors["ListQueueTags"]; exists {
 		return nil, err
 	}
-	
+
 	// Return mock tags that match the filter criteria
 	return &sqs.ListQueueTagsOutput{
 		Tags: map[string]string{

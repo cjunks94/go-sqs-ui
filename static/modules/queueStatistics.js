@@ -102,7 +102,7 @@ export class QueueStatistics {
                 if (enhancedStats) {
                     this.statistics = { ...this.statistics, ...enhancedStats };
                 }
-            } catch (error) {
+            } catch (_error) {
                 // API might not be implemented yet, use basic stats
             }
             
@@ -208,7 +208,7 @@ export class QueueStatistics {
             let dlqStats = {};
             try {
                 dlqStats = await APIService.getDLQStatistics?.(queue.url) || {};
-            } catch (error) {
+            } catch (_error) {
                 // API might not be implemented yet, calculate from messages
                 dlqStats = await this.calculateDLQStatistics();
             }
@@ -366,7 +366,7 @@ export class QueueStatistics {
      * Render statistics chart
      * @param {Object} data - Chart data
      */
-    renderChart(data) {
+    renderChart(_data) {
         if (!this.chartContext) return;
         
         // Simple bar chart for message counts

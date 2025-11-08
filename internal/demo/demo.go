@@ -37,8 +37,8 @@ func NewDemoSQSClient() *DemoSQSClient {
 			Body:          aws.String(`{"orderId": "12345", "customerId": "cust-001", "amount": 99.99, "status": "pending"}`),
 			ReceiptHandle: aws.String("receipt-001"),
 			Attributes: map[string]string{
-				"SentTimestamp":                   fmt.Sprintf("%d", now.Add(-1*time.Hour).UnixMilli()),
-				"ApproximateReceiveCount":         "1",
+				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-1*time.Hour).UnixMilli()),
+				"ApproximateReceiveCount":          "1",
 				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-50*time.Minute).UnixMilli()),
 			},
 		},
@@ -47,8 +47,8 @@ func NewDemoSQSClient() *DemoSQSClient {
 			Body:          aws.String(`{"orderId": "12346", "customerId": "cust-002", "amount": 149.99, "status": "processing"}`),
 			ReceiptHandle: aws.String("receipt-002"),
 			Attributes: map[string]string{
-				"SentTimestamp":                   fmt.Sprintf("%d", now.Add(-2*time.Hour).UnixMilli()),
-				"ApproximateReceiveCount":         "1",
+				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-2*time.Hour).UnixMilli()),
+				"ApproximateReceiveCount":          "1",
 				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-110*time.Minute).UnixMilli()),
 			},
 		},
@@ -80,12 +80,12 @@ func (d *DemoSQSClient) ListQueues(ctx context.Context, params *sqs.ListQueuesIn
 // ListQueueTags returns demo tags for the specified queue.
 func (d *DemoSQSClient) ListQueueTags(ctx context.Context, params *sqs.ListQueueTagsInput, optFns ...func(*sqs.Options)) (*sqs.ListQueueTagsOutput, error) {
 	log.Printf("Demo: ListQueueTags called for queue %s", aws.ToString(params.QueueUrl))
-	
+
 	// Return demo tags that match your filter criteria
 	return &sqs.ListQueueTagsOutput{
 		Tags: map[string]string{
 			"businessunit": "degrees",
-			"product":      "amt", 
+			"product":      "amt",
 			"env":          "stg",
 		},
 	}, nil
@@ -127,7 +127,7 @@ func (d *DemoSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQ
 func (d *DemoSQSClient) ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
 	queueURL := aws.ToString(params.QueueUrl)
 	messages := d.messages[queueURL]
-	
+
 	log.Printf("Demo: ReceiveMessage called for queue %s, found %d messages", queueURL, len(messages))
 
 	if len(messages) == 0 {

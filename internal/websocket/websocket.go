@@ -189,7 +189,7 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 
 			for _, msg := range result.Messages {
 				messageId := aws.ToString(msg.MessageId)
-				
+
 				// Only include messages we haven't sent before (unless it's the initial load)
 				if isInitialLoad || !sentMap[messageId] {
 					message := internal_types.Message{
@@ -245,7 +245,7 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 			}
 			isInitialLoad = false
 		}
-		
+
 		return false // Continue
 	}
 

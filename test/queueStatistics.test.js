@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { APIService } from '@/apiService.js';
+import { QueueStatistics } from '@/queueStatistics.js';
 
 // Mock the APIService
 vi.mock('@/apiService.js');
@@ -183,7 +184,7 @@ vi.mock('@/queueStatistics.js', () => ({
         
         this.getStatistics = vi.fn(() => this.statistics);
         
-        this.renderChart = vi.fn((data) => {
+        this.renderChart = vi.fn((_data) => {
             // Mock chart rendering
             const canvas = this.element?.querySelector('#stats-chart');
             if (canvas) {
@@ -204,8 +205,6 @@ vi.mock('@/queueStatistics.js', () => ({
         });
     })
 }));
-
-import { QueueStatistics } from '@/queueStatistics.js';
 
 describe('QueueStatistics', () => {
     let queueStats;
