@@ -1,4 +1,5 @@
-package main
+// Package websocket provides WebSocket-based real-time updates for SQS queue messages.
+package websocket
 
 import (
 	"context"
@@ -10,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	internal_sqs "github.com/cjunker/go-sqs-ui/internal/sqs"
+	internal_types "github.com/cjunker/go-sqs-ui/internal/types"
 	"github.com/gorilla/websocket"
 )
 
@@ -21,8 +24,9 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// WebSocketManager manages WebSocket connections and real-time SQS message streaming.
 type WebSocketManager struct {
-	sqsClient     SQSClientInterface
+	sqsClient     internal_sqs.SQSClientInterface
 	connections   map[*websocket.Conn]map[string]context.CancelFunc
 	connectionsMu sync.RWMutex
 	// Track sent messages per connection per queue
@@ -30,7 +34,8 @@ type WebSocketManager struct {
 	sentMessagesMu sync.RWMutex
 }
 
-func NewWebSocketManager(sqsClient SQSClientInterface) *WebSocketManager {
+// NewWebSocketManager creates a new WebSocket manager with the given SQS client.
+func NewWebSocketManager(sqsClient internal_sqs.SQSClientInterface) *WebSocketManager {
 	return &WebSocketManager{
 		sqsClient:    sqsClient,
 		connections:  make(map[*websocket.Conn]map[string]context.CancelFunc),
@@ -38,6 +43,7 @@ func NewWebSocketManager(sqsClient SQSClientInterface) *WebSocketManager {
 	}
 }
 
+// HandleWebSocket upgrades HTTP connections to WebSocket and handles message subscriptions.
 func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -91,6 +97,7 @@ func (wsm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+// cleanupConnection cancels all queue subscriptions and closes the WebSocket connection.
 func (wsm *WebSocketManager) cleanupConnection(conn *websocket.Conn) {
 	wsm.connectionsMu.Lock()
 	if queues, exists := wsm.connections[conn]; exists {
@@ -110,6 +117,7 @@ func (wsm *WebSocketManager) cleanupConnection(conn *websocket.Conn) {
 	}
 }
 
+// pingConnection sends periodic ping messages to keep the WebSocket connection alive.
 func (wsm *WebSocketManager) pingConnection(conn *websocket.Conn) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
@@ -121,6 +129,7 @@ func (wsm *WebSocketManager) pingConnection(conn *websocket.Conn) {
 	}
 }
 
+// subscribeToQueue starts polling the specified queue and streaming messages to the WebSocket connection.
 func (wsm *WebSocketManager) subscribeToQueue(conn *websocket.Conn, queueURL string) {
 	wsm.connectionsMu.Lock()
 	defer wsm.connectionsMu.Unlock()
@@ -145,6 +154,7 @@ func (wsm *WebSocketManager) subscribeToQueue(conn *websocket.Conn, queueURL str
 	}
 }
 
+// pollQueue continuously polls an SQS queue and sends new messages to the WebSocket connection.
 func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn, queueURL string) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -174,7 +184,7 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 			sentMap := wsm.sentMessages[conn][queueURL]
 			wsm.sentMessagesMu.RUnlock()
 
-			messages := []Message{}
+			messages := []internal_types.Message{}
 			newMessageIds := []string{}
 
 			for _, msg := range result.Messages {
@@ -182,7 +192,7 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 				
 				// Only include messages we haven't sent before (unless it's the initial load)
 				if isInitialLoad || !sentMap[messageId] {
-					message := Message{
+					message := internal_types.Message{
 						MessageId:     messageId,
 						Body:          aws.ToString(msg.Body),
 						ReceiptHandle: aws.ToString(msg.ReceiptHandle),
@@ -229,7 +239,7 @@ func (wsm *WebSocketManager) pollQueue(ctx context.Context, conn *websocket.Conn
 			if err := conn.WriteJSON(map[string]interface{}{
 				"type":     "initial_messages",
 				"queueUrl": queueURL,
-				"messages": []Message{},
+				"messages": []internal_types.Message{},
 			}); err != nil {
 				return true // Exit
 			}

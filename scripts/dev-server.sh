@@ -38,7 +38,7 @@ function start_server() {
     cleanup
     
     # Start server in background
-    nohup go run . > /tmp/go-sqs-ui.log 2>&1 &
+    nohup go run ./cmd/sqs-ui > /tmp/go-sqs-ui.log 2>&1 &
     SERVER_PID=$!
     
     # Save PID

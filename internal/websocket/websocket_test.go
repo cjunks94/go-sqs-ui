@@ -1,4 +1,4 @@
-package main
+package websocket
 
 import (
 	"context"
@@ -9,11 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cjunker/go-sqs-ui/test/helpers"
 	"github.com/gorilla/websocket"
 )
 
 func TestWebSocketManager_HandleWebSocket(t *testing.T) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	mockClient.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue")
 	mockClient.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue", "msg1", "test message")
 
@@ -51,7 +52,7 @@ func TestWebSocketManager_HandleWebSocket(t *testing.T) {
 		t.Fatalf("Failed to set read deadline: %v", err)
 	}
 
-	// Read the response (should be messages from the queue)
+	// Read the response (should be initial_messages from the queue)
 	var response map[string]interface{}
 	if err := conn.ReadJSON(&response); err != nil {
 		// This might timeout if no messages are sent immediately, which is okay
@@ -60,8 +61,9 @@ func TestWebSocketManager_HandleWebSocket(t *testing.T) {
 		}
 	} else {
 		// If we got a response, verify it's the expected format
-		if response["type"] != "messages" {
-			t.Errorf("Expected message type 'messages', got %v", response["type"])
+		// First response should be "initial_messages" type
+		if response["type"] != "initial_messages" {
+			t.Errorf("Expected message type 'initial_messages', got %v", response["type"])
 		}
 		if response["queueUrl"] != "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue" {
 			t.Errorf("Expected queueUrl to match subscription, got %v", response["queueUrl"])
@@ -70,7 +72,7 @@ func TestWebSocketManager_HandleWebSocket(t *testing.T) {
 }
 
 func TestWebSocketManager_ConnectionTracking(t *testing.T) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	wsManager := NewWebSocketManager(mockClient)
 
 	// Verify initial state
@@ -126,7 +128,7 @@ func TestWebSocketManager_ConnectionTracking(t *testing.T) {
 }
 
 func TestWebSocketManager_SubscribeToQueue(t *testing.T) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	mockClient.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue")
 
 	wsManager := NewWebSocketManager(mockClient)
@@ -182,7 +184,7 @@ func TestWebSocketManager_PingPong(t *testing.T) {
 }
 
 func TestWebSocketManager_InvalidMessage(t *testing.T) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	wsManager := NewWebSocketManager(mockClient)
 
 	server := httptest.NewServer(http.HandlerFunc(wsManager.HandleWebSocket))
@@ -216,7 +218,7 @@ func TestWebSocketManager_InvalidMessage(t *testing.T) {
 
 // Benchmark WebSocket message processing
 func BenchmarkWebSocketManager_MessageProcessing(b *testing.B) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	mockClient.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/bench-queue")
 
 	// Add many messages for benchmarking

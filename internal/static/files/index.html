@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQS UI</title>
+    
+    <!-- Theme System -->
+    <link rel="stylesheet" href="css/themes/theme-base.css">
+    <link rel="stylesheet" href="css/themes/light.css">
+    <link rel="stylesheet" href="css/themes/dark.css">
+    
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="css/base/reset.css">
+    <link rel="stylesheet" href="css/base/typography.css">
+    <link rel="stylesheet" href="css/base/layout.css">
+    
+    <!-- Component Styles -->
+    <link rel="stylesheet" href="css/components/sidebar.css">
+    <link rel="stylesheet" href="css/components/messages.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/forms.css">
+    <link rel="stylesheet" href="css/components/aws-context.css">
+    <link rel="stylesheet" href="css/components/enhanced-message.css">
+    <link rel="stylesheet" href="css/components/theme-toggle.css">
+    <link rel="stylesheet" href="css/components/pagination.css">
+    <link rel="stylesheet" href="css/components/queue-browser.css">
+    <link rel="stylesheet" href="css/components/statistics.css">
+    <link rel="stylesheet" href="css/components/keyboard.css">
+    <link rel="stylesheet" href="css/components/export.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <button id="sidebarToggle" class="sidebar-toggle" title="Toggle Sidebar">
+                <span class="toggle-icon">☰</span>
+            </button>
+            
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>AWS SQS UI</h2>
+                    <button class="sidebar-close" id="sidebarClose" title="Close Sidebar">×</button>
+                </div>
+                
+                <div class="aws-context-section">
+                    <div class="aws-context-header" onclick="toggleAWSContext()">
+                        <h3>AWS Context</h3>
+                        <span class="toggle-icon" id="awsToggleIcon">▶</span>
+                    </div>
+                    <div id="awsContextDetails" class="aws-context-details collapsed">
+                        <div class="loading">Loading AWS context...</div>
+                    </div>
+                </div>
+                
+                <div class="queues-section">
+                    <div class="queues-header" onclick="toggleQueuesSection()">
+                        <h3>Queues</h3>
+                        <span class="toggle-icon" id="queuesToggleIcon">▼</span>
+                    </div>
+                    <div id="queuesContent" class="queues-content">
+                        <div id="queueList" class="queue-list">
+                            <div class="loading">Loading queues...</div>
+                        </div>
+                        <button id="refreshQueues" class="btn btn-secondary">Refresh Queues</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div id="queueDetails" class="hidden">
+                    <div class="queue-header">
+                        <h1 id="queueName"></h1>
+                        <button class="btn btn-secondary browse-queue-button" title="Browse Queue">
+                            Browse Queue
+                        </button>
+                    </div>
+                    
+                    <div class="queue-info">
+                        <div class="queue-info-header" onclick="toggleQueueAttributes()">
+                            <h3>Queue Attributes</h3>
+                            <span class="toggle-icon" id="queueToggleIcon">▶</span>
+                        </div>
+                        <div id="queueAttributes" class="queue-attributes-table collapsed"></div>
+                    </div>
+                    
+                    <div class="queue-statistics-panel hidden" id="queueStatisticsPanel">
+                        <h3>Queue Statistics</h3>
+                        <div class="statistics-content">
+                            <div class="loading">Loading statistics...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="message-section">
+                        <div class="message-section-header" onclick="toggleSendMessage()">
+                            <h3>Send Message</h3>
+                            <span class="toggle-icon" id="sendToggleIcon">▶</span>
+                        </div>
+                        <div class="send-message collapsed" id="sendMessageSection">
+                            <textarea id="messageBody" placeholder="Enter message body..."></textarea>
+                            <button id="sendMessage" class="btn btn-primary">Send Message</button>
+                        </div>
+                    </div>
+                    
+                    <div class="messages-section">
+                        <div class="messages-header">
+                            <h3>Messages</h3>
+                            <div class="messages-controls">
+                                <button id="exportMessages" class="btn btn-secondary export-button" title="Export Messages">
+                                    Export
+                                </button>
+                                <button id="pauseMessages" class="btn btn-secondary" title="Pause/Resume live updates">
+                                    ⏸️ Pause
+                                </button>
+                                <button id="refreshMessages" class="btn btn-secondary">Refresh</button>
+                            </div>
+                        </div>
+                        <div id="messageList" class="message-list"></div>
+                        <div id="paginationContainer" class="pagination-container"></div>
+                    </div>
+                </div>
+                
+                <div id="noQueueSelected" class="no-selection">
+                    <p>Select a queue from the sidebar to view details</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Keyboard shortcuts help indicator -->
+    <div class="keyboard-shortcuts-indicator" title="Press ? for keyboard shortcuts">
+        <kbd>?</kbd>
+    </div>
+    
+    <!-- Modal containers for dynamic content -->
+    <div id="modalContainer"></div>
+    
+    <script type="module" src="modules/themeManager.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

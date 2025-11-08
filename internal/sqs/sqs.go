@@ -1,4 +1,5 @@
-package main
+// Package sqs provides HTTP handlers and AWS SQS client functionality for queue management.
+package sqs
 
 import (
 	"context"
@@ -15,9 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/cjunker/go-sqs-ui/internal/demo"
+	internal_types "github.com/cjunker/go-sqs-ui/internal/types"
 	"github.com/gorilla/mux"
 )
 
+// SQSClientInterface defines the AWS SQS client operations required for queue management.
 type SQSClientInterface interface {
 	ListQueues(ctx context.Context, params *sqs.ListQueuesInput, optFns ...func(*sqs.Options)) (*sqs.ListQueuesOutput, error)
 	GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error)
@@ -27,12 +31,14 @@ type SQSClientInterface interface {
 	DeleteMessage(ctx context.Context, params *sqs.DeleteMessageInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error)
 }
 
+// SQSHandler handles HTTP requests for AWS SQS operations and maintains the SQS client.
 type SQSHandler struct {
-	client SQSClientInterface
+	Client SQSClientInterface
 	config aws.Config
 	isDemo bool
 }
 
+// NewSQSHandler creates a new SQS handler, automatically detecting and configuring AWS or demo mode.
 func NewSQSHandler() (*SQSHandler, error) {
 	// Check for forced mode environment variables
 	forceDemoMode := os.Getenv("FORCE_DEMO_MODE") == "true"
@@ -46,7 +52,7 @@ func NewSQSHandler() (*SQSHandler, error) {
 	if forceDemoMode {
 		log.Printf("Using demo mode (FORCE_DEMO_MODE=true)")
 		return &SQSHandler{
-			client: NewDemoSQSClient(),
+			Client: demo.NewDemoSQSClient(),
 			config: aws.Config{},
 			isDemo: true,
 		}, nil
@@ -60,7 +66,7 @@ func NewSQSHandler() (*SQSHandler, error) {
 		}
 		log.Printf("Warning: AWS config not available (%v), using demo mode", err)
 		return &SQSHandler{
-			client: NewDemoSQSClient(),
+			Client: demo.NewDemoSQSClient(),
 			config: aws.Config{},
 			isDemo: true,
 		}, nil
@@ -78,7 +84,7 @@ func NewSQSHandler() (*SQSHandler, error) {
 		}
 		log.Printf("Warning: Cannot connect to AWS SQS (%v), using demo mode", err)
 		return &SQSHandler{
-			client: NewDemoSQSClient(),
+			Client: demo.NewDemoSQSClient(),
 			config: cfg,
 			isDemo: true,
 		}, nil
@@ -86,12 +92,13 @@ func NewSQSHandler() (*SQSHandler, error) {
 
 	log.Printf("Successfully connected to AWS SQS")
 	return &SQSHandler{
-		client: sqsClient,
+		Client: sqsClient,
 		config: cfg,
 		isDemo: false,
 	}, nil
 }
 
+// ListQueues handles HTTP requests to list SQS queues with optional tag-based filtering.
 func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 	log.Printf("ListQueues: Starting to fetch queues")
 	ctx := context.Background()
@@ -104,7 +111,7 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result, err := h.client.ListQueues(ctx, &sqs.ListQueuesInput{
+	result, err := h.Client.ListQueues(ctx, &sqs.ListQueuesInput{
 		MaxResults: aws.Int32(limit),
 	})
 	if err != nil {
@@ -114,7 +121,7 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("ListQueues: Found %d queues", len(result.QueueUrls))
-	queues := []Queue{}
+	queues := []internal_types.Queue{}
 	
 	// Check if tag filtering is disabled
 	disableTagFilter := os.Getenv("DISABLE_TAG_FILTER") == "true"
@@ -152,13 +159,13 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 	for _, queueURL := range result.QueueUrls {
 		// Skip tag checking if filtering is disabled
 		if disableTagFilter {
-			queue := Queue{
+			queue := internal_types.Queue{
 				Name: queueURL,
 				URL:  queueURL,
 			}
 			
 			// Get queue attributes
-			attrs, err := h.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+			attrs, err := h.Client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 				QueueUrl:       aws.String(queueURL),
 				AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
 			})
@@ -181,7 +188,7 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 		}
 		
 		// Check queue tags if filtering is enabled
-		tagsResult, err := h.client.ListQueueTags(ctx, &sqs.ListQueueTagsInput{
+		tagsResult, err := h.Client.ListQueueTags(ctx, &sqs.ListQueueTagsInput{
 			QueueUrl: aws.String(queueURL),
 		})
 		if err != nil {
@@ -213,7 +220,7 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ListQueues: Queue %s matches all required tags", queueURL)
 
 		// Get queue attributes for matching queues
-		attrs, err := h.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+		attrs, err := h.Client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 			QueueUrl:       aws.String(queueURL),
 			AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
 		})
@@ -230,7 +237,7 @@ func (h *SQSHandler) ListQueues(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		queue := Queue{
+		queue := internal_types.Queue{
 			Name: queueName,
 			URL:  queueURL,
 		}
@@ -261,6 +268,7 @@ func contains(slice []string, value string) bool {
 	return false
 }
 
+// GetMessages handles HTTP requests to retrieve messages from a specific SQS queue.
 func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
@@ -281,10 +289,19 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Get offset from query parameter for pagination (primarily for testing)
+	// Note: Real SQS doesn't support offset, but this works with mock/demo clients
+	offset := 0
+	if offsetParam := r.URL.Query().Get("offset"); offsetParam != "" {
+		if parsedOffset, err := strconv.Atoi(offsetParam); err == nil && parsedOffset >= 0 {
+			offset = parsedOffset
+		}
+	}
+
 	log.Printf("GetMessages: Fetching up to %d messages for queue %s", limit, queueURL)
 	ctx := context.Background()
 
-	result, err := h.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+	result, err := h.Client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:              aws.String(queueURL),
 		MaxNumberOfMessages:   limit,
 		WaitTimeSeconds:       1,
@@ -297,9 +314,9 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messages := []Message{}
+	messages := []internal_types.Message{}
 	for _, msg := range result.Messages {
-		message := Message{
+		message := internal_types.Message{
 			MessageId:     aws.ToString(msg.MessageId),
 			Body:          aws.ToString(msg.Body),
 			ReceiptHandle: aws.ToString(msg.ReceiptHandle),
@@ -321,6 +338,21 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		return timeI > timeJ // Descending order (newest first)
 	})
 
+	// Apply offset if specified (primarily for testing with mock client)
+	// Note: This doesn't work with real SQS as SQS doesn't support offset-based pagination
+	if offset > 0 {
+		if offset >= len(messages) {
+			messages = []internal_types.Message{}
+		} else {
+			messages = messages[offset:]
+		}
+	}
+
+	// Apply limit to sliced messages if needed
+	if len(messages) > int(limit) {
+		messages = messages[:limit]
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(messages); err != nil {
 		log.Printf("Error encoding messages response: %v", err)
@@ -329,6 +361,7 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// SendMessage handles HTTP requests to send a new message to an SQS queue.
 func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
@@ -349,7 +382,7 @@ func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
 
-	result, err := h.client.SendMessage(ctx, &sqs.SendMessageInput{
+	result, err := h.Client.SendMessage(ctx, &sqs.SendMessageInput{
 		QueueUrl:    aws.String(queueURL),
 		MessageBody: aws.String(payload.Body),
 	})
@@ -369,6 +402,7 @@ func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DeleteMessage handles HTTP requests to delete a message from an SQS queue using its receipt handle.
 func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
@@ -381,7 +415,7 @@ func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
 
-	_, err := h.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
+	_, err := h.Client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(queueURL),
 		ReceiptHandle: aws.String(receiptHandle),
 	})
@@ -394,6 +428,7 @@ func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// RetryMessage handles HTTP requests to retry a DLQ message by sending it to the target queue and deleting it from the source.
 func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sourceQueueURL := vars["queueUrl"]
@@ -404,7 +439,7 @@ func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload struct {
-		Message        Message `json:"message"`
+		Message        internal_types.Message `json:"message"`
 		TargetQueueURL string  `json:"targetQueueUrl"`
 	}
 
@@ -416,7 +451,7 @@ func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Send message to target queue
-	result, err := h.client.SendMessage(ctx, &sqs.SendMessageInput{
+	result, err := h.Client.SendMessage(ctx, &sqs.SendMessageInput{
 		QueueUrl:    aws.String(payload.TargetQueueURL),
 		MessageBody: aws.String(payload.Message.Body),
 	})
@@ -428,7 +463,7 @@ func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete from source queue (DLQ)
-	_, err = h.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
+	_, err = h.Client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(sourceQueueURL),
 		ReceiptHandle: aws.String(payload.Message.ReceiptHandle),
 	})
@@ -449,6 +484,7 @@ func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAWSContext handles HTTP requests to retrieve AWS context information including region and mode.
 func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
 	log.Printf("GetAWSContext: Fetching AWS context information")
 	
@@ -496,7 +532,7 @@ func (h *SQSHandler) GetAWSContext(w http.ResponseWriter, r *http.Request) {
 
 // getTimestampFromMessage extracts and parses the SentTimestamp from a message
 // Returns 0 if timestamp is missing or invalid, ensuring consistent sorting
-func getTimestampFromMessage(message Message) int64 {
+func getTimestampFromMessage(message internal_types.Message) int64 {
 	timestampStr, exists := message.Attributes["SentTimestamp"]
 	if !exists {
 		return 0
@@ -526,7 +562,7 @@ func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) 
 	ctx := context.Background()
 	
 	// Get queue attributes
-	attrs, err := h.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+	attrs, err := h.Client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		QueueUrl:       aws.String(queueURL),
 		AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameAll},
 	})
@@ -577,7 +613,7 @@ func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) 
 	// For DLQ, try to get additional statistics
 	if isDLQ {
 		// Sample a few messages to calculate DLQ-specific stats
-		messages, err := h.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+		messages, err := h.Client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 			QueueUrl:              aws.String(queueURL),
 			MaxNumberOfMessages:   10,
 			AttributeNames:        []types.QueueAttributeName{types.QueueAttributeNameAll},

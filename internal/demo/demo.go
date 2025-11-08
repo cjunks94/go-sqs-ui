@@ -1,4 +1,5 @@
-package main
+// Package demo provides a mock SQS client for demonstration and development without AWS credentials.
+package demo
 
 import (
 	"context"
@@ -17,6 +18,7 @@ type DemoSQSClient struct {
 	messages map[string][]types.Message
 }
 
+// NewDemoSQSClient creates a new demo SQS client with pre-populated queues and sample messages.
 func NewDemoSQSClient() *DemoSQSClient {
 	demo := &DemoSQSClient{
 		queues: []string{
@@ -67,6 +69,7 @@ func NewDemoSQSClient() *DemoSQSClient {
 	return demo
 }
 
+// ListQueues returns the list of demo SQS queues.
 func (d *DemoSQSClient) ListQueues(ctx context.Context, params *sqs.ListQueuesInput, optFns ...func(*sqs.Options)) (*sqs.ListQueuesOutput, error) {
 	log.Printf("Demo: ListQueues called, returning %d demo queues", len(d.queues))
 	return &sqs.ListQueuesOutput{
@@ -74,6 +77,7 @@ func (d *DemoSQSClient) ListQueues(ctx context.Context, params *sqs.ListQueuesIn
 	}, nil
 }
 
+// ListQueueTags returns demo tags for the specified queue.
 func (d *DemoSQSClient) ListQueueTags(ctx context.Context, params *sqs.ListQueueTagsInput, optFns ...func(*sqs.Options)) (*sqs.ListQueueTagsOutput, error) {
 	log.Printf("Demo: ListQueueTags called for queue %s", aws.ToString(params.QueueUrl))
 	
@@ -87,6 +91,7 @@ func (d *DemoSQSClient) ListQueueTags(ctx context.Context, params *sqs.ListQueue
 	}, nil
 }
 
+// GetQueueAttributes returns demo attributes for the specified queue including message count and ARN.
 func (d *DemoSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error) {
 	queueURL := aws.ToString(params.QueueUrl)
 	queueName := queueURL
@@ -118,6 +123,7 @@ func (d *DemoSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQ
 	}, nil
 }
 
+// ReceiveMessage retrieves demo messages from the specified queue.
 func (d *DemoSQSClient) ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
 	queueURL := aws.ToString(params.QueueUrl)
 	messages := d.messages[queueURL]
@@ -140,6 +146,7 @@ func (d *DemoSQSClient) ReceiveMessage(ctx context.Context, params *sqs.ReceiveM
 	}, nil
 }
 
+// SendMessage adds a new demo message to the specified queue.
 func (d *DemoSQSClient) SendMessage(ctx context.Context, params *sqs.SendMessageInput, optFns ...func(*sqs.Options)) (*sqs.SendMessageOutput, error) {
 	queueURL := aws.ToString(params.QueueUrl)
 	messageBody := aws.ToString(params.MessageBody)
@@ -168,6 +175,7 @@ func (d *DemoSQSClient) SendMessage(ctx context.Context, params *sqs.SendMessage
 	}, nil
 }
 
+// DeleteMessage removes a message from the specified demo queue using its receipt handle.
 func (d *DemoSQSClient) DeleteMessage(ctx context.Context, params *sqs.DeleteMessageInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error) {
 	queueURL := aws.ToString(params.QueueUrl)
 	receiptHandle := aws.ToString(params.ReceiptHandle)

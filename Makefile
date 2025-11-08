@@ -2,7 +2,7 @@
 
 # Build the application
 build:
-	go build -o go-sqs-ui
+	go build -o go-sqs-ui ./cmd/sqs-ui
 
 # Run Go tests
 test:
@@ -105,7 +105,7 @@ dev-logs:
 
 # Run the application (with cleanup)
 run: kill
-	go run .
+	go run ./cmd/sqs-ui
 
 # Install development tools
 install-tools:

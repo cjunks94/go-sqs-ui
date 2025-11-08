@@ -1,0 +1,306 @@
+/**
+ * Dark Theme  
+ * Modern dark theme inspired by professional dashboard design
+ * Features deep backgrounds with green and blue accents
+ */
+
+html.theme-dark {
+  /* === BACKGROUND COLORS === */
+  --color-bg-primary: #1a1d23;        /* Deep dark background */
+  --color-bg-secondary: #252930;       /* Card/surface background */
+  --color-bg-tertiary: #2d3340;        /* Elevated surfaces */
+  --color-bg-elevated: #323944;        /* Highest elevation */
+  
+  /* === SURFACE COLORS === */
+  --color-surface-primary: #252930;    /* Main card background */
+  --color-surface-secondary: #2d3340;  /* Secondary surfaces */
+  --color-surface-tertiary: #374151;   /* Tertiary surfaces */
+  --color-surface-hover: #323944;      /* Hover state */
+  
+  /* === TEXT COLORS === */
+  --color-text-primary: #f7fafc;       /* Primary text - brighter */
+  --color-text-secondary: #cbd5e0;     /* Secondary text - more contrast */
+  --color-text-tertiary: #a0aec0;      /* Tertiary/muted text - brighter */
+  --color-text-inverse: #1a1d23;       /* Inverse (for light backgrounds) */
+  --color-text-muted: #718096;         /* Very muted text - brighter */
+  --color-text-disabled: #4a5568;      /* Disabled text */
+  
+  /* === BORDER COLORS === */
+  --color-border-primary: #374151;     /* Primary borders */
+  --color-border-secondary: #4a5568;   /* Secondary borders */
+  --color-border-tertiary: #2d3748;    /* Subtle borders */
+  --color-border-focus: #00d27a;       /* Focus borders (green) */
+  --color-border-hover: #4a5568;       /* Hover borders */
+  
+  /* === BRAND COLORS (adjusted for dark theme) === */
+  --color-primary: #4299e1;            /* Blue primary */
+  --color-primary-hover: #63b3ed;      /* Lighter blue on hover */
+  --color-primary-active: #3182ce;     /* Darker blue when active */
+  --color-primary-light: #2b6cb0;      /* Light variant */
+  --color-primary-dark: #1e40af;       /* Dark variant */
+  
+  /* === SEMANTIC COLORS (optimized for dark) === */
+  --color-success: #00d27a;            /* Green accent (matching dashboard) */
+  --color-success-hover: #38e89a;      /* Lighter green on hover */
+  --color-success-light: #059669;      /* Darker green variant */
+  --color-success-dark: #047857;       /* Darkest green */
+  
+  --color-warning: #f6ad55;            /* Warm orange */
+  --color-warning-hover: #fbb041;      /* Lighter orange */
+  --color-warning-light: #d69e2e;      /* Darker orange */
+  --color-warning-dark: #b7791f;       /* Darkest orange */
+  
+  --color-error: #f56565;              /* Red error */
+  --color-error-hover: #fc8181;        /* Lighter red */
+  --color-error-light: #e53e3e;        /* Standard red */
+  --color-error-dark: #c53030;         /* Dark red */
+  
+  --color-info: #4299e1;               /* Blue info */
+  --color-info-hover: #63b3ed;         /* Lighter blue */
+  --color-info-light: #3182ce;         /* Standard blue */
+  --color-info-dark: #2c5282;          /* Dark blue */
+  
+  /* === COMPONENT OVERRIDES === */
+  --sidebar-bg: var(--color-surface-primary);
+  --sidebar-border: var(--color-border-primary);
+  --sidebar-text: var(--color-text-primary);
+  
+  --header-bg: var(--color-surface-primary);
+  --header-border: var(--color-border-primary);
+  --header-text: var(--color-text-primary);
+  
+  --message-bg: var(--color-surface-primary);
+  --message-border: var(--color-border-primary);
+  --message-hover-bg: var(--color-surface-hover);
+  --message-text: var(--color-text-primary);
+  
+  /* === SHADOWS (adjusted for dark theme) === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  
+  /* === SPECIAL STATES === */
+  --color-focus-ring: rgba(0, 210, 122, 0.3);    /* Green focus ring */
+  --color-selection-bg: rgba(0, 210, 122, 0.2);  /* Green selection */
+  --color-selection-text: var(--color-text-primary);
+  
+  /* === GRADIENT ACCENTS (inspired by dashboard) === */
+  --gradient-primary: linear-gradient(135deg, #00d27a 0%, #4299e1 100%);
+  --gradient-success: linear-gradient(135deg, #00d27a 0%, #38e89a 100%);
+  --gradient-chart: linear-gradient(135deg, #00d27a 0%, #4299e1 50%, #7c3aed 100%);
+}
+
+/* Selection styling for dark theme */
+html.theme-dark ::selection {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-text);
+}
+
+/* Focus ring for accessibility (green accent) */
+html.theme-dark *:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+/* Scrollbar styling for dark theme */
+html.theme-dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.theme-dark ::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+html.theme-dark ::-webkit-scrollbar-thumb {
+  background: var(--color-border-primary);
+  border-radius: var(--radius-sm);
+}
+
+html.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
+}
+
+/* Enhanced contrast for better readability */
+html.theme-dark .message-preview-text {
+  color: var(--color-text-secondary);
+}
+
+html.theme-dark .message-timestamp-compact {
+  color: var(--color-text-tertiary);
+}
+
+html.theme-dark .message-id-compact {
+  color: var(--color-text-tertiary);
+}
+
+/* Success/error states with proper contrast */
+/* Enhanced button styles for dark theme */
+html.theme-dark .btn {
+  border: 1px solid var(--color-border-secondary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+html.theme-dark .btn:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+html.theme-dark .btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+html.theme-dark .btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+html.theme-dark .btn-secondary {
+  background-color: var(--color-surface-secondary);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+html.theme-dark .btn-secondary:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border-hover);
+}
+
+html.theme-dark .btn-success {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+  color: #ffffff;
+}
+
+html.theme-dark .btn-success:hover {
+  background-color: var(--color-success-dark);
+  border-color: var(--color-success-dark);
+}
+
+html.theme-dark .btn-danger {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  color: #ffffff;
+}
+
+html.theme-dark .btn-danger:hover {
+  background-color: var(--color-error-dark);
+  border-color: var(--color-error-dark);
+}
+
+/* Glass morphism for sidebar and surfaces */
+html.theme-dark .sidebar {
+  background: rgba(26, 29, 35, 0.95);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.theme-dark .queue-link {
+  background: rgba(37, 41, 48, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e2e8f0; /* Brighter text */
+}
+
+html.theme-dark .queue-link:hover {
+  background: rgba(50, 57, 68, 0.8);
+  border-color: rgba(0, 210, 122, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 210, 122, 0.1);
+  color: #f7fafc; /* Even brighter on hover */
+}
+
+html.theme-dark .queue-link.active {
+  background: rgba(0, 210, 122, 0.15);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+html.theme-dark .queue-name {
+  color: inherit; /* Use parent color */
+}
+
+/* Refresh button styling */
+html.theme-dark #refreshQueues,
+html.theme-dark .refresh-queues {
+  background: rgba(45, 51, 64, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+html.theme-dark #refreshQueues:hover,
+html.theme-dark .refresh-queues:hover {
+  background: rgba(50, 57, 68, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* AWS Context and Queue sections enhancement */
+html.theme-dark .aws-context-section,
+html.theme-dark .queues-section {
+  background: rgba(37, 41, 48, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+html.theme-dark .aws-context-header,
+html.theme-dark .queues-header {
+  background: rgba(45, 51, 64, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.theme-dark .aws-context-header:hover,
+html.theme-dark .queues-header:hover {
+  background: rgba(50, 57, 68, 0.9);
+}
+
+html.theme-dark .aws-context-table {
+  background: transparent;
+}
+
+html.theme-dark .aws-context-value {
+  color: var(--color-success);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Enhanced card styling for dashboard feel */
+html.theme-dark .message-item {
+  background: rgba(37, 41, 48, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+html.theme-dark .message-item:hover {
+  background: rgba(45, 51, 64, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Message text readability improvements */
+html.theme-dark .message-preview-text {
+  color: #e2e8f0; /* Bright text for messages */
+}
+
+html.theme-dark .message-timestamp-compact {
+  color: #a0aec0; /* Readable timestamp */
+}
+
+html.theme-dark .message-id-compact {
+  color: #718096; /* Slightly muted ID */
+}
+
+/* Messages section card styling */
+html.theme-dark .messages-section {
+  background: rgba(37, 41, 48, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Message list background */
+html.theme-dark .message-list {
+  background-color: rgba(26, 29, 35, 0.5);
+  border-color: rgba(255, 255, 255, 0.05);
+}

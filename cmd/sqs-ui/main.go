@@ -1,18 +1,16 @@
 package main
 
 import (
-	"embed"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/cjunker/go-sqs-ui/internal/sqs"
+	"github.com/cjunker/go-sqs-ui/internal/static"
+	"github.com/cjunker/go-sqs-ui/internal/websocket"
 	"github.com/gorilla/mux"
 )
-
-//go:embed static/*
-var staticFiles embed.FS
 
 func main() {
 	port := os.Getenv("PORT")
@@ -20,12 +18,12 @@ func main() {
 		port = "8080"
 	}
 
-	sqsHandler, err := NewSQSHandler()
+	sqsHandler, err := sqs.NewSQSHandler()
 	if err != nil {
 		log.Fatal("Failed to create SQS handler:", err)
 	}
 
-	wsManager := NewWebSocketManager(sqsHandler.client)
+	wsManager := websocket.NewWebSocketManager(sqsHandler.Client)
 
 	r := mux.NewRouter()
 
@@ -47,13 +45,13 @@ func main() {
 	})
 
 	// Static files with logging
-	staticSubFS, err := fs.Sub(staticFiles, "static")
+	staticFS, err := static.GetFS()
 	if err != nil {
-		log.Fatal("Failed to create static subdirectory:", err)
+		log.Fatal("Failed to get static filesystem:", err)
 	}
 
 	// Serve static files (this will handle root path too)
-	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.FS(staticSubFS))))
+	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.FS(staticFS))))
 
 	log.Printf("Server starting on port %s", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {

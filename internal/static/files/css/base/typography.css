@@ -1,0 +1,212 @@
+/**
+ * Typography System
+ * Defines consistent typography styles using CSS custom properties
+ */
+
+/* Base typography setup is handled in reset.css and theme files */
+
+/* Heading styles */
+.heading-xs {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+.heading-sm {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+.heading-md {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+.heading-lg {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+.heading-xl {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+/* Text styles */
+.text-xs {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.text-md {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+}
+
+.text-lg {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-normal);
+}
+
+.text-xl {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-normal);
+}
+
+/* Font weights */
+.font-normal {
+  font-weight: var(--font-weight-normal);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+/* Text colors */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-inverse {
+  color: var(--color-text-inverse);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.text-info {
+  color: var(--color-info);
+}
+
+/* Monospace text */
+.text-mono {
+  font-family: var(--font-family-monospace);
+}
+
+.code {
+  font-family: var(--font-family-monospace);
+  font-size: 0.875em;
+  background-color: var(--color-surface-secondary);
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+}
+
+.pre {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  background-color: var(--color-surface-secondary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-secondary);
+  overflow-x: auto;
+  color: var(--color-text-primary);
+}
+
+/* Text alignment */
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Text decoration */
+.text-underline {
+  text-decoration: underline;
+}
+
+.text-no-underline {
+  text-decoration: none;
+}
+
+/* Line height utilities */
+.leading-tight {
+  line-height: var(--line-height-tight);
+}
+
+.leading-normal {
+  line-height: var(--line-height-normal);
+}
+
+.leading-relaxed {
+  line-height: var(--line-height-relaxed);
+}
+
+/* Text transformation */
+.uppercase {
+  text-transform: uppercase;
+}
+
+.lowercase {
+  text-transform: lowercase;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+/* Text overflow handling */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-wrap {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}

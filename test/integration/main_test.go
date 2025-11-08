@@ -1,4 +1,4 @@
-package main
+package integration
 
 import (
 	"bytes"
@@ -9,20 +9,24 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cjunker/go-sqs-ui/internal/sqs"
+	"github.com/cjunker/go-sqs-ui/internal/types"
+	"github.com/cjunker/go-sqs-ui/internal/websocket"
+	"github.com/cjunker/go-sqs-ui/test/helpers"
 	"github.com/gorilla/mux"
 )
 
 // Integration tests for the main application routes
 func TestIntegration_APIRoutes(t *testing.T) {
 	// Create mock SQS client
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	mockClient.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue-1")
 	mockClient.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue-2")
 	mockClient.AddMessage("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue-1", "msg1", "Hello World")
 
 	// Create handler with mock client
-	sqsHandler := &SQSHandler{client: mockClient}
-	wsManager := NewWebSocketManager(mockClient)
+	sqsHandler := &sqs.SQSHandler{Client: mockClient}
+	wsManager := websocket.NewWebSocketManager(mockClient)
 
 	// Set up router (same as main.go)
 	r := mux.NewRouter()
@@ -49,7 +53,7 @@ func TestIntegration_APIRoutes(t *testing.T) {
 			path:           "/api/queues",
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp *http.Response) {
-				var queues []Queue
+				var queues []types.Queue
 				if err := json.NewDecoder(resp.Body).Decode(&queues); err != nil {
 					t.Fatalf("Failed to decode response: %v", err)
 				}
@@ -106,8 +110,8 @@ func TestIntegration_APIRoutes(t *testing.T) {
 }
 
 func TestIntegration_CORS(t *testing.T) {
-	mockClient := NewMockSQSClient()
-	sqsHandler := &SQSHandler{client: mockClient}
+	mockClient := helpers.NewMockSQSClient()
+	sqsHandler := &sqs.SQSHandler{Client: mockClient}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/queues", sqsHandler.ListQueues).Methods("GET")
@@ -138,10 +142,10 @@ func TestIntegration_CORS(t *testing.T) {
 }
 
 func TestIntegration_ErrorHandling(t *testing.T) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	mockClient.SetError("ListQueues", fmt.Errorf("AWS service unavailable"))
 
-	sqsHandler := &SQSHandler{client: mockClient}
+	sqsHandler := &sqs.SQSHandler{Client: mockClient}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/queues", sqsHandler.ListQueues).Methods("GET")
@@ -165,10 +169,10 @@ func TestIntegration_ErrorHandling(t *testing.T) {
 }
 
 func TestIntegration_ContentType(t *testing.T) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 	mockClient.AddQueue("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue")
 
-	sqsHandler := &SQSHandler{client: mockClient}
+	sqsHandler := &sqs.SQSHandler{Client: mockClient}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/queues", sqsHandler.ListQueues).Methods("GET")
@@ -194,14 +198,14 @@ func TestIntegration_ContentType(t *testing.T) {
 
 // Benchmark the full API endpoint
 func BenchmarkIntegration_ListQueues(b *testing.B) {
-	mockClient := NewMockSQSClient()
+	mockClient := helpers.NewMockSQSClient()
 
 	// Add many queues for benchmarking
 	for i := 0; i < 100; i++ {
 		mockClient.AddQueue(fmt.Sprintf("https://sqs.us-east-1.amazonaws.com/123456789012/queue-%d", i))
 	}
 
-	sqsHandler := &SQSHandler{client: mockClient}
+	sqsHandler := &sqs.SQSHandler{Client: mockClient}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/queues", sqsHandler.ListQueues).Methods("GET")
