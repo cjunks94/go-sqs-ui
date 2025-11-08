@@ -15,161 +15,162 @@ import { QueueBrowser } from './queueBrowser.js';
 import { QueueStatistics } from './queueStatistics.js';
 import { MessageExport } from './messageExport.js';
 import { KeyboardNavigation } from './keyboardNavigation.js';
+import { toast } from './toastManager.js';
 
 export class SQSApp {
-    constructor() {
-        this.appState = new AppState();
-        this.awsContextHandler = new AWSContextHandler();
-        this.queueManager = new QueueManager(this.appState);
-        this.queueAttributesHandler = new QueueAttributesHandler();
-        this.messageHandler = new MessageHandler(this.appState);
-        this.messageSender = new MessageSender(this.appState, this.messageHandler);
-        this.webSocketManager = new WebSocketManager(this.appState, this.messageHandler);
-        
-        // New enhanced modules
-        this.pagination = null; // Will be initialized when needed
-        this.queueBrowser = new QueueBrowser(this.appState);
-        this.queueStatistics = new QueueStatistics(this.appState);
-        this.messageExport = new MessageExport(this.appState);
-        this.keyboardNavigation = new KeyboardNavigation(this.appState);
+  constructor() {
+    this.appState = new AppState();
+    this.awsContextHandler = new AWSContextHandler();
+    this.queueManager = new QueueManager(this.appState);
+    this.queueAttributesHandler = new QueueAttributesHandler();
+    this.messageHandler = new MessageHandler(this.appState);
+    this.messageSender = new MessageSender(this.appState, this.messageHandler);
+    this.webSocketManager = new WebSocketManager(this.appState, this.messageHandler);
+
+    // New enhanced modules
+    this.pagination = null; // Will be initialized when needed
+    this.queueBrowser = new QueueBrowser(this.appState);
+    this.queueStatistics = new QueueStatistics(this.appState);
+    this.messageExport = new MessageExport(this.appState);
+    this.keyboardNavigation = new KeyboardNavigation(this.appState);
+  }
+
+  async init() {
+    try {
+      await this.awsContextHandler.load();
+      await this.queueManager.loadQueues();
+      this.setupEventListeners();
+      this.webSocketManager.connect();
+
+      // Initialize keyboard navigation
+      this.keyboardNavigation.init();
+    } catch (error) {
+      console.error('Error initializing application:', error);
+    }
+  }
+
+  setupEventListeners() {
+    // Queue management
+    document.getElementById('refreshQueues').addEventListener('click', () => {
+      this.queueManager.refreshQueues();
+    });
+
+    // Message management
+    document.getElementById('sendMessage').addEventListener('click', () => {
+      this.messageSender.sendMessage();
+    });
+
+    document.getElementById('refreshMessages').addEventListener('click', () => {
+      this.messageHandler.loadMessages();
+    });
+
+    document.getElementById('pauseMessages').addEventListener('click', () => {
+      UIToggleManager.toggleMessagesPause(this.appState);
+    });
+
+    // Export button
+    const exportBtn = document.getElementById('exportMessages');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        this.messageExport.exportCurrentView();
+      });
     }
 
-    async init() {
-        try {
-            await this.awsContextHandler.load();
-            await this.queueManager.loadQueues();
-            this.setupEventListeners();
-            this.webSocketManager.connect();
-            
-            // Initialize keyboard navigation
-            this.keyboardNavigation.init();
-        } catch (error) {
-            console.error('Error initializing application:', error);
-        }
+    // Browse queue button
+    const browseBtn = document.querySelector('.browse-queue-button');
+    if (browseBtn) {
+      browseBtn.addEventListener('click', () => {
+        this.queueBrowser.open();
+      });
     }
 
-    setupEventListeners() {
-        // Queue management
-        document.getElementById('refreshQueues').addEventListener('click', () => {
-            this.queueManager.refreshQueues();
-        });
+    // UI toggles
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      UIToggleManager.toggleSidebar();
+    });
 
-        // Message management
-        document.getElementById('sendMessage').addEventListener('click', () => {
-            this.messageSender.sendMessage();
-        });
+    document.getElementById('sidebarClose').addEventListener('click', () => {
+      UIToggleManager.closeSidebar();
+    });
 
-        document.getElementById('refreshMessages').addEventListener('click', () => {
-            this.messageHandler.loadMessages();
-        });
+    // Global toggle functions for HTML onclick handlers
+    window.toggleAWSContext = () => UIToggleManager.toggleSection('awsContextDetails', 'awsToggleIcon');
+    window.toggleQueuesSection = () => UIToggleManager.toggleSection('queuesContent', 'queuesToggleIcon');
+    window.toggleQueueAttributes = () => UIToggleManager.toggleSection('queueAttributes', 'queueToggleIcon');
+    window.toggleSendMessage = () => UIToggleManager.toggleSection('sendMessageSection', 'sendToggleIcon');
 
-        document.getElementById('pauseMessages').addEventListener('click', () => {
-            UIToggleManager.toggleMessagesPause(this.appState);
-        });
-        
-        // Export button
-        const exportBtn = document.getElementById('exportMessages');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => {
-                this.messageExport.exportCurrentView();
-            });
-        }
-        
-        // Browse queue button
-        const browseBtn = document.querySelector('.browse-queue-button');
-        if (browseBtn) {
-            browseBtn.addEventListener('click', () => {
-                this.queueBrowser.open();
-            });
-        }
+    // Batch operations
+    window.addEventListener('batchDelete', async (event) => {
+      const { messageIds } = event.detail;
+      await this.handleBatchDelete(messageIds);
+    });
 
-        // UI toggles
-        document.getElementById('sidebarToggle').addEventListener('click', () => {
-            UIToggleManager.toggleSidebar();
-        });
+    window.addEventListener('batchRetry', async (event) => {
+      const { messageIds } = event.detail;
+      await this.handleBatchRetry(messageIds);
+    });
+  }
 
-        document.getElementById('sidebarClose').addEventListener('click', () => {
-            UIToggleManager.closeSidebar();
-        });
+  async handleBatchDelete(messageIds) {
+    const currentQueue = this.appState.getCurrentQueue();
+    if (!currentQueue || messageIds.length === 0) return;
 
-        // Global toggle functions for HTML onclick handlers
-        window.toggleAWSContext = () => UIToggleManager.toggleSection('awsContextDetails', 'awsToggleIcon');
-        window.toggleQueuesSection = () => UIToggleManager.toggleSection('queuesContent', 'queuesToggleIcon');
-        window.toggleQueueAttributes = () => UIToggleManager.toggleSection('queueAttributes', 'queueToggleIcon');
-        window.toggleSendMessage = () => UIToggleManager.toggleSection('sendMessageSection', 'sendToggleIcon');
+    try {
+      // Get messages from app state to find receipt handles
+      const messages = this.appState.getMessages();
+      const messagesToDelete = messages.filter((msg) => messageIds.includes(msg.messageId));
 
-        // Batch operations
-        window.addEventListener('batchDelete', async (event) => {
-            const { messageIds } = event.detail;
-            await this.handleBatchDelete(messageIds);
-        });
+      // Delete messages one by one (could be optimized with batch API in future)
+      for (const message of messagesToDelete) {
+        await APIService.deleteMessage(currentQueue.url, message.receiptHandle);
+      }
 
-        window.addEventListener('batchRetry', async (event) => {
-            const { messageIds } = event.detail;
-            await this.handleBatchRetry(messageIds);
-        });
+      // Refresh message list
+      await this.messageHandler.loadMessages();
+
+      // Deselect all checkboxes
+      const checkboxes = document.querySelectorAll('.message-checkbox');
+      checkboxes.forEach((checkbox) => (checkbox.checked = false));
+    } catch (error) {
+      console.error('Error deleting messages:', error);
+      toast.error('Failed to delete some messages');
     }
+  }
 
-    async handleBatchDelete(messageIds) {
-        const currentQueue = this.appState.getCurrentQueue();
-        if (!currentQueue || messageIds.length === 0) return;
+  async handleBatchRetry(messageIds) {
+    const currentQueue = this.appState.getCurrentQueue();
+    if (!currentQueue || messageIds.length === 0) return;
 
-        try {
-            // Get messages from app state to find receipt handles
-            const messages = this.appState.getMessages();
-            const messagesToDelete = messages.filter(msg => messageIds.includes(msg.messageId));
-            
-            // Delete messages one by one (could be optimized with batch API in future)
-            for (const message of messagesToDelete) {
-                await APIService.deleteMessage(currentQueue.url, message.receiptHandle);
-            }
-            
-            // Refresh message list
-            await this.messageHandler.loadMessages();
-            
-            // Deselect all checkboxes
-            const checkboxes = document.querySelectorAll('.message-checkbox');
-            checkboxes.forEach(checkbox => checkbox.checked = false);
-        } catch (error) {
-            console.error('Error deleting messages:', error);
-            alert('Failed to delete some messages');
-        }
+    try {
+      // Get messages from app state
+      const messages = this.appState.getMessages();
+      const messagesToRetry = messages.filter((msg) => messageIds.includes(msg.messageId));
+
+      // Get source queue URL from redrive policy
+      const sourceQueueUrl = currentQueue.sourceQueueUrl;
+      if (!sourceQueueUrl) {
+        toast.error('Could not determine source queue for retry');
+        return;
+      }
+
+      // Retry messages one by one
+      for (const message of messagesToRetry) {
+        await APIService.retryMessage(currentQueue.url, message, sourceQueueUrl);
+      }
+
+      // Refresh message list
+      await this.messageHandler.loadMessages();
+
+      // Deselect all checkboxes
+      const checkboxes = document.querySelectorAll('.message-checkbox');
+      checkboxes.forEach((checkbox) => (checkbox.checked = false));
+    } catch (error) {
+      console.error('Error retrying messages:', error);
+      toast.error('Failed to retry some messages');
     }
+  }
 
-    async handleBatchRetry(messageIds) {
-        const currentQueue = this.appState.getCurrentQueue();
-        if (!currentQueue || messageIds.length === 0) return;
-
-        try {
-            // Get messages from app state
-            const messages = this.appState.getMessages();
-            const messagesToRetry = messages.filter(msg => messageIds.includes(msg.messageId));
-            
-            // Get source queue URL from redrive policy
-            const sourceQueueUrl = currentQueue.sourceQueueUrl;
-            if (!sourceQueueUrl) {
-                alert('Could not determine source queue for retry');
-                return;
-            }
-            
-            // Retry messages one by one
-            for (const message of messagesToRetry) {
-                await APIService.retryMessage(currentQueue.url, message, sourceQueueUrl);
-            }
-            
-            // Refresh message list
-            await this.messageHandler.loadMessages();
-            
-            // Deselect all checkboxes
-            const checkboxes = document.querySelectorAll('.message-checkbox');
-            checkboxes.forEach(checkbox => checkbox.checked = false);
-        } catch (error) {
-            console.error('Error retrying messages:', error);
-            alert('Failed to retry some messages');
-        }
-    }
-
-    cleanup() {
-        this.webSocketManager.disconnect();
-    }
+  cleanup() {
+    this.webSocketManager.disconnect();
+  }
 }
