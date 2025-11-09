@@ -1,0 +1,24 @@
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gci
+    - gofmt
+    - revive
+    - misspell
+
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+    skip-generated: true
+    custom-order: true
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
