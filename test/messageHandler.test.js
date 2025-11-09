@@ -17,7 +17,7 @@ describe('MessageHandler', () => {
   beforeEach(() => {
     // Create mock DOM element
     mockElement = document.createElement('div');
-    mockElement.id = 'message-list';
+    mockElement.id = 'messageList';
     document.body.appendChild(mockElement);
 
     // Mock app state
@@ -31,11 +31,16 @@ describe('MessageHandler', () => {
     // Mock enhanced view
     mockEnhancedView = {
       render: vi.fn(),
+      createEnhancedView: vi.fn(() => {
+        const div = document.createElement('div');
+        div.className = 'message-details';
+        return div;
+      }),
     };
     EnhancedMessageView.mockImplementation(() => mockEnhancedView);
 
     // Create message handler instance
-    messageHandler = new MessageHandler('message-list', mockAppState);
+    messageHandler = new MessageHandler(mockAppState);
   });
 
   describe('loadMessages', () => {
@@ -96,17 +101,17 @@ describe('MessageHandler', () => {
   describe('displayMessages', () => {
     it('should display messages correctly', () => {
       const messages = [
-        { 
-          messageId: 'msg-1', 
+        {
+          messageId: 'msg-1',
           body: 'Test message 1',
           receiptHandle: 'receipt-1',
-          attributes: { SentTimestamp: '1000' }
+          attributes: { SentTimestamp: '1000' },
         },
-        { 
-          messageId: 'msg-2', 
+        {
+          messageId: 'msg-2',
           body: 'Test message 2',
           receiptHandle: 'receipt-2',
-          attributes: { SentTimestamp: '2000' }
+          attributes: { SentTimestamp: '2000' },
         },
       ];
 
@@ -136,12 +141,8 @@ describe('MessageHandler', () => {
     });
 
     it('should handle append mode', () => {
-      const initialMessages = [
-        { messageId: '1', body: 'Message 1', attributes: { SentTimestamp: '1000' } }
-      ];
-      const newMessages = [
-        { messageId: '2', body: 'Message 2', attributes: { SentTimestamp: '2000' } }
-      ];
+      const initialMessages = [{ messageId: '1', body: 'Message 1', attributes: { SentTimestamp: '1000' } }];
+      const newMessages = [{ messageId: '2', body: 'Message 2', attributes: { SentTimestamp: '2000' } }];
 
       mockAppState.getMessages.mockReturnValue(initialMessages);
       messageHandler.displayMessages(initialMessages);
@@ -154,12 +155,8 @@ describe('MessageHandler', () => {
     });
 
     it('should handle prepend mode for real-time updates', () => {
-      const initialMessages = [
-        { messageId: '1', body: 'Message 1', attributes: { SentTimestamp: '1000' } }
-      ];
-      const newMessages = [
-        { messageId: '2', body: 'Message 2', attributes: { SentTimestamp: '2000' } }
-      ];
+      const initialMessages = [{ messageId: '1', body: 'Message 1', attributes: { SentTimestamp: '1000' } }];
+      const newMessages = [{ messageId: '2', body: 'Message 2', attributes: { SentTimestamp: '2000' } }];
 
       mockAppState.getMessages.mockReturnValue(initialMessages);
       messageHandler.displayMessages(initialMessages);
@@ -197,7 +194,7 @@ describe('MessageHandler', () => {
         attributes: {
           SentTimestamp: Date.now().toString(),
           ApproximateReceiveCount: '3',
-        }
+        },
       };
 
       const row = messageHandler.createMessageRow(message);
@@ -217,7 +214,7 @@ describe('MessageHandler', () => {
         attributes: {
           SentTimestamp: Date.now().toString(),
           ApproximateReceiveCount: '5',
-        }
+        },
       };
 
       const mockQueue = { name: 'test-dlq', url: 'dlq-url' };
@@ -237,7 +234,7 @@ describe('MessageHandler', () => {
         messageId: 'click-test',
         body: 'Clickable message',
         receiptHandle: 'click-receipt',
-        attributes: { SentTimestamp: '1000' }
+        attributes: { SentTimestamp: '1000' },
       };
 
       const row = messageHandler.createMessageRow(message);
@@ -256,7 +253,7 @@ describe('MessageHandler', () => {
         messageId: 'toggle-test',
         body: '{"key": "value"}',
         receiptHandle: 'toggle-receipt',
-        attributes: { SentTimestamp: '1000' }
+        attributes: { SentTimestamp: '1000' },
       };
 
       const row = messageHandler.createMessageRow(message);
@@ -281,7 +278,7 @@ describe('MessageHandler', () => {
         messageId: 'enhance-test',
         body: '{"data": "test"}',
         receiptHandle: 'enhance-receipt',
-        attributes: { SentTimestamp: '1000' }
+        attributes: { SentTimestamp: '1000' },
       };
 
       const row = messageHandler.createMessageRow(message);
@@ -319,12 +316,8 @@ describe('MessageHandler', () => {
   describe('loadMoreMessages', () => {
     it('should load additional messages', async () => {
       const mockQueue = { url: 'queue-url' };
-      const existingMessages = [
-        { messageId: '1', body: 'Existing', attributes: { SentTimestamp: '1000' } }
-      ];
-      const newMessages = [
-        { messageId: '2', body: 'New', attributes: { SentTimestamp: '2000' } }
-      ];
+      const existingMessages = [{ messageId: '1', body: 'Existing', attributes: { SentTimestamp: '1000' } }];
+      const newMessages = [{ messageId: '2', body: 'New', attributes: { SentTimestamp: '2000' } }];
 
       mockAppState.getCurrentQueue.mockReturnValue(mockQueue);
       mockAppState.getMessages.mockReturnValue(existingMessages);
@@ -353,12 +346,10 @@ describe('MessageHandler', () => {
 
   describe('addNewMessages', () => {
     it('should add new messages without duplicates', () => {
-      const existingMessages = [
-        { messageId: '1', body: 'Existing', attributes: { SentTimestamp: '1000' } }
-      ];
+      const existingMessages = [{ messageId: '1', body: 'Existing', attributes: { SentTimestamp: '1000' } }];
       const newMessages = [
         { messageId: '1', body: 'Duplicate', attributes: { SentTimestamp: '1000' } },
-        { messageId: '2', body: 'New', attributes: { SentTimestamp: '2000' } }
+        { messageId: '2', body: 'New', attributes: { SentTimestamp: '2000' } },
       ];
 
       mockAppState.getMessages.mockReturnValue(existingMessages);
@@ -394,14 +385,14 @@ describe('MessageHandler', () => {
     it('should handle keyboard navigation selection', () => {
       const messages = [
         { messageId: '1', body: 'Message 1', attributes: { SentTimestamp: '1000' } },
-        { messageId: '2', body: 'Message 2', attributes: { SentTimestamp: '2000' } }
+        { messageId: '2', body: 'Message 2', attributes: { SentTimestamp: '2000' } },
       ];
 
       mockAppState.getMessages.mockReturnValue(messages);
       messageHandler.displayMessages(messages);
 
       const rows = mockElement.querySelectorAll('.message-row');
-      
+
       // Select first message
       messageHandler.selectMessage(0);
       expect(rows[0].classList.contains('selected')).toBe(true);
@@ -416,7 +407,7 @@ describe('MessageHandler', () => {
   describe('message formatting', () => {
     it('should format timestamps correctly', () => {
       const timestamp = messageHandler.createTimestamp({
-        attributes: { SentTimestamp: '1609459200000' } // 2021-01-01 00:00:00 UTC
+        attributes: { SentTimestamp: '1609459200000' }, // 2021-01-01 00:00:00 UTC
       });
 
       expect(timestamp.className).toBe('message-timestamp');
@@ -428,7 +419,7 @@ describe('MessageHandler', () => {
       const preview = messageHandler.createPreviewText({
         body: longMessage,
         messageId: 'long',
-        attributes: {}
+        attributes: {},
       });
 
       expect(preview.textContent.length).toBeLessThan(longMessage.length);
@@ -440,7 +431,7 @@ describe('MessageHandler', () => {
       const message = {
         messageId: 'json-msg',
         body: jsonBody,
-        attributes: { SentTimestamp: '1000' }
+        attributes: { SentTimestamp: '1000' },
       };
 
       const row = messageHandler.createMessageRow(message);
