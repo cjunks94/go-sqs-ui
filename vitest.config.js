@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    // Exclude E2E tests from Vitest (they run separately with Playwright)
+    exclude: ['node_modules/**', 'test/e2e/**', 'test-results/**', 'playwright-report/**', 'dist/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov', 'cobertura'],
@@ -18,26 +20,23 @@ export default defineConfig({
         'vitest.config.js',
         'eslint.config.js',
         '.prettierrc',
-        'test-results/**'
+        'test-results/**',
       ],
-      include: [
-        'static/modules/**/*.js',
-        'static/app.js'
-      ],
+      include: ['static/modules/**/*.js', 'static/app.js'],
       thresholds: {
         branches: 80,
         functions: 80,
         lines: 85,
-        statements: 85
+        statements: 85,
       },
       clean: true,
       reportsDirectory: './coverage',
-      all: true
-    }
+      all: true,
+    },
   },
   resolve: {
     alias: {
-      '@': '/static/modules'
-    }
-  }
+      '@': '/static/modules',
+    },
+  },
 });
