@@ -7,6 +7,10 @@ on:
     branches: [main, master, develop]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 env:
   GO_VERSION: '1.21'
   NODE_VERSION: '20'
@@ -153,7 +157,7 @@ jobs:
 
       - name: Build Go binary
         run: |
-          go build -v -o sqs-ui .
+          go build -v -o sqs-ui ./cmd/sqs-ui
           ./sqs-ui -version || echo "Binary built successfully"
 
       - name: Upload build artifacts
