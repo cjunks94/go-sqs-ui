@@ -1,0 +1,17 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    # Exclude errcheck for test files where we intentionally don't check certain errors
+    - path: _test\.go
+      linters:
+        - errcheck

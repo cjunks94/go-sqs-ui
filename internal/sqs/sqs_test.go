@@ -340,8 +340,14 @@ func TestSQSHandler_GetAWSContext(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set environment variables
 			for key, value := range tt.envVars {
-				os.Setenv(key, value)
-				defer os.Unsetenv(key)
+				if err := os.Setenv(key, value); err != nil {
+					t.Fatalf("failed to set env var %s: %v", key, err)
+				}
+				defer func(k string) {
+					if err := os.Unsetenv(k); err != nil {
+						t.Logf("failed to unset env var %s: %v", k, err)
+					}
+				}(key)
 			}
 
 			handler := &SQSHandler{

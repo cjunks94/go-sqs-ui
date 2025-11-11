@@ -5,7 +5,7 @@ const testResults = {
   timestamp: new Date().toISOString(),
   application: 'go-sqs-ui',
   url: 'http://localhost:8080',
-  tests: []
+  tests: [],
 };
 
 async function _runTest(name, testFn) {
@@ -15,7 +15,7 @@ async function _runTest(name, testFn) {
     testResults.tests.push({
       name,
       status: 'passed',
-      result
+      result,
     });
     console.log('  ✓ Passed');
     return result;
@@ -23,7 +23,7 @@ async function _runTest(name, testFn) {
     testResults.tests.push({
       name,
       status: 'failed',
-      error: error.message
+      error: error.message,
     });
     console.log(`  ✗ Failed: ${error.message}`);
     throw error;

@@ -362,24 +362,24 @@
     align-items: flex-start;
     gap: var(--spacing-sm);
   }
-  
+
   .message-preview {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
     width: 100%;
   }
-  
+
   .message-timestamp-compact,
   .message-id-compact {
     min-width: auto;
   }
-  
+
   .message-details {
     grid-template-columns: 1fr;
     gap: var(--spacing-sm);
   }
-  
+
   .message-actions {
     flex-direction: column;
   }

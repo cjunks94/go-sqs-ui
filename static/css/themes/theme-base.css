@@ -5,95 +5,95 @@
 
 :root {
   /* === COLORS === */
-  
+
   /* Background Colors */
   --color-bg-primary: #f5f5f5;
   --color-bg-secondary: #ffffff;
   --color-bg-tertiary: #fafafa;
   --color-bg-elevated: #ffffff;
-  
+
   /* Surface Colors */
   --color-surface-primary: #ffffff;
   --color-surface-secondary: #f8f9fa;
   --color-surface-tertiary: #e9ecef;
-  
+
   /* Text Colors */
   --color-text-primary: #333333;
   --color-text-secondary: #666666;
   --color-text-tertiary: #999999;
   --color-text-inverse: #ffffff;
   --color-text-muted: #6c757d;
-  
+
   /* Border Colors */
   --color-border-primary: #e0e0e0;
-  --color-border-secondary: #dee2e6;  
+  --color-border-secondary: #dee2e6;
   --color-border-tertiary: #f0f0f0;
   --color-border-focus: #4299e1;
-  
+
   /* Brand Colors */
   --color-primary: #4299e1;
   --color-primary-hover: #3182ce;
   --color-primary-active: #2b77cb;
   --color-primary-light: #bee3f8;
   --color-primary-dark: #2c5282;
-  
+
   /* Semantic Colors */
   --color-success: #00d27a;
   --color-success-hover: #00b06a;
   --color-success-light: #c6f6d5;
   --color-success-dark: #006837;
-  
+
   --color-warning: #f6ad55;
   --color-warning-hover: #ed8936;
   --color-warning-light: #fef5e7;
   --color-warning-dark: #c05621;
-  
+
   --color-error: #e53e3e;
   --color-error-hover: #c53030;
   --color-error-light: #fed7d7;
   --color-error-dark: #9b2c2c;
-  
+
   --color-info: #4299e1;
   --color-info-hover: #3182ce;
   --color-info-light: #bee3f8;
   --color-info-dark: #2c5282;
-  
+
   /* === SPACING === */
-  --spacing-xs: 0.25rem;    /* 4px */
-  --spacing-sm: 0.5rem;     /* 8px */
-  --spacing-md: 1rem;       /* 16px */
-  --spacing-lg: 1.5rem;     /* 24px */
-  --spacing-xl: 2rem;       /* 32px */
-  --spacing-2xl: 3rem;      /* 48px */
-  --spacing-3xl: 4rem;      /* 64px */
-  
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
+  --spacing-2xl: 3rem; /* 48px */
+  --spacing-3xl: 4rem; /* 64px */
+
   /* === TYPOGRAPHY === */
-  
+
   /* Font Families */
   --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --font-family-monospace: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  
+
   /* Font Sizes */
-  --font-size-xs: 0.75rem;   /* 12px */
-  --font-size-sm: 0.875rem;  /* 14px */
-  --font-size-md: 1rem;      /* 16px */
-  --font-size-lg: 1.125rem;  /* 18px */
-  --font-size-xl: 1.25rem;   /* 20px */
-  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-md: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
   --font-size-3xl: 1.875rem; /* 30px */
-  --font-size-4xl: 2.25rem;  /* 36px */
-  
+  --font-size-4xl: 2.25rem; /* 36px */
+
   /* Font Weights */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   /* Line Heights */
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
-  
+
   /* === SHADOWS === */
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.08);
@@ -102,20 +102,20 @@
   --shadow-hover: 0 8px 16px -4px rgba(0, 0, 0, 0.1), 0 4px 8px -2px rgba(0, 0, 0, 0.05);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-  
+
   /* === BORDER RADIUS === */
-  --radius-sm: 0.25rem;   /* 4px */
-  --radius-md: 0.375rem;  /* 6px */
-  --radius-lg: 0.5rem;    /* 8px */
-  --radius-xl: 0.75rem;   /* 12px */
-  --radius-2xl: 1rem;     /* 16px */
-  --radius-full: 9999px;  /* circular */
-  
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
+  --radius-2xl: 1rem; /* 16px */
+  --radius-full: 9999px; /* circular */
+
   /* === TRANSITIONS === */
   --transition-fast: 0.15s ease-in-out;
   --transition-normal: 0.3s ease-in-out;
   --transition-slow: 0.5s ease-in-out;
-  
+
   /* === Z-INDEX === */
   --z-dropdown: 1000;
   --z-sticky: 1020;
@@ -125,28 +125,28 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-toast: 1080;
-  
+
   /* === COMPONENT SPECIFIC === */
-  
+
   /* Sidebar */
   --sidebar-width: 300px;
   --sidebar-bg: var(--color-surface-primary);
   --sidebar-border: var(--color-border-primary);
-  
+
   /* Header */
   --header-height: 60px;
   --header-bg: var(--color-surface-primary);
   --header-border: var(--color-border-primary);
-  
+
   /* Content */
   --content-max-width: 1200px;
   --content-padding: var(--spacing-lg);
-  
+
   /* Messages */
   --message-bg: var(--color-surface-primary);
   --message-border: var(--color-border-secondary);
   --message-hover-bg: var(--color-surface-secondary);
-  
+
   /* Buttons */
   --button-height-sm: 2rem;
   --button-height-md: 2.5rem;
@@ -165,7 +165,7 @@ body.theme-light {
 @media (prefers-reduced-motion: reduce) {
   :root {
     --transition-fast: 0s;
-    --transition-normal: 0s;  
+    --transition-normal: 0s;
     --transition-slow: 0s;
   }
 }

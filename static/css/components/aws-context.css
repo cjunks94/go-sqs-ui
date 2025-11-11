@@ -232,7 +232,9 @@
 .toggle-icon {
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
-  transition: transform var(--transition-fast), color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
   line-height: 1;
   width: 1rem;
   height: 1rem;
@@ -254,20 +256,20 @@
   .attributes-table {
     font-size: var(--font-size-xs);
   }
-  
+
   .aws-context-label,
   .attr-label {
     width: 35%;
   }
-  
+
   .queue-header {
     padding: var(--spacing-md);
   }
-  
+
   .queue-header h1 {
     font-size: var(--font-size-xl);
   }
-  
+
   .no-selection {
     padding: var(--spacing-2xl);
     font-size: var(--font-size-md);
