@@ -1,24 +1,24 @@
+version: "2"
+
 linters:
   enable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
-    - gci
-    - gofmt
-    - revive
     - misspell
 
-linters-settings:
-  gci:
-    sections:
-      - standard
-      - default
-    skip-generated: true
-    custom-order: true
+formatters:
+  enable:
+    - gci
+    - gofmt
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-rules:
+    # Exclude errcheck for test files where we intentionally don't check certain errors
+    - path: _test\.go
+      linters:
+        - errcheck

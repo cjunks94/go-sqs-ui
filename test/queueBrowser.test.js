@@ -22,9 +22,10 @@ vi.mock('@/queueBrowser.js', () => ({
         this.element = null;
         
         this.open = vi.fn(async () => {
-            this.isOpen = true;
             const queue = this.appState.getCurrentQueue();
             if (!queue) return false;
+
+            this.isOpen = true;
             
             // Create browser UI
             this.element = document.createElement('div');
@@ -60,20 +61,27 @@ vi.mock('@/queueBrowser.js', () => ({
         this.loadPage = vi.fn(async (page) => {
             const queue = this.appState.getCurrentQueue();
             if (!queue) return false;
-            
-            const offset = (page - 1) * this.itemsPerPage;
-            const response = await APIService.getMessages(queue.url, this.itemsPerPage, offset);
-            
-            this.messages = response.messages || [];
-            this.totalItems = response.totalCount || 0;
-            this.currentPage = page;
-            
-            // Update UI
-            this.updateMessageDisplay();
-            this.updatePagination();
-            this.updateStats();
-            
-            return true;
+
+            try {
+                const offset = (page - 1) * this.itemsPerPage;
+                const response = await APIService.getMessages(queue.url, this.itemsPerPage, offset);
+
+                this.messages = response.messages || [];
+                this.totalItems = response.totalCount || 0;
+                this.currentPage = page;
+
+                // Update UI
+                this.updateMessageDisplay();
+                this.updatePagination();
+                this.updateStats();
+
+                return true;
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                this.messages = [];
+                this.totalItems = 0;
+                return false;
+            }
         });
         
         this.updateMessageDisplay = vi.fn(() => {
@@ -108,11 +116,17 @@ vi.mock('@/queueBrowser.js', () => ({
         
         this.updateStats = vi.fn(() => {
             if (!this.element) return;
-            
+
+            const display = this.element.querySelector('.message-count-display');
+
+            if (this.totalItems === 0) {
+                display.textContent = 'Showing 0-0 of 0 messages';
+                return;
+            }
+
             const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
             const endItem = Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
-            
-            const display = this.element.querySelector('.message-count-display');
+
             display.textContent = `Showing ${startItem}-${endItem} of ${this.totalItems} messages`;
         });
         
