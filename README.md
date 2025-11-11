@@ -1,7 +1,7 @@
 # Go SQS UI
 
-[![CI](https://github.com/cjunks94/go-sqs-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/cjunks94/go-sqs-ui/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/cjunks94/go-sqs-ui/branch/main/graph/badge.svg)](https://codecov.io/gh/cjunks94/go-sqs-ui)
+[![CI](https://github.com/cjunks94/go-sqs-ui/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/cjunks94/go-sqs-ui/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/cjunks94/go-sqs-ui/branch/master/graph/badge.svg)](https://codecov.io/gh/cjunks94/go-sqs-ui)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cjunks94/go-sqs-ui)](https://goreportcard.com/report/github.com/cjunks94/go-sqs-ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -10,6 +10,7 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 ## Features
 
 ### Core Functionality
+
 - 📋 List and filter SQS queues with tag-based filtering
 - 📨 View, send, and delete messages with real-time WebSocket updates
 - 🔄 Dead Letter Queue (DLQ) management with retry capabilities
@@ -17,6 +18,7 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 - 🎨 Clean, responsive UI with collapsible sidebar
 
 ### Advanced Capabilities
+
 - 📄 **Message Pagination**: Efficient browsing of large message sets
 - 🔍 **Smart Filtering**: Real-time search by content and attributes
 - ⌨️ **Keyboard Navigation**: Full keyboard shortcut support (press `?` for help)
@@ -41,12 +43,14 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/cjunker/go-sqs-ui.git
 cd go-sqs-ui
 ```
 
 2. Install dependencies:
+
 ```bash
 # Go dependencies
 go mod download
@@ -71,6 +75,7 @@ make dev-start
 ```
 
 The UI will automatically:
+
 - Filter queues by your configured tags (businessunit:degrees, product:amt, env:stg|prod)
 - Identify and mark DLQ queues with visual badges
 - Enable one-click retry for failed messages
@@ -125,7 +130,7 @@ make test-all
 # Run only backend tests
 make test
 
-# Run only frontend tests  
+# Run only frontend tests
 make test-frontend
 
 # Kill any running processes
@@ -141,21 +146,25 @@ make help
 ### Configuration Options
 
 #### Basic Configuration
+
 - `PORT` - Server port (default: 8080)
 - `AWS_REGION` - AWS region (default: from AWS config)
 - `AWS_PROFILE` - AWS profile to use
 
 #### Mode Control
+
 - `FORCE_DEMO_MODE=true` - Always use demo mode, even with AWS credentials
 - `FORCE_LIVE_MODE=true` - Force live mode (fails if no AWS credentials)
 
 #### Queue Filtering
+
 - `DISABLE_TAG_FILTER=true` - Show all queues without tag filtering
 - `FILTER_BUSINESS_UNIT` - Custom businessunit values (comma-separated)
 - `FILTER_PRODUCT` - Custom product values (comma-separated)
 - `FILTER_ENV` - Custom env values (comma-separated)
 
 Example:
+
 ```bash
 # Force demo mode
 FORCE_DEMO_MODE=true make dev-start
@@ -172,12 +181,14 @@ FILTER_BUSINESS_UNIT=myunit FILTER_PRODUCT=myapp FILTER_ENV=dev,test make dev-st
 Navigate and control the application efficiently with keyboard shortcuts:
 
 ### Navigation
+
 - `j` / `k` - Navigate down/up through messages
 - `Enter` - Expand/collapse selected message
 - `g g` - Jump to top (press g twice)
 - `G` - Jump to bottom
 
 ### Actions
+
 - `/` - Focus search/filter box
 - `r` - Refresh messages
 - `n` / `p` - Next/Previous page
@@ -186,6 +197,7 @@ Navigate and control the application efficiently with keyboard shortcuts:
 - `s` - Toggle statistics panel
 
 ### Utility
+
 - `?` - Show keyboard shortcuts help
 - `Escape` - Clear focus/close modals
 
@@ -263,9 +275,10 @@ npm run test:ui
 ```
 
 **Test Coverage Includes:**
+
 - Message ordering and chronological sorting
 - AWS context switching (demo vs live modes)
-- DLQ detection and retry functionality  
+- DLQ detection and retry functionality
 - Message filtering and search
 - Enhanced message view with JSON formatting
 - API service error handling
@@ -309,18 +322,21 @@ See [TEST_REPORT.md](TEST_REPORT.md) for comprehensive testing documentation.
 This project maintains high code quality standards with comprehensive testing and linting:
 
 ### 🧪 Testing & Coverage
+
 - **Backend**: Go tests with 80%+ coverage target
 - **Frontend**: Vitest with 85%+ coverage target
 - **Coverage Reports**: HTML, LCOV, and Cobertura formats
 - **CI Integration**: Automated testing on every push/PR
 
 ### 🔍 Linting & Formatting
+
 - **Go**: golangci-lint with 25+ linters enabled
 - **JavaScript**: ESLint 9 with modern flat config
 - **Formatting**: Prettier for consistent code style
 - **Pre-commit Hooks**: Automatic linting via husky
 
 ### 📊 Quality Commands
+
 ```bash
 # Run all linters
 make lint-all
@@ -377,6 +393,7 @@ make fmt-all
 Contributions are welcome! Please feel free to submit pull requests or open issues.
 
 ### Potential Enhancements
+
 - Support for message attributes
 - Queue creation and deletion
 - Message visibility timeout adjustment
