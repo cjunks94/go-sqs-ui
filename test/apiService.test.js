@@ -15,13 +15,13 @@ describe('APIService', () => {
       const mockResponse = { data: 'test' };
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse)
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await APIService.request('/test');
-      
+
       expect(fetch).toHaveBeenCalledWith('/test', {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       expect(result).toEqual(mockResponse);
     });
@@ -30,7 +30,7 @@ describe('APIService', () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       });
 
       await expect(APIService.request('/test')).rejects.toThrow('HTTP 404: Not Found');
@@ -45,18 +45,18 @@ describe('APIService', () => {
     it('should merge custom headers', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({})
+        json: () => Promise.resolve({}),
       });
 
       await APIService.request('/test', {
-        headers: { 'Authorization': 'Bearer token' }
+        headers: { Authorization: 'Bearer token' },
       });
 
       const [url, options] = fetch.mock.calls[0];
       expect(url).toBe('/test');
       expect(options.headers).toEqual({
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer token'
+        Authorization: 'Bearer token',
       });
     });
   });
@@ -66,13 +66,13 @@ describe('APIService', () => {
       const mockContext = { mode: 'Live AWS', region: 'us-east-1' };
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockContext)
+        json: () => Promise.resolve(mockContext),
       });
 
       const result = await APIService.getAWSContext();
 
       expect(fetch).toHaveBeenCalledWith('/api/aws-context', {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       expect(result).toEqual(mockContext);
     });
@@ -83,13 +83,13 @@ describe('APIService', () => {
       const mockQueues = [{ name: 'queue1' }, { name: 'queue2' }];
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockQueues)
+        json: () => Promise.resolve(mockQueues),
       });
 
       const result = await APIService.getQueues();
 
       expect(fetch).toHaveBeenCalledWith('/api/queues?limit=20', {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       expect(result).toEqual(mockQueues);
     });
@@ -97,13 +97,13 @@ describe('APIService', () => {
     it('should call getQueues with custom limit', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([])
+        json: () => Promise.resolve([]),
       });
 
       await APIService.getQueues(50);
 
       expect(fetch).toHaveBeenCalledWith('/api/queues?limit=50', {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     });
   });
@@ -112,18 +112,17 @@ describe('APIService', () => {
     it('should call getMessages with encoded queue URL', async () => {
       const queueUrl = 'https://sqs.us-east-1.amazonaws.com/123456789012/test-queue';
       const mockMessages = [{ messageId: '1', body: 'test' }];
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockMessages)
+        json: () => Promise.resolve(mockMessages),
       });
 
       const result = await APIService.getMessages(queueUrl);
 
-      expect(fetch).toHaveBeenCalledWith(
-        `/api/queues/${encodeURIComponent(queueUrl)}/messages?limit=10`,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      expect(fetch).toHaveBeenCalledWith(`/api/queues/${encodeURIComponent(queueUrl)}/messages?limit=10`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       expect(result).toEqual(mockMessages);
     });
 
@@ -134,19 +133,16 @@ describe('APIService', () => {
 
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse)
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await APIService.sendMessage(queueUrl, messageBody);
 
-      expect(fetch).toHaveBeenCalledWith(
-        `/api/queues/${encodeURIComponent(queueUrl)}/messages`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ body: messageBody }),
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      expect(fetch).toHaveBeenCalledWith(`/api/queues/${encodeURIComponent(queueUrl)}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ body: messageBody }),
+        headers: { 'Content-Type': 'application/json' },
+      });
       expect(result).toEqual(mockResponse);
     });
 
@@ -168,11 +164,10 @@ describe('APIService', () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: 'Internal Server Error'
+        statusText: 'Internal Server Error',
       });
 
-      await expect(APIService.deleteMessage('url', 'handle'))
-        .rejects.toThrow('HTTP 500: Internal Server Error');
+      await expect(APIService.deleteMessage('url', 'handle')).rejects.toThrow('HTTP 500: Internal Server Error');
     });
   });
 });

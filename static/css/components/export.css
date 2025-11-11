@@ -109,7 +109,7 @@
   margin-bottom: 0;
 }
 
-.export-setting input[type="checkbox"] {
+.export-setting input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -273,7 +273,7 @@
     right: auto;
     left: 0;
   }
-  
+
   .export-notification {
     bottom: var(--spacing-md);
     left: var(--spacing-md);

@@ -6,60 +6,60 @@ import { UIComponent } from './uiComponent.js';
 import { APIService } from './apiService.js';
 
 export class AWSContextHandler extends UIComponent {
-    constructor() {
-        super('#awsContextDetails');
+  constructor() {
+    super('#awsContextDetails');
+  }
+
+  async load() {
+    try {
+      const context = await APIService.getAWSContext();
+      this.render(context);
+    } catch (error) {
+      console.error('Error loading AWS context:', error);
+      this.setContent('<div class="error-message">Failed to load AWS context</div>');
+    }
+  }
+
+  render(context) {
+    if (!context || typeof context !== 'object') {
+      this.setContent('<div class="error-message">Invalid context data</div>');
+      return;
     }
 
-    async load() {
-        try {
-            const context = await APIService.getAWSContext();
-            this.render(context);
-        } catch (error) {
-            console.error('Error loading AWS context:', error);
-            this.setContent('<div class="error-message">Failed to load AWS context</div>');
-        }
-    }
+    const fields = [
+      { label: 'Mode', value: context.mode },
+      { label: 'Region', value: context.region || 'N/A' },
+      { label: 'Profile', value: context.profile || 'N/A' },
+      { label: 'Account', value: context.accountId || 'N/A' },
+    ];
 
-    render(context) {
-        if (!context || typeof context !== 'object') {
-            this.setContent('<div class="error-message">Invalid context data</div>');
-            return;
-        }
+    const table = document.createElement('table');
+    table.className = 'aws-context-table';
 
-        const fields = [
-            { label: 'Mode', value: context.mode },
-            { label: 'Region', value: context.region || 'N/A' },
-            { label: 'Profile', value: context.profile || 'N/A' },
-            { label: 'Account', value: context.accountId || 'N/A' }
-        ];
+    fields.forEach((field) => {
+      if (field.value && field.value !== 'N/A') {
+        const row = this.createTableRow(field.label, field.value);
+        table.appendChild(row);
+      }
+    });
 
-        const table = document.createElement('table');
-        table.className = 'aws-context-table';
+    this.setContent('');
+    this.element.appendChild(table);
+  }
 
-        fields.forEach(field => {
-            if (field.value && field.value !== 'N/A') {
-                const row = this.createTableRow(field.label, field.value);
-                table.appendChild(row);
-            }
-        });
+  createTableRow(label, value) {
+    const row = document.createElement('tr');
 
-        this.setContent('');
-        this.element.appendChild(table);
-    }
+    const labelCell = document.createElement('td');
+    labelCell.className = 'aws-context-label';
+    labelCell.textContent = label;
 
-    createTableRow(label, value) {
-        const row = document.createElement('tr');
-        
-        const labelCell = document.createElement('td');
-        labelCell.className = 'aws-context-label';
-        labelCell.textContent = label;
-        
-        const valueCell = document.createElement('td');
-        valueCell.className = 'aws-context-value';
-        valueCell.textContent = value;
-        
-        row.appendChild(labelCell);
-        row.appendChild(valueCell);
-        return row;
-    }
+    const valueCell = document.createElement('td');
+    valueCell.className = 'aws-context-value';
+    valueCell.textContent = value;
+
+    row.appendChild(labelCell);
+    row.appendChild(valueCell);
+    return row;
+  }
 }

@@ -83,7 +83,7 @@
   .theme-toggle {
     border-width: 2px;
   }
-  
+
   .theme-toggle:focus {
     box-shadow: 0 0 0 4px var(--color-focus-ring);
   }
@@ -95,11 +95,11 @@
   .theme-toggle::before {
     transition: none;
   }
-  
+
   .theme-toggle:hover {
     transform: none;
   }
-  
+
   .theme-toggle:active {
     transform: none;
   }

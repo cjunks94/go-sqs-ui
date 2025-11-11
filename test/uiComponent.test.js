@@ -73,7 +73,7 @@ describe('UIComponent', () => {
     it('should toggle class on element', () => {
       component.toggleClass('toggle-class');
       expect(component.element.classList.contains('toggle-class')).toBe(true);
-      
+
       component.toggleClass('toggle-class');
       expect(component.element.classList.contains('toggle-class')).toBe(false);
     });

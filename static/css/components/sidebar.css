@@ -9,7 +9,9 @@
   border-right: 1px solid var(--sidebar-border);
   padding: var(--spacing-md);
   overflow-y: auto;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
   z-index: var(--z-fixed);
   color: var(--sidebar-text);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
@@ -244,15 +246,15 @@
     z-index: var(--z-modal);
     box-shadow: var(--shadow-xl);
   }
-  
+
   .sidebar.collapsed {
     transform: translateX(-100%);
   }
-  
+
   .sidebar-toggle {
     display: flex;
   }
-  
+
   .main-content {
     padding-left: 0;
   }
@@ -262,7 +264,7 @@
   .sidebar-toggle {
     display: none;
   }
-  
+
   .sidebar-close {
     display: none;
   }

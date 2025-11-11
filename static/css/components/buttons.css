@@ -219,12 +219,12 @@
     padding: var(--spacing-sm);
     font-size: var(--font-size-xs);
   }
-  
+
   .btn-small {
     padding: var(--spacing-xs);
     font-size: var(--font-size-xs);
   }
-  
+
   .btn-large {
     padding: var(--spacing-md);
     font-size: var(--font-size-sm);
