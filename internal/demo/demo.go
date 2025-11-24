@@ -24,44 +24,199 @@ func NewDemoSQSClient() *DemoSQSClient {
 		queues: []string{
 			"https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue",
 			"https://sqs.us-east-1.amazonaws.com/123456789012/demo-notifications-queue",
+			"https://sqs.us-east-1.amazonaws.com/123456789012/demo-payments-queue",
+			"https://sqs.us-east-1.amazonaws.com/123456789012/demo-analytics-queue",
 			"https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue",
 		},
 		messages: make(map[string][]types.Message),
 	}
 
-	// Add some demo messages with recent timestamps (August 2025)
+	// Use dynamic timestamps relative to now
 	now := time.Now()
+
+	// Orders Queue - Active processing queue
 	demo.messages["https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue"] = []types.Message{
 		{
-			MessageId:     aws.String("msg-001"),
-			Body:          aws.String(`{"orderId": "12345", "customerId": "cust-001", "amount": 99.99, "status": "pending"}`),
-			ReceiptHandle: aws.String("receipt-001"),
+			MessageId:     aws.String("ord-001"),
+			Body:          aws.String(`{"orderId": "12345", "customerId": "cust-001", "amount": 99.99, "status": "pending", "items": [{"sku": "WIDGET-001", "quantity": 2}]}`),
+			ReceiptHandle: aws.String("receipt-ord-001"),
 			Attributes: map[string]string{
 				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-1*time.Hour).UnixMilli()),
 				"ApproximateReceiveCount":          "1",
 				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-50*time.Minute).UnixMilli()),
 			},
+			MessageAttributes: map[string]types.MessageAttributeValue{
+				"Priority": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("high"),
+				},
+				"Source": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("web-app"),
+				},
+			},
 		},
 		{
-			MessageId:     aws.String("msg-002"),
-			Body:          aws.String(`{"orderId": "12346", "customerId": "cust-002", "amount": 149.99, "status": "processing"}`),
-			ReceiptHandle: aws.String("receipt-002"),
+			MessageId:     aws.String("ord-002"),
+			Body:          aws.String(`{"orderId": "12346", "customerId": "cust-002", "amount": 149.99, "status": "processing", "items": [{"sku": "GADGET-042", "quantity": 1}]}`),
+			ReceiptHandle: aws.String("receipt-ord-002"),
 			Attributes: map[string]string{
 				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-2*time.Hour).UnixMilli()),
 				"ApproximateReceiveCount":          "1",
 				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-110*time.Minute).UnixMilli()),
 			},
+			MessageAttributes: map[string]types.MessageAttributeValue{
+				"Priority": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("normal"),
+				},
+				"Source": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("mobile-app"),
+				},
+			},
+		},
+		{
+			MessageId:     aws.String("ord-003"),
+			Body:          aws.String(`{"orderId": "12347", "customerId": "cust-003", "amount": 299.95, "status": "pending", "items": [{"sku": "PREMIUM-789", "quantity": 1}]}`),
+			ReceiptHandle: aws.String("receipt-ord-003"),
+			Attributes: map[string]string{
+				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-30*time.Minute).UnixMilli()),
+				"ApproximateReceiveCount":          "0",
+				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-25*time.Minute).UnixMilli()),
+			},
+			MessageAttributes: map[string]types.MessageAttributeValue{
+				"Priority": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("high"),
+				},
+			},
 		},
 	}
 
+	// Notifications Queue
 	demo.messages["https://sqs.us-east-1.amazonaws.com/123456789012/demo-notifications-queue"] = []types.Message{
 		{
 			MessageId:     aws.String("notif-001"),
-			Body:          aws.String(`{"type": "email", "recipient": "user@example.com", "subject": "Order Confirmation", "template": "order-confirmation"}`),
+			Body:          aws.String(`{"type": "email", "recipient": "user@example.com", "subject": "Order Confirmation", "template": "order-confirmation", "data": {"orderId": "12345"}}`),
 			ReceiptHandle: aws.String("receipt-notif-001"),
 			Attributes: map[string]string{
 				"SentTimestamp":           fmt.Sprintf("%d", now.Add(-30*time.Minute).UnixMilli()),
 				"ApproximateReceiveCount": "1",
+			},
+		},
+		{
+			MessageId:     aws.String("notif-002"),
+			Body:          aws.String(`{"type": "sms", "recipient": "+15551234567", "message": "Your package has shipped!", "trackingNumber": "1Z999AA10123456784"}`),
+			ReceiptHandle: aws.String("receipt-notif-002"),
+			Attributes: map[string]string{
+				"SentTimestamp":           fmt.Sprintf("%d", now.Add(-15*time.Minute).UnixMilli()),
+				"ApproximateReceiveCount": "0",
+			},
+		},
+	}
+
+	// Payments Queue - with some complex JSON
+	demo.messages["https://sqs.us-east-1.amazonaws.com/123456789012/demo-payments-queue"] = []types.Message{
+		{
+			MessageId:     aws.String("pay-001"),
+			Body:          aws.String(`{"paymentId": "pmt-abc123", "orderId": "12345", "method": "credit_card", "amount": 99.99, "currency": "USD", "status": "authorized", "metadata": {"cardLast4": "4242", "cardBrand": "visa"}}`),
+			ReceiptHandle: aws.String("receipt-pay-001"),
+			Attributes: map[string]string{
+				"SentTimestamp":           fmt.Sprintf("%d", now.Add(-45*time.Minute).UnixMilli()),
+				"ApproximateReceiveCount": "2",
+			},
+			MessageAttributes: map[string]types.MessageAttributeValue{
+				"Environment": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("production"),
+				},
+			},
+		},
+	}
+
+	// Analytics Queue - with event tracking data
+	demo.messages["https://sqs.us-east-1.amazonaws.com/123456789012/demo-analytics-queue"] = []types.Message{
+		{
+			MessageId:     aws.String("ana-001"),
+			Body:          aws.String(`{"event": "page_view", "page": "/products/widget-001", "userId": "usr-123", "timestamp": "` + now.Add(-20*time.Minute).Format(time.RFC3339) + `", "metadata": {"referrer": "google.com", "device": "mobile"}}`),
+			ReceiptHandle: aws.String("receipt-ana-001"),
+			Attributes: map[string]string{
+				"SentTimestamp":           fmt.Sprintf("%d", now.Add(-20*time.Minute).UnixMilli()),
+				"ApproximateReceiveCount": "0",
+			},
+		},
+		{
+			MessageId:     aws.String("ana-002"),
+			Body:          aws.String(`{"event": "add_to_cart", "productId": "WIDGET-001", "userId": "usr-456", "quantity": 2, "timestamp": "` + now.Add(-10*time.Minute).Format(time.RFC3339) + `"}`),
+			ReceiptHandle: aws.String("receipt-ana-002"),
+			Attributes: map[string]string{
+				"SentTimestamp":           fmt.Sprintf("%d", now.Add(-10*time.Minute).UnixMilli()),
+				"ApproximateReceiveCount": "1",
+			},
+		},
+	}
+
+	// Dead Letter Queue - CRITICAL: Add failed messages to demonstrate DLQ debugging!
+	demo.messages["https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue"] = []types.Message{
+		{
+			MessageId:     aws.String("dlq-001"),
+			Body:          aws.String(`{"orderId": "99999", "error": "Invalid payment method", "originalQueue": "demo-orders-queue", "failureReason": "Payment validation failed after 3 retries"}`),
+			ReceiptHandle: aws.String("receipt-dlq-001"),
+			Attributes: map[string]string{
+				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-6*time.Hour).UnixMilli()),
+				"ApproximateReceiveCount":          "5",
+				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-5*time.Hour).UnixMilli()),
+			},
+			MessageAttributes: map[string]types.MessageAttributeValue{
+				"OriginalQueue": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("demo-orders-queue"),
+				},
+				"FailureCount": {
+					DataType:    aws.String("Number"),
+					StringValue: aws.String("3"),
+				},
+			},
+		},
+		{
+			MessageId:     aws.String("dlq-002"),
+			Body:          aws.String(`{"paymentId": "pmt-failed-001", "error": "Gateway timeout", "amount": 1599.99, "retries": 3, "lastError": "Connection timeout to payment processor"}`),
+			ReceiptHandle: aws.String("receipt-dlq-002"),
+			Attributes: map[string]string{
+				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-12*time.Hour).UnixMilli()),
+				"ApproximateReceiveCount":          "8",
+				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-11*time.Hour).UnixMilli()),
+			},
+			MessageAttributes: map[string]types.MessageAttributeValue{
+				"OriginalQueue": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("demo-payments-queue"),
+				},
+				"FailureCount": {
+					DataType:    aws.String("Number"),
+					StringValue: aws.String("3"),
+				},
+			},
+		},
+		{
+			MessageId:     aws.String("dlq-003"),
+			Body:          aws.String(`{"type": "email", "error": "Invalid email address", "recipient": "not-a-valid-email", "subject": "Test", "failedAt": "` + now.Add(-24*time.Hour).Format(time.RFC3339) + `"}`),
+			ReceiptHandle: aws.String("receipt-dlq-003"),
+			Attributes: map[string]string{
+				"SentTimestamp":                    fmt.Sprintf("%d", now.Add(-24*time.Hour).UnixMilli()),
+				"ApproximateReceiveCount":          "12",
+				"ApproximateFirstReceiveTimestamp": fmt.Sprintf("%d", now.Add(-23*time.Hour).UnixMilli()),
+			},
+			MessageAttributes: map[string]types.MessageAttributeValue{
+				"OriginalQueue": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String("demo-notifications-queue"),
+				},
+				"FailureCount": {
+					DataType:    aws.String("Number"),
+					StringValue: aws.String("3"),
+				},
 			},
 		},
 	}
@@ -111,15 +266,26 @@ func (d *DemoSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQ
 		messageCount = "0"
 	}
 
+	attributes := map[string]string{
+		"QueueArn":                    fmt.Sprintf("arn:aws:sqs:us-east-1:123456789012:%s", queueName),
+		"ApproximateNumberOfMessages": messageCount,
+		"MessageRetentionPeriod":      "1209600",
+		"VisibilityTimeout":           "30",
+		"CreatedTimestamp":            "1640995000",
+		"LastModifiedTimestamp":       "1640995000",
+	}
+
+	// Add DLQ-specific attributes for the deadletter queue
+	if queueName == "demo-deadletter-queue" {
+		// RedriveAllowPolicy indicates this IS a DLQ that can receive messages from source queues
+		attributes["RedriveAllowPolicy"] = `{"redrivePermission":"allowAll"}`
+	} else if queueName == "demo-orders-queue" || queueName == "demo-payments-queue" || queueName == "demo-notifications-queue" {
+		// RedrivePolicy indicates these queues send failed messages TO the DLQ
+		attributes["RedrivePolicy"] = `{"deadLetterTargetArn":"arn:aws:sqs:us-east-1:123456789012:demo-deadletter-queue","maxReceiveCount":"3"}`
+	}
+
 	return &sqs.GetQueueAttributesOutput{
-		Attributes: map[string]string{
-			"QueueArn":                    fmt.Sprintf("arn:aws:sqs:us-east-1:123456789012:%s", queueName),
-			"ApproximateNumberOfMessages": messageCount,
-			"MessageRetentionPeriod":      "1209600",
-			"VisibilityTimeout":           "30",
-			"CreatedTimestamp":            "1640995000",
-			"LastModifiedTimestamp":       "1640995000",
-		},
+		Attributes: attributes,
 	}, nil
 }
 

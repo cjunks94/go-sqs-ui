@@ -3,82 +3,7 @@
  * Tests for pagination controls and navigation functionality
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-// Mock the module that doesn't exist yet - TDD approach
-vi.mock('@/pagination.js', () => ({
-  Pagination: vi.fn().mockImplementation(function (options) {
-    this.options = options;
-    this.currentPage = 1;
-    this.totalPages = Math.ceil(options.totalItems / options.itemsPerPage);
-    this.element = null;
-
-    this.render = vi.fn(() => {
-      const container = document.createElement('div');
-      container.className = 'pagination-controls';
-      container.innerHTML = `
-                <button class="pagination-prev" ${this.currentPage === 1 ? 'disabled' : ''}>Previous</button>
-                <span class="pagination-info">Page ${this.currentPage} of ${this.totalPages}</span>
-                <button class="pagination-next" ${this.currentPage === this.totalPages ? 'disabled' : ''}>Next</button>
-                <input type="number" class="pagination-input" value="${this.currentPage}" min="1" max="${this.totalPages}">
-                <button class="pagination-go">Go</button>
-            `;
-
-      // Attach event listeners to make buttons functional
-      const prevBtn = container.querySelector('.pagination-prev');
-      const nextBtn = container.querySelector('.pagination-next');
-      const goBtn = container.querySelector('.pagination-go');
-      const input = container.querySelector('.pagination-input');
-
-      prevBtn.addEventListener('click', () => this.previousPage());
-      nextBtn.addEventListener('click', () => this.nextPage());
-      goBtn.addEventListener('click', () => {
-        const page = parseInt(input.value, 10);
-        this.goToPage(page);
-      });
-
-      this.element = container;
-      return container;
-    });
-
-    this.goToPage = vi.fn((page) => {
-      if (page >= 1 && page <= this.totalPages) {
-        this.currentPage = page;
-        if (this.options.onPageChange) {
-          this.options.onPageChange(page);
-        }
-        // Save reference to old element before rendering
-        const oldElement = this.element;
-        const newElement = this.render();
-        // If there's an existing element in the DOM, replace it
-        if (oldElement && oldElement.parentNode) {
-          oldElement.parentNode.replaceChild(newElement, oldElement);
-        }
-        return true;
-      }
-      return false;
-    });
-
-    this.nextPage = vi.fn(() => {
-      return this.goToPage(this.currentPage + 1);
-    });
-
-    this.previousPage = vi.fn(() => {
-      return this.goToPage(this.currentPage - 1);
-    });
-
-    this.getCurrentPage = vi.fn(() => this.currentPage);
-    this.getTotalPages = vi.fn(() => this.totalPages);
-    this.getPageInfo = vi.fn(() => ({
-      currentPage: this.currentPage,
-      totalPages: this.totalPages,
-      startItem: (this.currentPage - 1) * this.options.itemsPerPage + 1,
-      endItem: Math.min(this.currentPage * this.options.itemsPerPage, this.options.totalItems),
-      totalItems: this.options.totalItems,
-    }));
-  }),
-}));
-
-import { Pagination } from '@/pagination.js';
+import { Pagination } from '../static/modules/pagination.js';
 
 describe('Pagination Component', () => {
   let pagination;
@@ -354,16 +279,19 @@ describe('Pagination Component', () => {
       const nextButton = container.querySelector('.pagination-next');
       nextButton.click();
 
-      expect(pagination.nextPage).toHaveBeenCalled();
-      expect(onPageChangeMock).toHaveBeenCalled();
+      expect(pagination.getCurrentPage()).toBe(2);
+      expect(onPageChangeMock).toHaveBeenCalledWith(2);
     });
 
     it('should handle clicking Previous button', () => {
       pagination.goToPage(2);
+      onPageChangeMock.mockClear();
+
       const prevButton = container.querySelector('.pagination-prev');
       prevButton.click();
 
-      expect(pagination.previousPage).toHaveBeenCalled();
+      expect(pagination.getCurrentPage()).toBe(1);
+      expect(onPageChangeMock).toHaveBeenCalledWith(1);
     });
 
     it('should handle page input and Go button', () => {
@@ -373,7 +301,197 @@ describe('Pagination Component', () => {
       input.value = '3';
       goButton.click();
 
-      expect(pagination.goToPage).toHaveBeenCalledWith(3);
+      expect(pagination.getCurrentPage()).toBe(3);
+      expect(onPageChangeMock).toHaveBeenCalledWith(3);
+    });
+
+    it('should handle Enter key in page input', () => {
+      const input = container.querySelector('.pagination-input');
+      input.value = '2';
+
+      const enterEvent = new KeyboardEvent('keypress', { key: 'Enter' });
+      input.dispatchEvent(enterEvent);
+
+      expect(pagination.getCurrentPage()).toBe(2);
+    });
+
+    it('should not navigate on same page', () => {
+      const result = pagination.goToPage(1);
+      expect(result).toBe(false);
+      expect(onPageChangeMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Update Methods', () => {
+    beforeEach(() => {
+      pagination = new Pagination({
+        totalItems: 150,
+        itemsPerPage: 50,
+        onPageChange: onPageChangeMock,
+      });
+      const element = pagination.render();
+      container.appendChild(element);
+    });
+
+    it('should update total items and recalculate pages', () => {
+      pagination.updateTotalItems(250);
+
+      expect(pagination.totalItems).toBe(250);
+      expect(pagination.getTotalPages()).toBe(5);
+    });
+
+    it('should adjust current page if it exceeds new total pages', () => {
+      pagination.goToPage(3);
+      onPageChangeMock.mockClear();
+
+      pagination.updateTotalItems(75); // Only 2 pages now
+
+      expect(pagination.getCurrentPage()).toBe(2);
+      expect(pagination.getTotalPages()).toBe(2);
+    });
+
+    it('should update display when total items change', () => {
+      pagination.updateTotalItems(200);
+
+      const pageInfo = container.querySelector('.pagination-info');
+      expect(pageInfo.textContent).toContain('of 4');
+    });
+
+    it('should update items per page and reset to page 1', () => {
+      pagination.goToPage(2);
+      onPageChangeMock.mockClear();
+
+      pagination.updateItemsPerPage(100);
+
+      expect(pagination.itemsPerPage).toBe(100);
+      expect(pagination.getTotalPages()).toBe(2);
+      expect(pagination.getCurrentPage()).toBe(1);
+      expect(onPageChangeMock).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle zero total items', () => {
+      pagination.updateTotalItems(0);
+
+      expect(pagination.getTotalPages()).toBe(0);
+      const info = pagination.getPageInfo();
+      expect(info.startItem).toBe(0);
+      expect(info.endItem).toBe(0);
+    });
+  });
+
+  describe('Display Update', () => {
+    beforeEach(() => {
+      pagination = new Pagination({
+        totalItems: 150,
+        itemsPerPage: 50,
+        onPageChange: onPageChangeMock,
+      });
+      const element = pagination.render();
+      container.appendChild(element);
+    });
+
+    it('should update display when navigating', () => {
+      pagination.goToPage(2);
+
+      const pageInfo = container.querySelector('.pagination-info');
+      const pageInput = container.querySelector('.pagination-input');
+      const prevButton = container.querySelector('.pagination-prev');
+      const nextButton = container.querySelector('.pagination-next');
+
+      expect(pageInfo.textContent).toBe('Page 2 of 3');
+      expect(pageInput.value).toBe('2');
+      expect(prevButton.disabled).toBe(false);
+      expect(nextButton.disabled).toBe(false);
+    });
+
+    it('should not throw if element is not rendered', () => {
+      const newPagination = new Pagination({
+        totalItems: 100,
+        itemsPerPage: 50,
+        onPageChange: vi.fn(),
+      });
+
+      expect(() => newPagination.updateDisplay()).not.toThrow();
+    });
+  });
+
+  describe('Destroy Method', () => {
+    beforeEach(() => {
+      pagination = new Pagination({
+        totalItems: 150,
+        itemsPerPage: 50,
+        onPageChange: onPageChangeMock,
+      });
+      const element = pagination.render();
+      container.appendChild(element);
+    });
+
+    it('should remove element from DOM', () => {
+      expect(container.querySelector('.pagination-controls')).toBeTruthy();
+
+      pagination.destroy();
+
+      expect(container.querySelector('.pagination-controls')).toBeFalsy();
+    });
+
+    it('should set element to null after destroy', () => {
+      pagination.destroy();
+      expect(pagination.element).toBeNull();
+    });
+
+    it('should not throw if element not in DOM', () => {
+      pagination.element = document.createElement('div');
+      expect(() => pagination.destroy()).not.toThrow();
+    });
+  });
+
+  describe('Constructor Options', () => {
+    it('should use provided currentPage', () => {
+      pagination = new Pagination({
+        totalItems: 150,
+        itemsPerPage: 50,
+        currentPage: 2,
+        onPageChange: onPageChangeMock,
+      });
+
+      expect(pagination.getCurrentPage()).toBe(2);
+    });
+
+    it('should default to page 1 if no currentPage provided', () => {
+      pagination = new Pagination({
+        totalItems: 150,
+        itemsPerPage: 50,
+        onPageChange: onPageChangeMock,
+      });
+
+      expect(pagination.getCurrentPage()).toBe(1);
+    });
+
+    it('should use default itemsPerPage of 50', () => {
+      pagination = new Pagination({
+        totalItems: 150,
+        onPageChange: onPageChangeMock,
+      });
+
+      expect(pagination.itemsPerPage).toBe(50);
+    });
+
+    it('should use default totalItems of 0', () => {
+      pagination = new Pagination({
+        itemsPerPage: 50,
+        onPageChange: onPageChangeMock,
+      });
+
+      expect(pagination.totalItems).toBe(0);
+    });
+
+    it('should use no-op function if onPageChange not provided', () => {
+      pagination = new Pagination({
+        totalItems: 150,
+        itemsPerPage: 50,
+      });
+
+      expect(() => pagination.goToPage(2)).not.toThrow();
     });
   });
 });

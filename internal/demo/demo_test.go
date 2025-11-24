@@ -15,13 +15,15 @@ func TestNewDemoSQSClient(t *testing.T) {
 		t.Fatal("NewDemoSQSClient returned nil")
 	}
 
-	if len(client.queues) != 3 {
-		t.Errorf("Expected 3 demo queues, got %d", len(client.queues))
+	if len(client.queues) != 5 {
+		t.Errorf("Expected 5 demo queues, got %d", len(client.queues))
 	}
 
 	expectedQueues := []string{
 		"demo-orders-queue",
 		"demo-notifications-queue",
+		"demo-payments-queue",
+		"demo-analytics-queue",
 		"demo-deadletter-queue",
 	}
 
@@ -48,8 +50,8 @@ func TestDemoSQSClient_ListQueues(t *testing.T) {
 		t.Fatalf("ListQueues failed: %v", err)
 	}
 
-	if len(output.QueueUrls) != 3 {
-		t.Errorf("Expected 3 queue URLs, got %d", len(output.QueueUrls))
+	if len(output.QueueUrls) != 5 {
+		t.Errorf("Expected 5 queue URLs, got %d", len(output.QueueUrls))
 	}
 
 	for _, url := range output.QueueUrls {
@@ -186,13 +188,23 @@ func TestDemoSQSClient_ReceiveMessage_DLQ(t *testing.T) {
 		t.Fatalf("ReceiveMessage failed for DLQ: %v", err)
 	}
 
-	// DLQ might be empty in demo mode, which is okay
+	// DLQ should have messages to demonstrate DLQ debugging functionality
+	if len(output.Messages) == 0 {
+		t.Error("Expected DLQ to have messages for demo purposes, but it was empty")
+	}
+
 	for i, msg := range output.Messages {
-		// DLQ messages should have ApproximateReceiveCount >= 1 if any exist
+		// DLQ messages should have high ApproximateReceiveCount
 		if receiveCount, exists := msg.Attributes["ApproximateReceiveCount"]; exists {
 			if receiveCount == "0" {
 				t.Errorf("DLQ message %d has invalid ApproximateReceiveCount: %s", i, receiveCount)
 			}
+		}
+
+		// Verify DLQ messages have error-related content
+		body := aws.ToString(msg.Body)
+		if !strings.Contains(body, "error") && !strings.Contains(body, "Error") {
+			t.Errorf("DLQ message %d body should contain error information: %s", i, body)
 		}
 	}
 }
