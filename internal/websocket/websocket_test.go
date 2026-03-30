@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -213,6 +214,123 @@ func TestWebSocketManager_InvalidMessage(t *testing.T) {
 	_, _, err = conn.ReadMessage()
 	if err == nil {
 		t.Error("Expected connection to close due to invalid JSON")
+	}
+}
+
+func TestCheckOrigin_AllowsEmptyOrigin(t *testing.T) {
+	req := httptest.NewRequest("GET", "/ws", nil)
+	// No Origin header = same-origin request
+
+	if !checkOrigin(req) {
+		t.Error("Expected empty origin (same-origin request) to be allowed")
+	}
+}
+
+func TestCheckOrigin_AllowsLocalhost(t *testing.T) {
+	testCases := []struct {
+		origin   string
+		expected bool
+	}{
+		{"http://localhost", true},
+		{"http://localhost:8080", true},
+		{"http://localhost:3000", true},
+		{"https://localhost", true},
+		{"https://localhost:8080", true},
+		{"http://127.0.0.1", true},
+		{"http://127.0.0.1:8080", true},
+		{"https://127.0.0.1", true},
+		{"https://127.0.0.1:443", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.origin, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/ws", nil)
+			req.Header.Set("Origin", tc.origin)
+
+			result := checkOrigin(req)
+			if result != tc.expected {
+				t.Errorf("checkOrigin(%q) = %v, expected %v", tc.origin, result, tc.expected)
+			}
+		})
+	}
+}
+
+func TestCheckOrigin_RejectsUnknownOrigins(t *testing.T) {
+	testCases := []string{
+		"http://evil.com",
+		"http://malicious-site.com:8080",
+		"https://attacker.example.com",
+		"http://localhost.evil.com", // Subdomain attack
+		"http://127.0.0.1.evil.com", // Subdomain attack
+	}
+
+	for _, origin := range testCases {
+		t.Run(origin, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/ws", nil)
+			req.Header.Set("Origin", origin)
+
+			if checkOrigin(req) {
+				t.Errorf("Expected origin %q to be rejected", origin)
+			}
+		})
+	}
+}
+
+func TestCheckOrigin_AllowsCustomOrigins(t *testing.T) {
+	// Set custom allowed origins
+	originalEnv := os.Getenv("ALLOWED_WEBSOCKET_ORIGINS")
+	defer func() {
+		if err := os.Setenv("ALLOWED_WEBSOCKET_ORIGINS", originalEnv); err != nil {
+			t.Logf("Failed to restore ALLOWED_WEBSOCKET_ORIGINS: %v", err)
+		}
+	}()
+
+	if err := os.Setenv("ALLOWED_WEBSOCKET_ORIGINS", "https://myapp.example.com,https://staging.example.com"); err != nil {
+		t.Fatalf("Failed to set ALLOWED_WEBSOCKET_ORIGINS: %v", err)
+	}
+
+	testCases := []struct {
+		origin   string
+		expected bool
+	}{
+		{"https://myapp.example.com", true},
+		{"https://myapp.example.com:443", true},
+		{"https://staging.example.com", true},
+		{"https://other.example.com", false},
+		{"http://myapp.example.com", false}, // Wrong scheme
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.origin, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/ws", nil)
+			req.Header.Set("Origin", tc.origin)
+
+			result := checkOrigin(req)
+			if result != tc.expected {
+				t.Errorf("checkOrigin(%q) = %v, expected %v", tc.origin, result, tc.expected)
+			}
+		})
+	}
+}
+
+func TestCheckOrigin_HandlesWhitespaceInCustomOrigins(t *testing.T) {
+	originalEnv := os.Getenv("ALLOWED_WEBSOCKET_ORIGINS")
+	defer func() {
+		if err := os.Setenv("ALLOWED_WEBSOCKET_ORIGINS", originalEnv); err != nil {
+			t.Logf("Failed to restore ALLOWED_WEBSOCKET_ORIGINS: %v", err)
+		}
+	}()
+
+	// Origins with extra whitespace
+	if err := os.Setenv("ALLOWED_WEBSOCKET_ORIGINS", " https://app1.com , https://app2.com "); err != nil {
+		t.Fatalf("Failed to set ALLOWED_WEBSOCKET_ORIGINS: %v", err)
+	}
+
+	req := httptest.NewRequest("GET", "/ws", nil)
+	req.Header.Set("Origin", "https://app1.com")
+
+	if !checkOrigin(req) {
+		t.Error("Expected origin with trimmed whitespace to be allowed")
 	}
 }
 

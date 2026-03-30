@@ -5,6 +5,8 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,10 +18,64 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
+// defaultAllowedOrigins contains origins that are always permitted for WebSocket connections.
+var defaultAllowedOrigins = []string{
+	"http://localhost",
+	"http://127.0.0.1",
+	"https://localhost",
+	"https://127.0.0.1",
+}
+
+// isOriginAllowed checks if the origin matches an allowed pattern.
+// It ensures the origin either matches exactly or is followed by a port separator (:).
+// This prevents subdomain attacks like "localhost.evil.com" matching "localhost".
+func isOriginAllowed(origin, allowed string) bool {
+	if !strings.HasPrefix(origin, allowed) {
+		return false
+	}
+
+	// Origin must either match exactly or be followed by a port separator
+	remainder := origin[len(allowed):]
+	return remainder == "" || strings.HasPrefix(remainder, ":")
+}
+
+// checkOrigin validates the Origin header for WebSocket upgrade requests.
+// It allows:
+// - Same-origin requests (no Origin header)
+// - Localhost/127.0.0.1 on any port
+// - Origins specified in ALLOWED_WEBSOCKET_ORIGINS environment variable (comma-separated)
+func checkOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+
+	// Same-origin requests don't include an Origin header
+	if origin == "" {
 		return true
-	},
+	}
+
+	// Check against default allowed origins (localhost variants)
+	for _, allowed := range defaultAllowedOrigins {
+		if isOriginAllowed(origin, allowed) {
+			return true
+		}
+	}
+
+	// Check against custom allowed origins from environment variable
+	customOrigins := os.Getenv("ALLOWED_WEBSOCKET_ORIGINS")
+	if customOrigins != "" {
+		for _, allowed := range strings.Split(customOrigins, ",") {
+			allowed = strings.TrimSpace(allowed)
+			if allowed != "" && isOriginAllowed(origin, allowed) {
+				return true
+			}
+		}
+	}
+
+	log.Printf("WebSocket connection rejected: origin %q not allowed", origin)
+	return false
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin:     checkOrigin,
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
