@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/cjunker/go-sqs-ui/internal/sqs"
@@ -12,10 +13,24 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	defaultPort = "8080"
+	portRetries = 10
+)
+
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	requestedPort, portFromEnv := os.LookupEnv("PORT")
+	if requestedPort == "" {
+		requestedPort = defaultPort
+		portFromEnv = false
+	}
+
+	listener, actualPort, err := listenWithFallback(requestedPort, portRetries, portFromEnv)
+	if err != nil {
+		log.Fatalf("Failed to bind: %v", err)
+	}
+	if requested, _ := strconv.Atoi(requestedPort); requested != actualPort {
+		log.Printf("⚠ Port %d was in use; serving on port %d instead", requested, actualPort)
 	}
 
 	sqsHandler, err := sqs.NewSQSHandler()
@@ -53,8 +68,8 @@ func main() {
 	// Serve static files (this will handle root path too)
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.FS(staticFS))))
 
-	log.Printf("Server starting on port %s", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	log.Printf("Server starting on http://localhost:%d", actualPort)
+	if err := http.Serve(listener, r); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
 }
