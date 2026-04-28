@@ -68,8 +68,13 @@ func main() {
 	// Serve static files (this will handle root path too)
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.FS(staticFS))))
 
+	srv := &http.Server{
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
 	log.Printf("Server starting on http://localhost:%d", actualPort)
-	if err := http.Serve(listener, r); err != nil {
+	if err := srv.Serve(listener); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
 }
