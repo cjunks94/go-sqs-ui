@@ -3,6 +3,7 @@
  * Tests for WebSocket connection management and message handling
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { WebSocketManager } from '../static/modules/webSocketManager.js';
 
 describe('WebSocketManager', () => {

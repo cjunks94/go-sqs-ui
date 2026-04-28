@@ -3,6 +3,7 @@
  * Tests for pagination controls and navigation functionality
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { Pagination } from '../static/modules/pagination.js';
 
 describe('Pagination Component', () => {
