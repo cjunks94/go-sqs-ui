@@ -2,11 +2,11 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly security scan on Sunday
+    - cron: '0 0 * * 0' # Weekly security scan on Sunday
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -25,7 +25,7 @@ jobs:
   # ============================================
   # Stage 1: Quick Checks (Parallel)
   # ============================================
-  
+
   lint-go:
     name: Lint Go Code
     runs-on: ubuntu-latest
@@ -34,7 +34,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for better analysis
+          fetch-depth: 0 # Full history for better analysis
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -43,7 +43,7 @@ jobs:
           cache: true
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           args: --timeout=5m --config=.golangci.yml
@@ -92,7 +92,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'  # Don't fail the build
+          exit-code: '0' # Don't fail the build
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
@@ -104,7 +104,7 @@ jobs:
         uses: securego/gosec@master
         with:
           args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
-          
+
       - name: Upload gosec results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
@@ -119,7 +119,7 @@ jobs:
   # ============================================
   # Stage 2: Unit Tests (Parallel with Matrix)
   # ============================================
-  
+
   test-go:
     name: Test Go (${{ matrix.go-version }} on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -184,7 +184,7 @@ jobs:
   # ============================================
   # Stage 3: Coverage Analysis & Quality Gates
   # ============================================
-  
+
   coverage-check:
     name: Coverage Analysis & Quality Gates
     runs-on: ubuntu-latest
@@ -275,7 +275,7 @@ jobs:
   # ============================================
   # Stage 4: Build & Integration Tests
   # ============================================
-  
+
   build:
     name: Build Application
     runs-on: ubuntu-latest
@@ -400,7 +400,7 @@ jobs:
   # ============================================
   # Stage 5: Reporting & Notifications
   # ============================================
-  
+
   publish-results:
     name: Publish Test Results
     runs-on: ubuntu-latest
@@ -443,7 +443,7 @@ jobs:
   # ============================================
   # Quality Gate Decision
   # ============================================
-  
+
   quality-gate:
     name: Quality Gate Decision
     runs-on: ubuntu-latest
