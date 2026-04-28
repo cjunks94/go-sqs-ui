@@ -276,10 +276,11 @@ func (d *DemoSQSClient) GetQueueAttributes(ctx context.Context, params *sqs.GetQ
 	}
 
 	// Add DLQ-specific attributes for the deadletter queue
-	if queueName == "demo-deadletter-queue" {
+	switch queueName {
+	case "demo-deadletter-queue":
 		// RedriveAllowPolicy indicates this IS a DLQ that can receive messages from source queues
 		attributes["RedriveAllowPolicy"] = `{"redrivePermission":"allowAll"}`
-	} else if queueName == "demo-orders-queue" || queueName == "demo-payments-queue" || queueName == "demo-notifications-queue" {
+	case "demo-orders-queue", "demo-payments-queue", "demo-notifications-queue":
 		// RedrivePolicy indicates these queues send failed messages TO the DLQ
 		attributes["RedrivePolicy"] = `{"deadLetterTargetArn":"arn:aws:sqs:us-east-1:123456789012:demo-deadletter-queue","maxReceiveCount":"3"}`
 	}

@@ -3,6 +3,7 @@
  * Tests for theme switching and persistence
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
 import ThemeManager from '../static/modules/themeManager.js';
 
 describe('ThemeManager', () => {
