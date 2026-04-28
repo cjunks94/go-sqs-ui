@@ -10,19 +10,35 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
+// SendMessageCall records the arguments of a SendMessage invocation for assertion.
+type SendMessageCall struct {
+	QueueURL string
+	Body     string
+}
+
+// DeleteMessageCall records the arguments of a DeleteMessage invocation for assertion.
+type DeleteMessageCall struct {
+	QueueURL      string
+	ReceiptHandle string
+}
+
 // MockSQSClient implements the SQSClientInterface for testing with configurable mock data.
 type MockSQSClient struct {
-	queues   []string
-	messages map[string][]types.Message
-	errors   map[string]error
+	queues             []string
+	messages           map[string][]types.Message
+	errors             map[string]error
+	SendMessageCalls   []SendMessageCall
+	DeleteMessageCalls []DeleteMessageCall
 }
 
 // NewMockSQSClient creates a new mock SQS client for testing.
 func NewMockSQSClient() *MockSQSClient {
 	return &MockSQSClient{
-		queues:   []string{},
-		messages: make(map[string][]types.Message),
-		errors:   make(map[string]error),
+		queues:             []string{},
+		messages:           make(map[string][]types.Message),
+		errors:             make(map[string]error),
+		SendMessageCalls:   []SendMessageCall{},
+		DeleteMessageCalls: []DeleteMessageCall{},
 	}
 }
 
@@ -140,6 +156,11 @@ func (m *MockSQSClient) ReceiveMessage(ctx context.Context, params *sqs.ReceiveM
 
 // SendMessage simulates sending a message and returns a mock message ID.
 func (m *MockSQSClient) SendMessage(ctx context.Context, params *sqs.SendMessageInput, optFns ...func(*sqs.Options)) (*sqs.SendMessageOutput, error) {
+	m.SendMessageCalls = append(m.SendMessageCalls, SendMessageCall{
+		QueueURL: aws.ToString(params.QueueUrl),
+		Body:     aws.ToString(params.MessageBody),
+	})
+
 	if err, exists := m.errors["SendMessage"]; exists {
 		return nil, err
 	}
@@ -152,14 +173,18 @@ func (m *MockSQSClient) SendMessage(ctx context.Context, params *sqs.SendMessage
 
 // DeleteMessage removes a message from the mock queue using its receipt handle.
 func (m *MockSQSClient) DeleteMessage(ctx context.Context, params *sqs.DeleteMessageInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error) {
+	queueURL := aws.ToString(params.QueueUrl)
+	receiptHandle := aws.ToString(params.ReceiptHandle)
+
+	m.DeleteMessageCalls = append(m.DeleteMessageCalls, DeleteMessageCall{
+		QueueURL:      queueURL,
+		ReceiptHandle: receiptHandle,
+	})
+
 	if err, exists := m.errors["DeleteMessage"]; exists {
 		return nil, err
 	}
 
-	queueURL := aws.ToString(params.QueueUrl)
-	receiptHandle := aws.ToString(params.ReceiptHandle)
-
-	// Remove message with matching receipt handle
 	messages := m.messages[queueURL]
 	for i, msg := range messages {
 		if aws.ToString(msg.ReceiptHandle) == receiptHandle {

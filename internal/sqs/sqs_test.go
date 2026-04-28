@@ -770,3 +770,293 @@ func TestSQSHandler_GetMessagesWithOffset(t *testing.T) {
 		})
 	}
 }
+
+func TestSQSHandler_RetryMessage(t *testing.T) {
+	const sourceQueueURL = "https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue"
+	const targetQueueURL = "https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue"
+
+	validPayload := map[string]interface{}{
+		"message": map[string]interface{}{
+			"messageId":     "dlq-001",
+			"body":          `{"orderId":"99999"}`,
+			"receiptHandle": "receipt-dlq-001",
+		},
+		"targetQueueUrl": targetQueueURL,
+	}
+
+	tests := []struct {
+		name                string
+		queueURL            string
+		requestBody         interface{}
+		setupMock           func(*helpers.MockSQSClient)
+		expectedStatus      int
+		expectedSendCalls   int
+		expectedDeleteCalls int
+		expectedSendQueue   string
+		expectedDeleteQueue string
+	}{
+		{
+			name:                "should retry successfully when source and target are valid",
+			queueURL:            sourceQueueURL,
+			requestBody:         validPayload,
+			setupMock:           func(mock *helpers.MockSQSClient) {},
+			expectedStatus:      http.StatusOK,
+			expectedSendCalls:   1,
+			expectedDeleteCalls: 1,
+			expectedSendQueue:   targetQueueURL,
+			expectedDeleteQueue: sourceQueueURL,
+		},
+		{
+			name:     "should fix double-slash mux encoding when queueUrl arrives as https:/...",
+			queueURL: "https:/sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue",
+			requestBody: map[string]interface{}{
+				"message": map[string]interface{}{
+					"messageId":     "dlq-001",
+					"body":          `{"orderId":"99999"}`,
+					"receiptHandle": "receipt-dlq-001",
+				},
+				"targetQueueUrl": targetQueueURL,
+			},
+			setupMock:           func(mock *helpers.MockSQSClient) {},
+			expectedStatus:      http.StatusOK,
+			expectedSendCalls:   1,
+			expectedDeleteCalls: 1,
+			expectedSendQueue:   targetQueueURL,
+			expectedDeleteQueue: sourceQueueURL,
+		},
+		{
+			name:                "should return 400 when payload is malformed JSON",
+			queueURL:            sourceQueueURL,
+			requestBody:         "not-json",
+			setupMock:           func(mock *helpers.MockSQSClient) {},
+			expectedStatus:      http.StatusBadRequest,
+			expectedSendCalls:   0,
+			expectedDeleteCalls: 0,
+		},
+		{
+			name:        "should return 500 and skip delete when SendMessage fails",
+			queueURL:    sourceQueueURL,
+			requestBody: validPayload,
+			setupMock: func(mock *helpers.MockSQSClient) {
+				mock.SetError("SendMessage", fmt.Errorf("AWS unavailable"))
+			},
+			expectedStatus:      http.StatusInternalServerError,
+			expectedSendCalls:   1,
+			expectedDeleteCalls: 0,
+		},
+		{
+			name:        "should still return 200 when DeleteMessage fails after successful send",
+			queueURL:    sourceQueueURL,
+			requestBody: validPayload,
+			setupMock: func(mock *helpers.MockSQSClient) {
+				mock.SetError("DeleteMessage", fmt.Errorf("permission denied"))
+			},
+			expectedStatus:      http.StatusOK,
+			expectedSendCalls:   1,
+			expectedDeleteCalls: 1,
+			expectedSendQueue:   targetQueueURL,
+			expectedDeleteQueue: sourceQueueURL,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := helpers.NewMockSQSClient()
+			tt.setupMock(mockClient)
+
+			handler := &SQSHandler{Client: mockClient}
+
+			body, _ := json.Marshal(tt.requestBody)
+			req := httptest.NewRequest("POST", "/api/queues/{queueUrl}/retry", bytes.NewReader(body))
+			req = mux.SetURLVars(req, map[string]string{"queueUrl": tt.queueURL})
+			rr := httptest.NewRecorder()
+
+			handler.RetryMessage(rr, req)
+
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d (body=%s)", tt.expectedStatus, rr.Code, rr.Body.String())
+			}
+
+			if got := len(mockClient.SendMessageCalls); got != tt.expectedSendCalls {
+				t.Errorf("expected %d SendMessage calls, got %d", tt.expectedSendCalls, got)
+			}
+
+			if got := len(mockClient.DeleteMessageCalls); got != tt.expectedDeleteCalls {
+				t.Errorf("expected %d DeleteMessage calls, got %d", tt.expectedDeleteCalls, got)
+			}
+
+			if tt.expectedSendQueue != "" && len(mockClient.SendMessageCalls) > 0 {
+				if got := mockClient.SendMessageCalls[0].QueueURL; got != tt.expectedSendQueue {
+					t.Errorf("expected SendMessage queueURL %q, got %q", tt.expectedSendQueue, got)
+				}
+			}
+
+			if tt.expectedDeleteQueue != "" && len(mockClient.DeleteMessageCalls) > 0 {
+				if got := mockClient.DeleteMessageCalls[0].QueueURL; got != tt.expectedDeleteQueue {
+					t.Errorf("expected DeleteMessage queueURL %q, got %q", tt.expectedDeleteQueue, got)
+				}
+			}
+
+			if tt.expectedStatus == http.StatusOK {
+				var resp map[string]string
+				if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+					t.Fatalf("failed to unmarshal response: %v", err)
+				}
+				if resp["status"] != "retried" {
+					t.Errorf("expected status field to be 'retried', got %q", resp["status"])
+				}
+				if resp["messageId"] == "" {
+					t.Error("response missing messageId")
+				}
+			}
+		})
+	}
+}
+
+func TestSQSHandler_RetryMessage_PreservesBody(t *testing.T) {
+	const targetQueueURL = "https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue"
+	const originalBody = `{"orderId":"99999","retryAttempt":3}`
+
+	mockClient := helpers.NewMockSQSClient()
+	handler := &SQSHandler{Client: mockClient}
+
+	payload := map[string]interface{}{
+		"message": map[string]interface{}{
+			"messageId":     "dlq-001",
+			"body":          originalBody,
+			"receiptHandle": "receipt-dlq-001",
+		},
+		"targetQueueUrl": targetQueueURL,
+	}
+
+	body, _ := json.Marshal(payload)
+	req := httptest.NewRequest("POST", "/api/queues/{queueUrl}/retry", bytes.NewReader(body))
+	req = mux.SetURLVars(req, map[string]string{
+		"queueUrl": "https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue",
+	})
+	rr := httptest.NewRecorder()
+
+	handler.RetryMessage(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	if len(mockClient.SendMessageCalls) != 1 {
+		t.Fatalf("expected 1 SendMessage call, got %d", len(mockClient.SendMessageCalls))
+	}
+	if got := mockClient.SendMessageCalls[0].Body; got != originalBody {
+		t.Errorf("retry must preserve original body verbatim; expected %q, got %q", originalBody, got)
+	}
+}
+
+func TestSQSHandler_ListQueues_TagFilters(t *testing.T) {
+	const matchingQueue = "https://sqs.us-east-1.amazonaws.com/123456789012/matching-queue"
+	const nonMatchingQueue = "https://sqs.us-east-1.amazonaws.com/123456789012/non-matching-queue"
+
+	tests := []struct {
+		name           string
+		envVars        map[string]string
+		setupMock      func(*helpers.MockSQSClient)
+		expectedQueues int
+	}{
+		{
+			name: "should return all queues when DISABLE_TAG_FILTER is true",
+			envVars: map[string]string{
+				"DISABLE_TAG_FILTER": "true",
+			},
+			setupMock: func(mock *helpers.MockSQSClient) {
+				mock.AddQueue(matchingQueue)
+				mock.AddQueue(nonMatchingQueue)
+			},
+			expectedQueues: 2,
+		},
+		{
+			name: "should respect custom FILTER_BUSINESS_UNIT (mock returns degrees, filter expects different)",
+			envVars: map[string]string{
+				"FILTER_BUSINESS_UNIT": "marketing",
+			},
+			setupMock: func(mock *helpers.MockSQSClient) {
+				mock.AddQueue(matchingQueue)
+			},
+			expectedQueues: 0,
+		},
+		{
+			name: "should respect custom FILTER_PRODUCT (mock returns amt, filter expects amt,other)",
+			envVars: map[string]string{
+				"FILTER_PRODUCT": "amt,other",
+			},
+			setupMock: func(mock *helpers.MockSQSClient) {
+				mock.AddQueue(matchingQueue)
+			},
+			expectedQueues: 1,
+		},
+		{
+			name: "should respect custom FILTER_ENV (mock returns stg, filter expects prod)",
+			envVars: map[string]string{
+				"FILTER_ENV": "prod",
+			},
+			setupMock: func(mock *helpers.MockSQSClient) {
+				mock.AddQueue(matchingQueue)
+			},
+			expectedQueues: 0,
+		},
+		{
+			name: "should match when custom FILTER_ENV includes mock's tag value",
+			envVars: map[string]string{
+				"FILTER_ENV": "stg,prod,dev",
+			},
+			setupMock: func(mock *helpers.MockSQSClient) {
+				mock.AddQueue(matchingQueue)
+			},
+			expectedQueues: 1,
+		},
+	}
+
+	tagFilterEnvVars := []string{
+		"DISABLE_TAG_FILTER",
+		"FILTER_BUSINESS_UNIT",
+		"FILTER_PRODUCT",
+		"FILTER_ENV",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, key := range tagFilterEnvVars {
+				if err := os.Unsetenv(key); err != nil {
+					t.Fatalf("failed to unset %s: %v", key, err)
+				}
+			}
+			for key, value := range tt.envVars {
+				if err := os.Setenv(key, value); err != nil {
+					t.Fatalf("failed to set %s: %v", key, err)
+				}
+			}
+			t.Cleanup(func() {
+				for _, key := range tagFilterEnvVars {
+					_ = os.Unsetenv(key)
+				}
+			})
+
+			mockClient := helpers.NewMockSQSClient()
+			tt.setupMock(mockClient)
+			handler := &SQSHandler{Client: mockClient}
+
+			req := httptest.NewRequest("GET", "/api/queues", nil)
+			rr := httptest.NewRecorder()
+			handler.ListQueues(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Fatalf("expected 200, got %d", rr.Code)
+			}
+
+			var queues []types.Queue
+			if err := json.Unmarshal(rr.Body.Bytes(), &queues); err != nil {
+				t.Fatalf("failed to unmarshal: %v", err)
+			}
+
+			if len(queues) != tt.expectedQueues {
+				t.Errorf("expected %d queues, got %d", tt.expectedQueues, len(queues))
+			}
+		})
+	}
+}
