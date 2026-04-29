@@ -10,6 +10,9 @@ build/
 go-sqs-ui
 sqs-ui
 
+# Embedded static mirror (drifted copy of /static; tracked separately)
+internal/static/files/
+
 # Coverage
 coverage/
 *.coverage

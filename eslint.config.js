@@ -42,11 +42,11 @@ export default [
         HTMLSelectElement: 'readonly',
         requestAnimationFrame: 'readonly',
         Element: 'readonly',
-        
+
         // Node/Test globals
         global: 'readonly',
         process: 'readonly',
-        
+
         // Test globals
         describe: 'readonly',
         it: 'readonly',
@@ -57,7 +57,7 @@ export default [
         afterAll: 'readonly',
         vi: 'readonly',
         test: 'readonly',
-      }
+      },
     },
     plugins: {
       import: importPlugin,
@@ -68,14 +68,17 @@ export default [
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-debugger': 'error',
       'no-alert': 'warn',
-      'no-unused-vars': ['error', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_'
-      }],
-      
+      'no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+
       // Best practices
-      'eqeqeq': ['error', 'always', { null: 'ignore' }],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
@@ -83,7 +86,7 @@ export default [
       'prefer-const': 'error',
       'prefer-arrow-callback': 'error',
       'prefer-template': 'warn',
-      
+
       // Import rules
       'import/no-unresolved': 'off', // Turned off for browser modules
       'import/named': 'error',
@@ -95,11 +98,14 @@ export default [
       'import/no-cycle': 'error',
       'import/no-useless-path-segments': 'error',
       'import/export': 'error',
-      'import/order': ['warn', {
-        'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-        'newlines-between': 'always'
-      }],
-      
+      'import/order': [
+        'warn',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          'newlines-between': 'always',
+        },
+      ],
+
       // Promise rules
       'promise/always-return': 'error',
       'promise/no-return-wrap': 'error',
@@ -108,19 +114,22 @@ export default [
       'promise/no-new-statics': 'error',
       'promise/no-return-in-finally': 'error',
       'promise/valid-params': 'error',
-      
+
       // Style rules (Prettier will handle most formatting)
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
+      semi: ['error', 'always'],
+      quotes: ['error', 'single', { avoidEscape: true }],
       'comma-dangle': ['error', 'only-multiline'],
-      'max-len': ['warn', { 
-        code: 120, 
-        ignoreStrings: true,
-        ignoreTemplateLiterals: true,
-        ignoreRegExpLiterals: true,
-        ignoreUrls: true
-      }],
-    }
+      'max-len': [
+        'warn',
+        {
+          code: 120,
+          ignoreStrings: true,
+          ignoreTemplateLiterals: true,
+          ignoreRegExpLiterals: true,
+          ignoreUrls: true,
+        },
+      ],
+    },
   },
   {
     // Test files configuration
@@ -128,7 +137,7 @@ export default [
     rules: {
       'no-console': 'off',
       'max-len': 'off',
-    }
+    },
   },
   {
     // Ignore patterns
@@ -140,6 +149,6 @@ export default [
       '*.min.js',
       'test-results/**',
       'playwright-report/**',
-    ]
-  }
+    ],
+  },
 ];
