@@ -5,24 +5,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 ## Core Development Principles
 
 ### 1. Test-Driven Development (TDD)
+
 - **ALWAYS** write tests before implementing new features
 - Maintain or improve the current test coverage (47+ tests)
 - Run both frontend (`npm test`) and backend (`go test ./...`) tests before committing
 - Each new module should have a corresponding test file
 
 ### 2. Atomic Commits
+
 - Each commit should represent ONE logical change
 - Commit messages should clearly describe what changed and why
 - Use conventional commit format: `type(scope): description`
   - Examples: `feat(dlq): add retry button`, `fix(websocket): handle connection errors`
 
 ### 3. Single Responsibility Principle (SRP)
+
 - Keep files small and focused (max 200-300 lines)
 - Each module should do one thing well
 - When a file grows too large, refactor into smaller modules
 - Current good examples: `apiService.js`, `messageHandler.js`, `webSocketManager.js`
 
 ### 4. File Organization
+
 - Backend: Separate concerns into distinct `.go` files
 - Frontend: Use the modular architecture in `static/modules/`
 - Tests: Mirror the source structure in `test/` directory
@@ -32,6 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 The immediate priority is building robust DLQ (Dead Letter Queue) debugging capabilities. See `PLAN.md` for detailed feature requirements and implementation roadmap.
 
 Key DLQ features to prioritize:
+
 - Message retry functionality
 - Enhanced message viewing for debugging
 - Filtering and search capabilities
@@ -40,12 +45,14 @@ Key DLQ features to prioritize:
 ## Code Style Guidelines
 
 ### Go Backend
+
 - Follow standard Go conventions
 - Use meaningful variable names
 - Handle errors explicitly
 - Add comments for exported functions
 
 ### JavaScript Frontend
+
 - Use modern ES6+ features (modules, arrow functions, destructuring)
 - Keep the vanilla JavaScript approach (no frameworks)
 - Follow the existing module pattern
@@ -54,12 +61,14 @@ Key DLQ features to prioritize:
 ## Testing Requirements
 
 ### Before ANY commit:
+
 1. Run frontend tests: `npm test`
 2. Run backend tests: `go test ./...`
 3. Ensure all tests pass
 4. Add tests for any new functionality
 
 ### Test Coverage Goals:
+
 - Frontend: Maintain 90%+ coverage
 - Backend: Aim for 80%+ coverage
 - Integration tests for critical paths
@@ -67,6 +76,7 @@ Key DLQ features to prioritize:
 ## Recent Stability Improvements
 
 ### Major Bug Fixes (Latest Release)
+
 The following critical issues have been resolved:
 
 1. **DLQ Detection Logic Fixed** ⚠️ **Breaking Change**

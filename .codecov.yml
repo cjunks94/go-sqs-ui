@@ -6,33 +6,33 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "70...100"
-  
+  range: '70...100'
+
   status:
     project:
       default:
         target: 80%
         threshold: 2%
         paths:
-          - "!test/"
-          - "!**/*_test.go"
-        
+          - '!test/'
+          - '!**/*_test.go'
+
       frontend:
         target: 85%
         threshold: 2%
         paths:
-          - "static/**/*.js"
-          - "!static/**/*.test.js"
-          - "!static/**/*.spec.js"
-        
+          - 'static/**/*.js'
+          - '!static/**/*.test.js'
+          - '!static/**/*.spec.js'
+
       backend:
         target: 80%
         threshold: 2%
         paths:
-          - "**/*.go"
-          - "!**/*_test.go"
-          - "!test_*.go"
-    
+          - '**/*.go'
+          - '!**/*_test.go'
+          - '!test_*.go'
+
     patch:
       default:
         target: 80%
@@ -47,32 +47,32 @@ parsers:
       macro: false
 
 comment:
-  layout: "reach,diff,flags,tree,footer"
+  layout: 'reach,diff,flags,tree,footer'
   behavior: default
   require_changes: false
   require_base: false
   require_head: true
-  
+
 flags:
   frontend:
     paths:
       - static/
     carryforward: false
-    
+
   backend:
     paths:
-      - "*.go"
+      - '*.go'
     carryforward: false
 
 ignore:
-  - "**/*_test.go"
-  - "test_*.go"
-  - "test/**"
-  - "vendor/**"
-  - "node_modules/**"
-  - "coverage/**"
-  - "dist/**"
-  - "build/**"
-  - "*.pb.go"
-  - "*.pb.gw.go"
-  - "mock_*.go"
+  - '**/*_test.go'
+  - 'test_*.go'
+  - 'test/**'
+  - 'vendor/**'
+  - 'node_modules/**'
+  - 'coverage/**'
+  - 'dist/**'
+  - 'build/**'
+  - '*.pb.go'
+  - '*.pb.gw.go'
+  - 'mock_*.go'

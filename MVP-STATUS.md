@@ -3,6 +3,7 @@
 ## ✅ Completed Features
 
 ### 1. **Message Filtering** ✅
+
 - Filter UI is integrated and appears when a queue is selected
 - Real-time filtering by message body text
 - Attribute filtering (e.g., `ApproximateReceiveCount:5`)
@@ -10,6 +11,7 @@
 - Implementation in `messageFilter.js` and `messageHandler.js`
 
 ### 2. **Show More Pagination** ✅
+
 - "Show More Messages" button implemented
 - Loads 10 additional messages on click
 - Maintains existing messages (appends new ones)
@@ -17,6 +19,7 @@
 - Implementation in `messageHandler.js`
 
 ### 3. **Keyboard Navigation** ✅
+
 - Full keyboard navigation system implemented
 - Key shortcuts:
   - `j` / `k` - Navigate up/down through messages
@@ -29,6 +32,7 @@
 - Implementation in `keyboardNavigation.js`
 
 ### 4. **URL Routing Fix** ✅
+
 - Fixed Gorilla mux issue with double slashes in queue URLs
 - Added URL correction in all handlers (GetMessages, GetQueueStatistics, etc.)
 - Server now properly handles `https://` URLs
@@ -58,6 +62,7 @@
 ## 📁 Files Modified
 
 ### Frontend
+
 - `static/modules/messageHandler.js` - Filter UI integration, Show More button
 - `static/modules/messageFilter.js` - Filtering logic
 - `static/modules/keyboardNavigation.js` - Keyboard shortcuts
@@ -66,20 +71,24 @@
 - `static/index.html` - UI elements added
 
 ### Backend
+
 - `sqs.go` - Fixed URL handling in all handlers
 - `main.go` - Statistics endpoint registered
 
 ### Styles
+
 - Added 5 new CSS files for components
 - `pagination.css`, `keyboard.css`, `statistics.css`, `queue-browser.css`, `export.css`
 
 ## 🔧 Technical Notes
 
 ### URL Encoding Issue
+
 - Gorilla mux pattern `{queueUrl:.*}` was eating one slash from `https://`
 - Fixed by detecting and correcting `https:/` to `https://` in handlers
 
 ### Module Architecture
+
 - All new features implemented as ES6 modules
 - Follows existing patterns in the codebase
 - Maintains clean separation of concerns
@@ -107,6 +116,7 @@
 ## Status: **MVP Complete** ✅
 
 The core MVP features for message navigation and filtering are fully functional:
+
 - ✅ Users can filter messages in real-time
 - ✅ Users can load more messages with pagination
 - ✅ Users can navigate with keyboard shortcuts

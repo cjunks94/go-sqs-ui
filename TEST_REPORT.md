@@ -15,28 +15,35 @@ Successfully set up and tested the go-sqs-ui application for debugging live stag
 ## Test Results
 
 ### 1. ✅ Server Setup and Launch
+
 - Successfully started development server using `make dev-start`
 - Server running on port 8080
 - Automatic fallback to Demo Mode when AWS credentials not available
 
 ### 2. ✅ UI Functionality Verified
+
 Based on screenshot analysis:
+
 - **Sidebar Navigation**: Working correctly with collapsible sections
 - **Queue Listing**: 3 demo queues displayed with message counts
   - demo-orders-queue (2 messages)
-  - demo-notifications-queue (1 message) 
+  - demo-notifications-queue (1 message)
   - demo-deadletter-queue (0 messages)
 - **AWS Context Display**: Shows "Demo" mode indicator
 - **Refresh Queue Button**: Available for manual updates
 
 ### 3. ✅ API Endpoints
+
 Verified working endpoints:
+
 - `/api/aws-context` - Returns `{"mode": "Demo"}`
 - WebSocket endpoint for real-time updates
 - Queue and message management endpoints
 
 ### 4. ✅ DLQ Features Ready
+
 The application includes all planned DLQ debugging features:
+
 - DLQ detection and visual indicators
 - Message retry functionality
 - Enhanced message viewing with metadata
@@ -46,11 +53,13 @@ The application includes all planned DLQ debugging features:
 ## Playwright Testing Challenges
 
 ### Issue Encountered
+
 - Playwright MCP server expects chromium version 1179
 - Local Playwright installation has versions 1178 and 1181
 - Version mismatch prevents browser automation through MCP
 
 ### Workarounds Implemented
+
 1. Created standalone Playwright test scripts
 2. Manual verification through screenshots
 3. API testing via curl commands
@@ -59,6 +68,7 @@ The application includes all planned DLQ debugging features:
 ## How to Use for Staging Debugging
 
 ### Setup Instructions
+
 ```bash
 # 1. Configure AWS credentials for staging
 export AWS_PROFILE=your-staging-profile
@@ -71,6 +81,7 @@ make dev-start
 ```
 
 ### Key Features for DLQ Debugging
+
 1. **Automatic DLQ Detection**: Identifies DLQs by naming patterns and AWS attributes
 2. **Message Inspection**: Full JSON view, attributes, receive counts
 3. **One-Click Retry**: Move messages from DLQ back to source queue

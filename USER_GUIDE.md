@@ -17,12 +17,14 @@ A comprehensive guide for using Go SQS UI to debug and manage AWS SQS queues, wi
 ### Setting Up for Different Environments
 
 #### Development Mode (No AWS)
+
 ```bash
 # Start without AWS credentials for demo mode
 make dev-start
 ```
 
 #### Staging Environment
+
 ```bash
 # Set staging credentials
 export AWS_PROFILE=staging-profile
@@ -33,6 +35,7 @@ make dev-start
 ```
 
 #### Production Environment
+
 ```bash
 # Use production profile (with caution!)
 export AWS_PROFILE=prod-profile
@@ -55,14 +58,18 @@ make dev-start
 ### Sidebar Components
 
 #### AWS Context Section
+
 Shows your current connection status:
+
 - **Mode**: Demo or Live AWS
 - **Region**: Current AWS region
 - **Profile**: Active AWS profile
 - **Account**: Account type (Session/IAM)
 
 #### Queue List
+
 Displays filtered queues with:
+
 - Queue name
 - Message count
 - DLQ badge (for Dead Letter Queues)
@@ -71,14 +78,18 @@ Displays filtered queues with:
 ### Main Content Area
 
 #### Message List View
+
 When you select a queue:
+
 - Messages sorted chronologically (oldest first)
 - Real-time updates via WebSocket
 - Expandable message details
 - Batch selection checkboxes
 
 #### Message Detail View
+
 Click the arrow to expand a message:
+
 - Full JSON body with syntax highlighting
 - All message attributes
 - Receive count with color coding:
@@ -105,11 +116,13 @@ Click the arrow to expand a message:
 ### Step 3: Fix and Retry Messages
 
 #### Single Message Retry
+
 1. Click the **Retry** button on a message
 2. Confirm the target queue (defaults to source queue)
 3. Monitor the retry status in real-time
 
 #### Bulk Retry Operations
+
 1. Select multiple messages using checkboxes
 2. Click **Select All** for all visible messages
 3. Click **Retry Selected** button
@@ -126,6 +139,7 @@ Click the arrow to expand a message:
 ### Message Filtering
 
 Filter messages by content or attributes:
+
 ```
 # Search in message body
 error: timeout
@@ -140,17 +154,20 @@ payment AND failed
 ### Batch Operations
 
 #### Select Messages
+
 - Click individual checkboxes
 - Use **Select All** for visible messages
 - Use **Deselect All** to clear selection
 
 #### Available Actions
+
 - **Delete Selected**: Remove messages permanently
 - **Retry Selected**: Send back to source queue (DLQ only)
 
 ### Real-Time Updates
 
 #### WebSocket Features
+
 - Automatic message refresh
 - Pause/Resume button for control
 - Connection status indicator
@@ -159,25 +176,27 @@ payment AND failed
 ### Theme Management
 
 Toggle between light and dark themes:
+
 - Click the theme toggle button (sun/moon icon)
 - Theme preference is saved locally
 - Optimized for long debugging sessions
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `r` | Refresh current queue |
-| `/` | Focus search box |
-| `Escape` | Clear search/selection |
-| `Space` | Toggle message expansion |
-| `t` | Toggle theme |
+| Shortcut | Action                   |
+| -------- | ------------------------ |
+| `r`      | Refresh current queue    |
+| `/`      | Focus search box         |
+| `Escape` | Clear search/selection   |
+| `Space`  | Toggle message expansion |
+| `t`      | Toggle theme             |
 
 ## Troubleshooting
 
 ### Common Issues
 
 #### "No queues found"
+
 - Verify AWS credentials are set correctly
 - Check queue tags match filter criteria:
   - businessunit: degrees
@@ -186,11 +205,13 @@ Toggle between light and dark themes:
 - Ensure you have ListQueues permission
 
 #### "Cannot retry messages"
+
 - Verify the source queue exists
 - Check SendMessage permissions
 - Ensure message hasn't expired
 
 #### "WebSocket disconnected"
+
 - Check network connectivity
 - Refresh the page
 - Check browser console for errors
@@ -198,6 +219,7 @@ Toggle between light and dark themes:
 ### AWS Permission Requirements
 
 Minimum required permissions:
+
 ```json
 {
   "Version": "2012-10-17",
@@ -281,6 +303,7 @@ make dev-start
 ## Support
 
 For issues or feature requests:
+
 1. Check existing GitHub issues
 2. Create a new issue with detailed description
 3. Include screenshots for UI issues
