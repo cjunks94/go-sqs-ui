@@ -11,8 +11,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest --watch",
-    "lint": "eslint --max-warnings 0 'static/**/*.js' 'test/**/*.js'",
-    "lint:fix": "eslint --fix 'static/**/*.js' 'test/**/*.js'",
+    "lint": "eslint --max-warnings 0 'internal/static/files/**/*.js' 'test/**/*.js'",
+    "lint:fix": "eslint --fix 'internal/static/files/**/*.js' 'test/**/*.js'",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"

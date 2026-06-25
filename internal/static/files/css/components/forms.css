@@ -165,12 +165,12 @@ select.success:focus {
     font-size: var(--font-size-sm);
     padding: var(--spacing-sm);
   }
-  
+
   #messageBody {
     min-height: 80px;
     font-size: var(--font-size-sm);
   }
-  
+
   .send-message {
     padding: var(--spacing-sm);
   }

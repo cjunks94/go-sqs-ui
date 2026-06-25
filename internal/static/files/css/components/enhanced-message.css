@@ -259,57 +259,57 @@
   .enhanced-message-view {
     padding: var(--spacing-md);
   }
-  
+
   .message-metadata {
     padding: var(--spacing-md);
   }
-  
+
   .metadata-row {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
-  
+
   .metadata-label {
     min-width: auto;
   }
-  
+
   .metadata-value {
     text-align: left;
   }
-  
+
   .metadata-value.truncate {
     max-width: 100%;
   }
-  
+
   .message-attributes {
     padding: var(--spacing-md);
   }
-  
+
   .attribute-row {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
-  
+
   .attribute-key {
     min-width: auto;
   }
-  
+
   .attribute-value {
     text-align: left;
   }
-  
+
   .body-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-sm);
   }
-  
+
   .message-body-content {
     font-size: var(--font-size-xs);
   }
-  
+
   .message-header {
     flex-direction: column;
     align-items: flex-start;

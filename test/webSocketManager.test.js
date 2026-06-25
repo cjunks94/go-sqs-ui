@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { WebSocketManager } from '../static/modules/webSocketManager.js';
+import { WebSocketManager } from '../internal/static/files/modules/webSocketManager.js';
 
 describe('WebSocketManager', () => {
   let wsManager;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { ToastManager } from '../static/modules/toastManager.js';
+import { ToastManager } from '../internal/static/files/modules/toastManager.js';
 
 describe('ToastManager', () => {
   let toast;

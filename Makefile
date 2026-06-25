@@ -48,7 +48,7 @@ lint:
 
 # Run JavaScript linter
 lint-js:
-	npx eslint --max-warnings 0 'static/**/*.js' 'test/**/*.js'
+	npx eslint --max-warnings 0 'internal/static/files/**/*.js' 'test/**/*.js'
 
 # Run all linters
 lint-all: lint lint-js
@@ -60,7 +60,7 @@ fmt:
 
 # Format JavaScript code
 fmt-js:
-	npx prettier --write 'static/**/*.{js,html,css}' 'test/**/*.js' '*.{json,yml,yaml,md}'
+	npx prettier --write 'internal/static/files/**/*.{js,html,css}' 'test/**/*.js' '*.{json,yml,yaml,md}'
 
 # Format all code
 fmt-all: fmt fmt-js
@@ -68,7 +68,7 @@ fmt-all: fmt fmt-js
 # Fix linting issues automatically
 fix:
 	golangci-lint run --fix
-	npx eslint --fix 'static/**/*.js' 'test/**/*.js'
+	npx eslint --fix 'internal/static/files/**/*.js' 'test/**/*.js'
 	npx prettier --write .
 
 # Clean build artifacts

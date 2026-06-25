@@ -5,23 +5,23 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { MessageHandler } from '../static/modules/messageHandler.js';
-import { AppState } from '../static/modules/appState.js';
+import { MessageHandler } from '../internal/static/files/modules/messageHandler.js';
+import { AppState } from '../internal/static/files/modules/appState.js';
 
 // Mock the dependencies
-vi.mock('../static/modules/apiService.js', () => ({
+vi.mock('../internal/static/files/modules/apiService.js', () => ({
   APIService: {
     deleteMessage: vi.fn().mockResolvedValue({}),
   },
 }));
 
-vi.mock('../static/modules/messageRetry.js', () => ({
+vi.mock('../internal/static/files/modules/messageRetry.js', () => ({
   MessageRetry: class {
     attachRetryHandlers() {}
   },
 }));
 
-vi.mock('../static/modules/messageFilter.js', () => ({
+vi.mock('../internal/static/files/modules/messageFilter.js', () => ({
   MessageFilter: class {
     constructor() {
       this.callbacks = [];
@@ -41,7 +41,7 @@ vi.mock('../static/modules/messageFilter.js', () => ({
   },
 }));
 
-vi.mock('../static/modules/enhancedMessageView.js', () => ({
+vi.mock('../internal/static/files/modules/enhancedMessageView.js', () => ({
   EnhancedMessageView: class {
     createEnhancedView() {
       return document.createElement('div');

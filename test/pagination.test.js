@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { Pagination } from '../static/modules/pagination.js';
+import { Pagination } from '../internal/static/files/modules/pagination.js';
 
 describe('Pagination Component', () => {
   let pagination;

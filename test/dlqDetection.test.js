@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 
-import { isDLQ, getSourceQueue, getDLQIndicator } from '../static/modules/dlqDetection.js';
+import { isDLQ, getSourceQueue, getDLQIndicator } from '../internal/static/files/modules/dlqDetection.js';
 
 describe('DLQ Detection', () => {
   describe('isDLQ', () => {

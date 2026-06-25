@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock toast manager
-vi.mock('../static/modules/toastManager.js', () => ({
+vi.mock('../internal/static/files/modules/toastManager.js', () => ({
   toast: {
     warning: vi.fn(),
     error: vi.fn(),
@@ -12,16 +12,16 @@ vi.mock('../static/modules/toastManager.js', () => ({
 }));
 
 // Mock APIService methods
-vi.mock('../static/modules/apiService.js', () => ({
+vi.mock('../internal/static/files/modules/apiService.js', () => ({
   APIService: {
     sendMessage: vi.fn(),
   },
 }));
 
-import { MessageSender } from '../static/modules/messageSender.js';
-import { AppState } from '../static/modules/appState.js';
-import { APIService } from '../static/modules/apiService.js';
-import { toast } from '../static/modules/toastManager.js';
+import { MessageSender } from '../internal/static/files/modules/messageSender.js';
+import { AppState } from '../internal/static/files/modules/appState.js';
+import { APIService } from '../internal/static/files/modules/apiService.js';
+import { toast } from '../internal/static/files/modules/toastManager.js';
 
 // Mock MessageHandler
 const mockMessageHandler = {

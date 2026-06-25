@@ -52,10 +52,10 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npx eslint --max-warnings 0 'static/**/*.js' 'test/**/*.js'
+        run: npx eslint --max-warnings 0 'internal/static/files/**/*.js' 'test/**/*.js'
 
       - name: Run Prettier check
-        run: npx prettier --check 'static/**/*.{js,html,css}' 'test/**/*.js'
+        run: npx prettier --check 'internal/static/files/**/*.{js,html,css}' 'test/**/*.js'
 
   test-backend:
     name: Test Go Code

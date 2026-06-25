@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { MessageFilter } from '../static/modules/messageFilter.js';
+import { MessageFilter } from '../internal/static/files/modules/messageFilter.js';
 
 describe('MessageFilter', () => {
   let messageFilter;

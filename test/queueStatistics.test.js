@@ -4,11 +4,11 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { QueueStatistics } from '../static/modules/queueStatistics.js';
-import { APIService } from '../static/modules/apiService.js';
+import { QueueStatistics } from '../internal/static/files/modules/queueStatistics.js';
+import { APIService } from '../internal/static/files/modules/apiService.js';
 
 // Mock only APIService (external dependency), not the module we're testing
-vi.mock('../static/modules/apiService.js', () => ({
+vi.mock('../internal/static/files/modules/apiService.js', () => ({
   APIService: {
     getQueueStatistics: vi.fn(),
     getDLQStatistics: vi.fn(),

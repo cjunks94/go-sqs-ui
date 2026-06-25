@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { MessageHandler } from '../static/modules/messageHandler.js';
-import { APIService } from '../static/modules/apiService.js';
-import { EnhancedMessageView } from '../static/modules/enhancedMessageView.js';
-import { MessageRetry } from '../static/modules/messageRetry.js';
-import { MessageFilter } from '../static/modules/messageFilter.js';
+import { MessageHandler } from '../internal/static/files/modules/messageHandler.js';
+import { APIService } from '../internal/static/files/modules/apiService.js';
+import { EnhancedMessageView } from '../internal/static/files/modules/enhancedMessageView.js';
+import { MessageRetry } from '../internal/static/files/modules/messageRetry.js';
+import { MessageFilter } from '../internal/static/files/modules/messageFilter.js';
 
 // Mock external dependencies only
-vi.mock('../static/modules/apiService.js');
-vi.mock('../static/modules/enhancedMessageView.js');
-vi.mock('../static/modules/messageRetry.js');
-vi.mock('../static/modules/messageFilter.js');
+vi.mock('../internal/static/files/modules/apiService.js');
+vi.mock('../internal/static/files/modules/enhancedMessageView.js');
+vi.mock('../internal/static/files/modules/messageRetry.js');
+vi.mock('../internal/static/files/modules/messageFilter.js');
 
 describe('MessageHandler', () => {
   let messageHandler;
