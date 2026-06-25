@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cjunker/go-sqs-ui/test/helpers"
+	"github.com/cjunks94/go-sqs-ui/test/helpers"
 	"github.com/gorilla/websocket"
 )
 

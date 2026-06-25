@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	internal_sqs "github.com/cjunker/go-sqs-ui/internal/sqs"
-	internal_types "github.com/cjunker/go-sqs-ui/internal/types"
+	internal_sqs "github.com/cjunks94/go-sqs-ui/internal/sqs"
+	internal_types "github.com/cjunks94/go-sqs-ui/internal/types"
 	"github.com/gorilla/websocket"
 )
 

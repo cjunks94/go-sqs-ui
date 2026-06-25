@@ -1,4 +1,4 @@
-module github.com/cjunker/go-sqs-ui
+module github.com/cjunks94/go-sqs-ui
 
 go 1.25.0
 

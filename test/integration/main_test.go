@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cjunker/go-sqs-ui/internal/sqs"
-	"github.com/cjunker/go-sqs-ui/internal/types"
-	"github.com/cjunker/go-sqs-ui/internal/websocket"
-	"github.com/cjunker/go-sqs-ui/test/helpers"
+	"github.com/cjunks94/go-sqs-ui/internal/sqs"
+	"github.com/cjunks94/go-sqs-ui/internal/types"
+	"github.com/cjunks94/go-sqs-ui/internal/websocket"
+	"github.com/cjunks94/go-sqs-ui/test/helpers"
 	"github.com/gorilla/mux"
 )
 

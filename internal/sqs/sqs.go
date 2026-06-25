@@ -16,8 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/cjunker/go-sqs-ui/internal/demo"
-	internal_types "github.com/cjunker/go-sqs-ui/internal/types"
+	"github.com/cjunks94/go-sqs-ui/internal/demo"
+	internal_types "github.com/cjunks94/go-sqs-ui/internal/types"
 	"github.com/gorilla/mux"
 )
 

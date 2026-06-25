@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/cjunker/go-sqs-ui/internal/sqs"
-	"github.com/cjunker/go-sqs-ui/internal/static"
-	"github.com/cjunker/go-sqs-ui/internal/websocket"
+	"github.com/cjunks94/go-sqs-ui/internal/sqs"
+	"github.com/cjunks94/go-sqs-ui/internal/static"
+	"github.com/cjunks94/go-sqs-ui/internal/websocket"
 	"github.com/gorilla/mux"
 )
 
