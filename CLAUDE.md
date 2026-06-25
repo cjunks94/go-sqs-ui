@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 ### 1. Test-Driven Development (TDD)
 
 - **ALWAYS** write tests before implementing new features
-- Maintain or improve the current test coverage (47+ tests)
+- Maintain or improve the current test coverage (446 frontend + ~100 Go tests)
 - Run both frontend (`npm test`) and backend (`go test ./...`) tests before committing
 - Each new module should have a corresponding test file
 
@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 ### 4. File Organization
 
 - Backend: Separate concerns into distinct `.go` files
-- Frontend: Use the modular architecture in `static/modules/`
+- Frontend: Use the modular architecture in `internal/static/files/modules/` (embedded into the Go binary; single source of truth)
 - Tests: Mirror the source structure in `test/` directory
 
 ## MVP Focus: DLQ Debugging
