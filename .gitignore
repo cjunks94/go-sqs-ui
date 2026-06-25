@@ -17,9 +17,9 @@
 # Go workspace file
 go.work
 
-# Built binary
-sqs-ui
-go-sqs-ui
+# Built binary (anchored to repo root so they don't match the cmd/sqs-ui source dir)
+/sqs-ui
+/go-sqs-ui
 
 # IDE specific files
 .idea/
