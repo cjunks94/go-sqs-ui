@@ -121,11 +121,11 @@
     flex-direction: column;
     gap: var(--spacing-sm);
   }
-  
+
   .pagination-info {
     order: -1;
   }
-  
+
   .items-per-page {
     order: 1;
   }

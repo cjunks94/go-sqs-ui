@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { UIComponent } from '../static/modules/uiComponent.js';
+import { UIComponent } from '../internal/static/files/modules/uiComponent.js';
 
 describe('UIComponent', () => {
   beforeEach(() => {

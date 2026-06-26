@@ -4,11 +4,11 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { MessageExport } from '../static/modules/messageExport.js';
-import { APIService } from '../static/modules/apiService.js';
+import { MessageExport } from '../internal/static/files/modules/messageExport.js';
+import { APIService } from '../internal/static/files/modules/apiService.js';
 
 // Mock only external dependencies
-vi.mock('../static/modules/apiService.js', () => ({
+vi.mock('../internal/static/files/modules/apiService.js', () => ({
   APIService: {
     getMessages: vi.fn(),
   },

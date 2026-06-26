@@ -484,7 +484,7 @@
   .content {
     padding: var(--spacing-md);
   }
-  
+
   .hidden-mobile {
     display: none;
   }

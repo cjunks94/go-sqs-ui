@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { APIService } from '../static/modules/apiService.js';
+import { APIService } from '../internal/static/files/modules/apiService.js';
 
 // Mock fetch globally
 global.fetch = vi.fn();

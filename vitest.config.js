@@ -22,7 +22,7 @@ export default defineConfig({
         '.prettierrc',
         'test-results/**',
       ],
-      include: ['static/modules/**/*.js', 'static/app.js'],
+      include: ['internal/static/files/modules/**/*.js', 'internal/static/files/app.js'],
       thresholds: {
         branches: 75,
         functions: 35,
@@ -36,7 +36,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': '/static/modules',
+      '@': '/internal/static/files/modules',
     },
   },
 });

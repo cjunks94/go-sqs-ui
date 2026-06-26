@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { SQSApp } from '../static/modules/sqsApp.js';
+import { SQSApp } from '../internal/static/files/modules/sqsApp.js';
 
 // Mock all external dependencies
 global.fetch = vi.fn();

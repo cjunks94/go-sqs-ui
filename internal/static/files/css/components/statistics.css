@@ -245,7 +245,7 @@
   .statistics-content {
     grid-template-columns: 1fr;
   }
-  
+
   .queue-statistics-panel {
     padding: var(--spacing-md);
   }

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { QueueAttributesHandler } from '../static/modules/queueAttributesHandler.js';
+import { QueueAttributesHandler } from '../internal/static/files/modules/queueAttributesHandler.js';
 
 describe('QueueAttributesHandler', () => {
   let handler;

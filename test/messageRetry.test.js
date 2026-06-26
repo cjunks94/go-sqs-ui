@@ -4,10 +4,10 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { MessageRetry } from '../static/modules/messageRetry.js';
-import { APIService } from '../static/modules/apiService.js';
+import { MessageRetry } from '../internal/static/files/modules/messageRetry.js';
+import { APIService } from '../internal/static/files/modules/apiService.js';
 
-vi.mock('../static/modules/apiService.js');
+vi.mock('../internal/static/files/modules/apiService.js');
 
 describe('MessageRetry', () => {
   let messageRetry;

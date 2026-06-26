@@ -322,19 +322,19 @@
     height: 90vh;
     border-radius: var(--radius-md);
   }
-  
+
   .browser-header {
     padding: var(--spacing-md);
   }
-  
+
   .browser-controls {
     padding: var(--spacing-sm) var(--spacing-md);
   }
-  
+
   .browser-body {
     padding: var(--spacing-md);
   }
-  
+
   .browser-footer {
     padding: var(--spacing-sm) var(--spacing-md);
     flex-direction: column;

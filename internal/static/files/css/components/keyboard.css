@@ -235,19 +235,19 @@ button.keyboard-focused {
     bottom: var(--spacing-md);
     right: var(--spacing-md);
   }
-  
+
   .help-modal-content {
     padding: var(--spacing-lg);
     width: 95%;
     max-height: 90vh;
   }
-  
+
   .shortcut-item {
     flex-direction: column;
     text-align: center;
     gap: var(--spacing-xs);
   }
-  
+
   .shortcut-item kbd {
     min-width: auto;
   }

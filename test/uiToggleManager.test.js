@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { UIToggleManager } from '../static/modules/uiToggleManager.js';
-import { AppState } from '../static/modules/appState.js';
+import { UIToggleManager } from '../internal/static/files/modules/uiToggleManager.js';
+import { AppState } from '../internal/static/files/modules/appState.js';
 
 describe('UIToggleManager', () => {
   beforeEach(() => {

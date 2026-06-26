@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import ThemeManager from '../static/modules/themeManager.js';
+import ThemeManager from '../internal/static/files/modules/themeManager.js';
 
 describe('ThemeManager', () => {
   let themeManager;

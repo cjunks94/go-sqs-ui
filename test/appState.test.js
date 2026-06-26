@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { AppState } from '../static/modules/appState.js';
+import { AppState } from '../internal/static/files/modules/appState.js';
 
 describe('AppState', () => {
   let appState;

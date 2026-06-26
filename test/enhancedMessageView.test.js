@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { EnhancedMessageView } from '../static/modules/enhancedMessageView.js';
+import { EnhancedMessageView } from '../internal/static/files/modules/enhancedMessageView.js';
 
 describe('EnhancedMessageView', () => {
   let enhancedView;

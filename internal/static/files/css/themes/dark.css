@@ -6,85 +6,85 @@
 
 html.theme-dark {
   /* === BACKGROUND COLORS === */
-  --color-bg-primary: #1a1d23;        /* Deep dark background */
-  --color-bg-secondary: #252930;       /* Card/surface background */
-  --color-bg-tertiary: #2d3340;        /* Elevated surfaces */
-  --color-bg-elevated: #323944;        /* Highest elevation */
-  
+  --color-bg-primary: #1a1d23; /* Deep dark background */
+  --color-bg-secondary: #252930; /* Card/surface background */
+  --color-bg-tertiary: #2d3340; /* Elevated surfaces */
+  --color-bg-elevated: #323944; /* Highest elevation */
+
   /* === SURFACE COLORS === */
-  --color-surface-primary: #252930;    /* Main card background */
-  --color-surface-secondary: #2d3340;  /* Secondary surfaces */
-  --color-surface-tertiary: #374151;   /* Tertiary surfaces */
-  --color-surface-hover: #323944;      /* Hover state */
-  
+  --color-surface-primary: #252930; /* Main card background */
+  --color-surface-secondary: #2d3340; /* Secondary surfaces */
+  --color-surface-tertiary: #374151; /* Tertiary surfaces */
+  --color-surface-hover: #323944; /* Hover state */
+
   /* === TEXT COLORS === */
-  --color-text-primary: #f7fafc;       /* Primary text - brighter */
-  --color-text-secondary: #cbd5e0;     /* Secondary text - more contrast */
-  --color-text-tertiary: #a0aec0;      /* Tertiary/muted text - brighter */
-  --color-text-inverse: #1a1d23;       /* Inverse (for light backgrounds) */
-  --color-text-muted: #718096;         /* Very muted text - brighter */
-  --color-text-disabled: #4a5568;      /* Disabled text */
-  
+  --color-text-primary: #f7fafc; /* Primary text - brighter */
+  --color-text-secondary: #cbd5e0; /* Secondary text - more contrast */
+  --color-text-tertiary: #a0aec0; /* Tertiary/muted text - brighter */
+  --color-text-inverse: #1a1d23; /* Inverse (for light backgrounds) */
+  --color-text-muted: #718096; /* Very muted text - brighter */
+  --color-text-disabled: #4a5568; /* Disabled text */
+
   /* === BORDER COLORS === */
-  --color-border-primary: #374151;     /* Primary borders */
-  --color-border-secondary: #4a5568;   /* Secondary borders */
-  --color-border-tertiary: #2d3748;    /* Subtle borders */
-  --color-border-focus: #00d27a;       /* Focus borders (green) */
-  --color-border-hover: #4a5568;       /* Hover borders */
-  
+  --color-border-primary: #374151; /* Primary borders */
+  --color-border-secondary: #4a5568; /* Secondary borders */
+  --color-border-tertiary: #2d3748; /* Subtle borders */
+  --color-border-focus: #00d27a; /* Focus borders (green) */
+  --color-border-hover: #4a5568; /* Hover borders */
+
   /* === BRAND COLORS (adjusted for dark theme) === */
-  --color-primary: #4299e1;            /* Blue primary */
-  --color-primary-hover: #63b3ed;      /* Lighter blue on hover */
-  --color-primary-active: #3182ce;     /* Darker blue when active */
-  --color-primary-light: #2b6cb0;      /* Light variant */
-  --color-primary-dark: #1e40af;       /* Dark variant */
-  
+  --color-primary: #4299e1; /* Blue primary */
+  --color-primary-hover: #63b3ed; /* Lighter blue on hover */
+  --color-primary-active: #3182ce; /* Darker blue when active */
+  --color-primary-light: #2b6cb0; /* Light variant */
+  --color-primary-dark: #1e40af; /* Dark variant */
+
   /* === SEMANTIC COLORS (optimized for dark) === */
-  --color-success: #00d27a;            /* Green accent (matching dashboard) */
-  --color-success-hover: #38e89a;      /* Lighter green on hover */
-  --color-success-light: #059669;      /* Darker green variant */
-  --color-success-dark: #047857;       /* Darkest green */
-  
-  --color-warning: #f6ad55;            /* Warm orange */
-  --color-warning-hover: #fbb041;      /* Lighter orange */
-  --color-warning-light: #d69e2e;      /* Darker orange */
-  --color-warning-dark: #b7791f;       /* Darkest orange */
-  
-  --color-error: #f56565;              /* Red error */
-  --color-error-hover: #fc8181;        /* Lighter red */
-  --color-error-light: #e53e3e;        /* Standard red */
-  --color-error-dark: #c53030;         /* Dark red */
-  
-  --color-info: #4299e1;               /* Blue info */
-  --color-info-hover: #63b3ed;         /* Lighter blue */
-  --color-info-light: #3182ce;         /* Standard blue */
-  --color-info-dark: #2c5282;          /* Dark blue */
-  
+  --color-success: #00d27a; /* Green accent (matching dashboard) */
+  --color-success-hover: #38e89a; /* Lighter green on hover */
+  --color-success-light: #059669; /* Darker green variant */
+  --color-success-dark: #047857; /* Darkest green */
+
+  --color-warning: #f6ad55; /* Warm orange */
+  --color-warning-hover: #fbb041; /* Lighter orange */
+  --color-warning-light: #d69e2e; /* Darker orange */
+  --color-warning-dark: #b7791f; /* Darkest orange */
+
+  --color-error: #f56565; /* Red error */
+  --color-error-hover: #fc8181; /* Lighter red */
+  --color-error-light: #e53e3e; /* Standard red */
+  --color-error-dark: #c53030; /* Dark red */
+
+  --color-info: #4299e1; /* Blue info */
+  --color-info-hover: #63b3ed; /* Lighter blue */
+  --color-info-light: #3182ce; /* Standard blue */
+  --color-info-dark: #2c5282; /* Dark blue */
+
   /* === COMPONENT OVERRIDES === */
   --sidebar-bg: var(--color-surface-primary);
   --sidebar-border: var(--color-border-primary);
   --sidebar-text: var(--color-text-primary);
-  
+
   --header-bg: var(--color-surface-primary);
   --header-border: var(--color-border-primary);
   --header-text: var(--color-text-primary);
-  
+
   --message-bg: var(--color-surface-primary);
   --message-border: var(--color-border-primary);
   --message-hover-bg: var(--color-surface-hover);
   --message-text: var(--color-text-primary);
-  
+
   /* === SHADOWS (adjusted for dark theme) === */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  
+
   /* === SPECIAL STATES === */
-  --color-focus-ring: rgba(0, 210, 122, 0.3);    /* Green focus ring */
-  --color-selection-bg: rgba(0, 210, 122, 0.2);  /* Green selection */
+  --color-focus-ring: rgba(0, 210, 122, 0.3); /* Green focus ring */
+  --color-selection-bg: rgba(0, 210, 122, 0.2); /* Green selection */
   --color-selection-text: var(--color-text-primary);
-  
+
   /* === GRADIENT ACCENTS (inspired by dashboard) === */
   --gradient-primary: linear-gradient(135deg, #00d27a 0%, #4299e1 100%);
   --gradient-success: linear-gradient(135deg, #00d27a 0%, #38e89a 100%);
