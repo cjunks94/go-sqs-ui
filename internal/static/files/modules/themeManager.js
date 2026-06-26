@@ -137,11 +137,13 @@ class ThemeManager {
   watchSystemTheme() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // Only auto-switch if no theme is saved in localStorage
+    // Only auto-switch if no theme is saved in localStorage. Apply without
+    // persisting, otherwise the first OS change would fill the storage slot
+    // and this guard would block all subsequent auto-switches.
     mediaQuery.addListener((e) => {
       if (!localStorage.getItem(this.storageKey)) {
         const theme = e.matches ? 'dark' : 'light';
-        this.applyTheme(theme);
+        this.applyTheme(theme, false);
       }
     });
   }

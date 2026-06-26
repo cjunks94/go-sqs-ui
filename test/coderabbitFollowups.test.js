@@ -35,6 +35,31 @@ describe('ThemeManager - system preference is not persisted', () => {
     tm.applyTheme('light'); // explicit change persists (default)
     expect(localStorage.getItem('sqs-ui-theme')).toBe('light');
   });
+
+  it('keeps tracking OS changes across multiple events (does not become sticky)', () => {
+    let listener;
+    window.matchMedia = vi.fn(() => ({
+      matches: false, // start light
+      addListener: (cb) => {
+        listener = cb;
+      },
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+
+    new ThemeManager();
+    expect(listener).toBeTypeOf('function');
+
+    // First OS change -> dark, must NOT persist (or future changes get blocked)
+    listener({ matches: true });
+    expect(document.documentElement.classList.contains('theme-dark')).toBe(true);
+    expect(localStorage.getItem('sqs-ui-theme')).toBeNull();
+
+    // Second OS change -> light still applies (proves tracking didn't become sticky)
+    listener({ matches: false });
+    expect(document.documentElement.classList.contains('theme-light')).toBe(true);
+    expect(localStorage.getItem('sqs-ui-theme')).toBeNull();
+  });
 });
 
 // Note: the keyboardNavigation `:has-text()` fix (an invalid CSS selector that
