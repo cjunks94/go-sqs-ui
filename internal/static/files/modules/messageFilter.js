@@ -4,6 +4,31 @@
  */
 import { toast } from './toastManager.js';
 
+/**
+ * Escape HTML so untrusted message text can't inject markup when the
+ * highlighted result is assigned to innerHTML.
+ * @param {unknown} value
+ * @returns {string}
+ */
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Escape regex metacharacters so the user's filter is matched literally
+ * (prevents SyntaxError on inputs like "[" and ReDoS via crafted patterns).
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export class MessageFilter {
   constructor() {
     this.currentFilter = '';
@@ -218,10 +243,13 @@ export class MessageFilter {
    * @returns {string} HTML with highlighted matches
    */
   highlightMatches(text, searchTerm) {
-    if (!searchTerm || !text) return text;
+    if (!searchTerm || !text) return escapeHtml(text);
 
-    const regex = new RegExp(`(${searchTerm})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
+    // Escape the text (output goes to innerHTML) and treat the search term as
+    // a literal string, then wrap matches in <mark>.
+    const escapedText = escapeHtml(text);
+    const regex = new RegExp(`(${escapeRegExp(escapeHtml(searchTerm))})`, 'gi');
+    return escapedText.replace(regex, '<mark>$1</mark>');
   }
 
   /**

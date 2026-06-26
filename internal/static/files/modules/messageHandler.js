@@ -620,6 +620,11 @@ export class MessageHandler extends UIComponent {
         if (expandedView) {
           expandedView.classList.remove('hidden');
         }
+        // Hide the collapsed view too, otherwise both panes render after a merge.
+        const collapsedView = messageItem.querySelector('.message-collapsed');
+        if (collapsedView) {
+          collapsedView.classList.add('hidden');
+        }
       }
     });
 

@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { APIService } from '@/apiService.js';
 import { QueueBrowser } from '@/queueBrowser.js';
 import { QueueStatistics } from '@/queueStatistics.js';
+import { MessageFilter } from '@/messageFilter.js';
 
 vi.mock('@/apiService.js');
 
@@ -63,6 +64,31 @@ describe('XSS escaping (real modules)', () => {
       expect(errorTypesEl.querySelector('img')).toBeNull();
       expect(errorTypesEl.querySelector('.error-type-item').textContent).toBe(`${XSS}: 2`);
       expect(window.__pwned).toBeUndefined();
+    });
+  });
+
+  describe('MessageFilter.highlightMatches', () => {
+    it('escapes HTML in the message text (output is assigned to innerHTML)', () => {
+      const filter = new MessageFilter();
+      const out = filter.highlightMatches(XSS, 'src');
+
+      // No live markup: the raw tag must be escaped...
+      expect(out).not.toContain('<img');
+      expect(out).toContain('&lt;img');
+      // ...and the literal match is still highlighted.
+      expect(out).toContain('<mark>');
+    });
+
+    it('treats a regex-special search term literally (no SyntaxError)', () => {
+      const filter = new MessageFilter();
+      expect(() => filter.highlightMatches('a[b]c', '[')).not.toThrow();
+      const out = filter.highlightMatches('a[b]c', '[');
+      expect(out).toContain('<mark>[</mark>');
+    });
+
+    it('escapes text even when there is no search term', () => {
+      const filter = new MessageFilter();
+      expect(filter.highlightMatches('<b>x</b>', '')).toBe('&lt;b&gt;x&lt;/b&gt;');
     });
   });
 });
