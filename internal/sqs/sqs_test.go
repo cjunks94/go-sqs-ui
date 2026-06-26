@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/cjunker/go-sqs-ui/internal/types"
-	"github.com/cjunker/go-sqs-ui/test/helpers"
+	"github.com/cjunks94/go-sqs-ui/internal/types"
+	"github.com/cjunks94/go-sqs-ui/test/helpers"
 	"github.com/gorilla/mux"
 )
 
