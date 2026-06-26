@@ -27,16 +27,18 @@ class ThemeManager {
 
     if (savedTheme) {
       this.currentTheme = savedTheme;
-    } else {
-      // Use system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      this.currentTheme = prefersDark ? 'dark' : 'light';
+      this.applyTheme(this.currentTheme);
+      return;
     }
 
-    this.applyTheme(this.currentTheme);
+    // Use system preference, but do NOT persist it: persisting here would fill
+    // the storage slot and stop watchSystemTheme() from tracking OS changes.
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    this.currentTheme = prefersDark ? 'dark' : 'light';
+    this.applyTheme(this.currentTheme, false);
   }
 
-  applyTheme(theme) {
+  applyTheme(theme, persist = true) {
     const html = document.documentElement;
 
     // Remove existing theme classes
@@ -48,8 +50,10 @@ class ThemeManager {
     // Update current theme
     this.currentTheme = theme;
 
-    // Save to localStorage
-    localStorage.setItem(this.storageKey, theme);
+    // Save to localStorage (skipped for the bootstrapped system preference)
+    if (persist) {
+      localStorage.setItem(this.storageKey, theme);
+    }
 
     // Update toggle button if it exists
     this.updateToggleButton();
@@ -133,11 +137,13 @@ class ThemeManager {
   watchSystemTheme() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // Only auto-switch if no theme is saved in localStorage
+    // Only auto-switch if no theme is saved in localStorage. Apply without
+    // persisting, otherwise the first OS change would fill the storage slot
+    // and this guard would block all subsequent auto-switches.
     mediaQuery.addListener((e) => {
       if (!localStorage.getItem(this.storageKey)) {
         const theme = e.matches ? 'dark' : 'light';
-        this.applyTheme(theme);
+        this.applyTheme(theme, false);
       }
     });
   }

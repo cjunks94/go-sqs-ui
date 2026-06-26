@@ -172,5 +172,6 @@ export class SQSApp {
 
   cleanup() {
     this.webSocketManager.disconnect();
+    this.keyboardNavigation.destroy();
   }
 }
