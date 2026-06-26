@@ -45,7 +45,7 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/cjunker/go-sqs-ui.git
+git clone https://github.com/cjunks94/go-sqs-ui.git
 cd go-sqs-ui
 ```
 
@@ -231,7 +231,7 @@ go build -o sqs-ui .
 2. **No Framework**: Kept simple with vanilla JavaScript to minimize complexity and dependencies
 3. **Responsive Design**: CSS Grid and Flexbox for a modern, responsive layout
 4. **AWS-Inspired UI**: Design inspired by AWS Console and DataDog for familiar user experience
-5. **Comprehensive Testing**: 112+ tests using Vitest with full coverage of all modules
+5. **Comprehensive Testing**: 446 frontend tests using Vitest with full coverage of all modules
 
 ### Goals
 
@@ -254,14 +254,14 @@ go build -o sqs-ui .
 
 ## Testing
 
-The application includes comprehensive test coverage with 230+ tests across frontend and backend.
+The application includes comprehensive test coverage with 540+ tests across frontend (446 Vitest) and backend (Go).
 
 ### Frontend Tests
 
 Run the comprehensive JavaScript test suite:
 
 ```bash
-# Run all tests (112+ tests)
+# Run all tests (446 tests)
 npm test
 
 # Run tests in watch mode during development
@@ -359,32 +359,35 @@ make fmt-all
 ### Project Structure
 
 ```
-├── main.go                 # Application entry point
-├── sqs.go                 # SQS operations and handlers
-├── websocket.go           # WebSocket management
-├── types.go               # Type definitions
-├── demo.go                # Demo mode for development
-├── static/
-│   ├── app.js            # Main application entry
-│   ├── index.html        # HTML template
-│   ├── styles.css        # Application styles
-│   └── modules/          # Modular JavaScript architecture
-│       ├── appState.js
-│       ├── apiService.js
-│       ├── webSocketManager.js
-│       └── ...
-├── test/                 # Frontend tests
+├── cmd/sqs-ui/main.go          # Application entry point & routing
+├── internal/
+│   ├── sqs/                    # SQS operations and HTTP handlers
+│   ├── websocket/              # WebSocket management
+│   ├── types/                  # Type definitions
+│   ├── demo/                   # Demo mode for development
+│   └── static/
+│       ├── static.go           # go:embed of the frontend assets
+│       └── files/              # Embedded frontend (single source of truth)
+│           ├── app.js          # Main application entry
+│           ├── index.html      # HTML template
+│           ├── css/            # Styles
+│           └── modules/        # Modular JavaScript architecture
+│               ├── appState.js
+│               ├── apiService.js
+│               ├── webSocketManager.js
+│               └── ...
+├── test/                       # Frontend (Vitest) + Go integration tests
 │   ├── appState.test.js
 │   ├── apiService.test.js
 │   └── ...
-├── package.json          # Node.js dependencies and scripts
-└── vitest.config.js      # Test configuration
+├── package.json                # Node.js dependencies and scripts
+└── vitest.config.js            # Test configuration
 ```
 
 ### Adding New Features
 
 1. **Backend**: Add handlers in appropriate `.go` files
-2. **Frontend**: Create new modules in `static/modules/`
+2. **Frontend**: Create new modules in `internal/static/files/modules/`
 3. **Tests**: Add corresponding test files in `test/`
 4. **Run tests**: `npm test && go test ./...`
 
