@@ -40,6 +40,7 @@ export class SQSApp {
       await this.awsContextHandler.load();
       await this.queueManager.loadQueues();
       this.setupEventListeners();
+      this.mountStatisticsPanel();
       this.webSocketManager.connect();
 
       // Initialize keyboard navigation
@@ -168,6 +169,23 @@ export class SQSApp {
       console.error('Error retrying messages:', error);
       toast.error('Failed to retry some messages');
     }
+  }
+
+  /**
+   * Mount the QueueStatistics panel in place of the static placeholder in
+   * index.html. Without this the module is never rendered, load() no-ops
+   * (this.element is null), and the `s` toggle has nothing real to show.
+   */
+  mountStatisticsPanel() {
+    const placeholder = document.getElementById('queueStatisticsPanel');
+    if (!placeholder) return;
+
+    const panel = this.queueStatistics.init();
+    // Preserve the placeholder's id and hidden-by-default state so the
+    // existing toggleStatisticsPanel() shortcut keeps working.
+    panel.id = placeholder.id;
+    panel.classList.add('hidden');
+    placeholder.replaceWith(panel);
   }
 
   cleanup() {
