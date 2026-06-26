@@ -29,7 +29,7 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 
 ## Prerequisites
 
-- Go 1.21 or higher
+- Go 1.23 or higher
 - Node.js 18+ (for frontend testing and development)
 - AWS credentials configured (via `~/.aws/credentials`, environment variables, or IAM role)
 - Appropriate AWS permissions for SQS operations:
