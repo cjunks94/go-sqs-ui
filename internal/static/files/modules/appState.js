@@ -9,6 +9,8 @@ export class AppState {
     this.currentOffset = 0;
     this.currentMessageOffset = 0;
     this.isMessagesPaused = false;
+    this.queues = [];
+    this.dlqSourceMap = new Map();
   }
 
   setCurrentQueue(queue) {
@@ -17,6 +19,27 @@ export class AppState {
 
   getCurrentQueue() {
     return this.currentQueue;
+  }
+
+  setQueues(queues) {
+    this.queues = Array.isArray(queues) ? queues : [];
+  }
+
+  getQueues() {
+    return this.queues;
+  }
+
+  setDlqSourceMap(map) {
+    this.dlqSourceMap = map instanceof Map ? map : new Map();
+  }
+
+  /**
+   * Resolve the source queue URL for a DLQ (for retrying messages back).
+   * @param {string} dlqUrl
+   * @returns {string|null}
+   */
+  getSourceQueueUrl(dlqUrl) {
+    return this.dlqSourceMap.get(dlqUrl) || null;
   }
 
   pauseMessages() {

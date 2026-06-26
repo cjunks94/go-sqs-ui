@@ -24,7 +24,10 @@ export function isDLQ(queue) {
   if (queue.attributes && queue.attributes.RedriveAllowPolicy) {
     try {
       const policy = JSON.parse(queue.attributes.RedriveAllowPolicy);
-      if (policy.redrivePermission && policy.sourceQueueArns) {
+      // Any redrivePermission (allowAll / byQueue / denyAll) means the queue is
+      // configured as a DLQ target. sourceQueueArns is only present for byQueue,
+      // so requiring it would miss the common allowAll case.
+      if (policy.redrivePermission) {
         return true;
       }
     } catch (_e) {
@@ -33,6 +36,42 @@ export function isDLQ(queue) {
   }
 
   return false;
+}
+
+/**
+ * Build a map of DLQ queue URL -> source queue URL by scanning every queue's
+ * RedrivePolicy (deadLetterTargetArn). This is more reliable than deriving the
+ * source from the DLQ's name, and works for any naming scheme. When multiple
+ * source queues target the same DLQ, the first one encountered wins.
+ * @param {Array<Object>} queues - All known queues (with attributes)
+ * @returns {Map<string, string>} dlqUrl -> sourceQueueUrl
+ */
+export function buildDlqSourceMap(queues) {
+  const map = new Map();
+  if (!Array.isArray(queues)) return map;
+
+  // ARN -> URL for every queue, so we can resolve deadLetterTargetArn.
+  const arnToUrl = new Map();
+  for (const q of queues) {
+    const arn = q?.attributes?.QueueArn;
+    if (arn && q.url) arnToUrl.set(arn, q.url);
+  }
+
+  for (const q of queues) {
+    const redrivePolicy = q?.attributes?.RedrivePolicy;
+    if (!redrivePolicy || !q.url) continue;
+    try {
+      const dlqArn = JSON.parse(redrivePolicy).deadLetterTargetArn;
+      const dlqUrl = arnToUrl.get(dlqArn);
+      if (dlqUrl && !map.has(dlqUrl)) {
+        map.set(dlqUrl, q.url);
+      }
+    } catch (_e) {
+      // Ignore malformed RedrivePolicy.
+    }
+  }
+
+  return map;
 }
 
 /**

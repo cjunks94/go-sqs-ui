@@ -45,6 +45,23 @@ describe('MessageRetry', () => {
       expect(result.messageId).toBe('new-123');
     });
 
+    it('prefers the queue.sourceQueueUrl (RedrivePolicy-derived) over the name', async () => {
+      mockAppState.getCurrentQueue.mockReturnValue({
+        url: 'https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue',
+        name: 'demo-deadletter-queue', // would NOT resolve via name heuristic
+        sourceQueueUrl: 'https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue',
+      });
+      APIService.retryMessage.mockResolvedValue({ messageId: 'new-1' });
+
+      await messageRetry.retryMessage({ messageId: '1', body: '{}', receiptHandle: 'r1' });
+
+      expect(APIService.retryMessage).toHaveBeenCalledWith(
+        'https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue',
+        expect.any(Object),
+        'https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue'
+      );
+    });
+
     it('should handle retry errors', async () => {
       const mockMessage = {
         messageId: '123',
