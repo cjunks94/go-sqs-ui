@@ -26,7 +26,9 @@ export class QueueBrowser {
     this.appState = appState;
     this.isOpen = false;
     this.currentPage = 1;
-    this.itemsPerPage = 50;
+    // SQS caps a single ReceiveMessage at 10, so the page size is bounded by it.
+    this.maxItemsPerPage = 10;
+    this.itemsPerPage = 10;
     this.totalItems = 0;
     this.messages = [];
     this.element = null;
@@ -97,9 +99,8 @@ export class QueueBrowser {
                     <div class="items-per-page-control">
                         <label>Items per page:</label>
                         <select class="items-per-page-select">
-                            <option value="25">25</option>
-                            <option value="50" selected>50</option>
-                            <option value="100">100</option>
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
                         </select>
                     </div>
                 </div>
@@ -161,12 +162,14 @@ export class QueueBrowser {
    * @param {number} offset - Offset for pagination
    * @returns {Promise<Object>} Response with messages and total count
    */
-  async fetchMessagesWithPagination(queueUrl, limit, _offset) {
-    // First, try to get messages with the standard API
-    const messages = await APIService.getMessages(queueUrl, limit);
+  async fetchMessagesWithPagination(queueUrl, limit, offset) {
+    // SQS caps a single fetch at 10 messages; the backend applies the offset
+    // against what it receives. Deep offsets are only fully reachable for
+    // demo/mock queues — for live SQS this pages within the first batch
+    // (inherent SQS limitation, see issue #34).
+    const cappedLimit = Math.min(limit, this.maxItemsPerPage);
+    const messages = await APIService.getMessages(queueUrl, cappedLimit, offset);
 
-    // For now, simulate pagination since backend might not support it yet
-    // In production, this would be a single API call with offset
     const queue = this.appState.getCurrentQueue();
     const totalCount = parseInt(queue.attributes?.ApproximateNumberOfMessages || '0');
 
@@ -347,7 +350,8 @@ export class QueueBrowser {
    * @returns {Promise<void>}
    */
   async setItemsPerPage(count) {
-    this.itemsPerPage = count;
+    // Clamp to the SQS per-fetch cap so pages stay coherent.
+    this.itemsPerPage = Math.min(count, this.maxItemsPerPage);
     this.currentPage = 1;
     await this.loadPage(1);
   }
