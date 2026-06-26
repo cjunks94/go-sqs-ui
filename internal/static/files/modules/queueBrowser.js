@@ -6,6 +6,21 @@ import { APIService } from './apiService.js';
 import { Pagination } from './pagination.js';
 import { EnhancedMessageView } from './enhancedMessageView.js';
 
+/**
+ * Escape a string for safe interpolation into HTML, preventing XSS from
+ * untrusted SQS message content or backend error text.
+ * @param {unknown} value
+ * @returns {string}
+ */
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export class QueueBrowser {
   constructor(appState) {
     this.appState = appState;
@@ -134,7 +149,7 @@ export class QueueBrowser {
     } catch (error) {
       console.error('Error loading messages:', error);
       const messagesContainer = this.element.querySelector('.queue-browser-messages');
-      messagesContainer.innerHTML = `<div class="error">Failed to load messages: ${error.message}</div>`;
+      messagesContainer.innerHTML = `<div class="error">Failed to load messages: ${escapeHtml(error.message)}</div>`;
       return false;
     }
   }
@@ -208,10 +223,10 @@ export class QueueBrowser {
 
     messageItem.innerHTML = `
             <div class="browser-message-header">
-                <span class="browser-message-id">${message.messageId || message.MessageId}</span>
-                <span class="browser-message-time">${timestamp}</span>
+                <span class="browser-message-id">${escapeHtml(message.messageId || message.MessageId)}</span>
+                <span class="browser-message-time">${escapeHtml(timestamp)}</span>
             </div>
-            <div class="browser-message-body">${this.truncateBody(message.body || message.Body)}</div>
+            <div class="browser-message-body">${escapeHtml(this.truncateBody(message.body || message.Body))}</div>
         `;
 
     // Click to expand

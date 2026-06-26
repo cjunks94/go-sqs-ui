@@ -223,9 +223,14 @@ export class QueueStatistics {
       // Display error types breakdown
       const errorTypesEl = this.element.querySelector('#stat-error-types');
       if (dlqStats.errorTypes && Object.keys(dlqStats.errorTypes).length > 0) {
-        errorTypesEl.innerHTML = Object.entries(dlqStats.errorTypes)
-          .map(([type, count]) => `<div class="error-type-item">${type}: ${count}</div>`)
-          .join('');
+        errorTypesEl.replaceChildren(
+          ...Object.entries(dlqStats.errorTypes).map(([type, count]) => {
+            const item = document.createElement('div');
+            item.className = 'error-type-item';
+            item.textContent = `${type}: ${count}`;
+            return item;
+          })
+        );
       } else {
         errorTypesEl.textContent = 'No error data available';
       }
