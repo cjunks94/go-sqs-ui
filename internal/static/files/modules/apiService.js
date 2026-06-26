@@ -32,8 +32,8 @@ export class APIService {
     return this.request(`/api/queues?limit=${limit}`);
   }
 
-  static async getMessages(queueUrl, limit = 10) {
-    return this.request(`/api/queues/${encodeURIComponent(queueUrl)}/messages?limit=${limit}`);
+  static async getMessages(queueUrl, limit = 10, offset = 0) {
+    return this.request(`/api/queues/${encodeURIComponent(queueUrl)}/messages?limit=${limit}&offset=${offset}`);
   }
 
   static async sendMessage(queueUrl, messageBody) {

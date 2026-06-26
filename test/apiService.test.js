@@ -120,7 +120,7 @@ describe('APIService', () => {
 
       const result = await APIService.getMessages(queueUrl);
 
-      expect(fetch).toHaveBeenCalledWith(`/api/queues/${encodeURIComponent(queueUrl)}/messages?limit=10`, {
+      expect(fetch).toHaveBeenCalledWith(`/api/queues/${encodeURIComponent(queueUrl)}/messages?limit=10&offset=0`, {
         headers: { 'Content-Type': 'application/json' },
       });
       expect(result).toEqual(mockMessages);

@@ -2,6 +2,7 @@ package sqs
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,10 +11,117 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awssqs "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/cjunks94/go-sqs-ui/internal/types"
 	"github.com/cjunks94/go-sqs-ui/test/helpers"
 	"github.com/gorilla/mux"
 )
+
+// maxHonoringClient honors MaxNumberOfMessages like the real demo/live SQS
+// clients (the default MockSQSClient intentionally ignores it to ease offset
+// testing). It also records the last requested max so tests can assert the
+// receiveCount clamp/overflow handling.
+type maxHonoringClient struct {
+	*helpers.MockSQSClient
+	lastMax int32
+}
+
+func (c *maxHonoringClient) ReceiveMessage(ctx context.Context, params *awssqs.ReceiveMessageInput, optFns ...func(*awssqs.Options)) (*awssqs.ReceiveMessageOutput, error) {
+	c.lastMax = params.MaxNumberOfMessages
+	out, err := c.MockSQSClient.ReceiveMessage(ctx, params, optFns...)
+	if err != nil {
+		return out, err
+	}
+	if maxN := int(params.MaxNumberOfMessages); maxN > 0 && maxN < len(out.Messages) {
+		out.Messages = out.Messages[:maxN]
+	}
+	return out, nil
+}
+
+func newMaxHonoringClient(queueURL string, n int) *maxHonoringClient {
+	mc := helpers.NewMockSQSClient()
+	// Distinct, increasing timestamps so the handler's newest-first sort is
+	// deterministic: msg-n is newest, msg-1 is oldest.
+	for i := 1; i <= n; i++ {
+		ts := fmt.Sprintf("%d", 1640995200000+i)
+		mc.AddMessageWithTimestamp(queueURL, fmt.Sprintf("msg-%d", i), fmt.Sprintf("body %d", i), ts)
+	}
+	return &maxHonoringClient{MockSQSClient: mc}
+}
+
+func decodeMessages(t *testing.T, rr *httptest.ResponseRecorder) []types.Message {
+	t.Helper()
+	var msgs []types.Message
+	if err := json.NewDecoder(rr.Body).Decode(&msgs); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	return msgs
+}
+
+func getMessagesReq(queueURL, query string) *http.Request {
+	req := httptest.NewRequest("GET", "/api/queues/{queueUrl}/messages"+query, nil)
+	return mux.SetURLVars(req, map[string]string{"queueUrl": queueURL})
+}
+
+// TestSQSHandler_GetMessages_OffsetDemoVsLive verifies the receiveCount fix:
+// demo clients (which hold the full set) can serve deep offsets, while live
+// SQS is clamped to its 10-message per-fetch cap.
+func TestSQSHandler_GetMessages_OffsetDemoVsLive(t *testing.T) {
+	const queueURL = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
+
+	// Demo: offset 20 is reachable (receives offset+limit, not clamped to 10).
+	demo := newMaxHonoringClient(queueURL, 30)
+	hDemo := &SQSHandler{Client: demo, isDemo: true}
+	rr := httptest.NewRecorder()
+	hDemo.GetMessages(rr, getMessagesReq(queueURL, "?limit=10&offset=20"))
+	demoMsgs := decodeMessages(t, rr)
+	if len(demoMsgs) != 10 {
+		t.Fatalf("demo offset=20: expected 10 messages, got %d", len(demoMsgs))
+	}
+	// Newest-first sort of msg-1..msg-30 is msg-30..msg-1; offset 20 starts the
+	// page at msg-10 and runs to msg-1 — proving it's the requested page, not
+	// just the first 10.
+	if demoMsgs[0].MessageId != "msg-10" || demoMsgs[9].MessageId != "msg-1" {
+		t.Errorf("demo offset=20: expected page msg-10..msg-1, got %s..%s", demoMsgs[0].MessageId, demoMsgs[9].MessageId)
+	}
+	if demo.lastMax != 30 {
+		t.Errorf("demo: expected receiveCount 30, got %d", demo.lastMax)
+	}
+
+	// Live: clamped to SQS's 10 cap, so offset 20 is unreachable (empty page).
+	live := newMaxHonoringClient(queueURL, 30)
+	hLive := &SQSHandler{Client: live, isDemo: false}
+	rr = httptest.NewRecorder()
+	hLive.GetMessages(rr, getMessagesReq(queueURL, "?limit=10&offset=20"))
+	if got := len(decodeMessages(t, rr)); got != 0 {
+		t.Errorf("live offset=20: expected 0 messages, got %d", got)
+	}
+	if live.lastMax != 10 {
+		t.Errorf("live: expected receiveCount clamped to 10, got %d", live.lastMax)
+	}
+}
+
+// TestSQSHandler_GetMessages_OffsetNoOverflow ensures a huge offset does not
+// wrap the int32 MaxNumberOfMessages negative (which SQS would reject).
+func TestSQSHandler_GetMessages_OffsetNoOverflow(t *testing.T) {
+	const queueURL = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
+	client := newMaxHonoringClient(queueURL, 30)
+	handler := &SQSHandler{Client: client, isDemo: false}
+
+	rr := httptest.NewRecorder()
+	// 3_000_000_000 overflows int32; the clamp must run in int first.
+	handler.GetMessages(rr, getMessagesReq(queueURL, "?limit=10&offset=3000000000"))
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	if client.lastMax != 10 {
+		t.Errorf("expected clamped receiveCount 10 (no overflow), got %d", client.lastMax)
+	}
+	if got := len(decodeMessages(t, rr)); got != 0 {
+		t.Errorf("expected 0 messages for huge offset, got %d", got)
+	}
+}
 
 func TestSQSHandler_ListQueues(t *testing.T) {
 	tests := []struct {

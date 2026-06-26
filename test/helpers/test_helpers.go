@@ -52,12 +52,18 @@ func (m *MockSQSClient) AddQueue(url string) {
 
 // AddMessage adds a test message to the specified queue.
 func (m *MockSQSClient) AddMessage(queueURL, messageID, body string) {
+	m.AddMessageWithTimestamp(queueURL, messageID, body, "1640995200000")
+}
+
+// AddMessageWithTimestamp adds a message with an explicit SentTimestamp, letting
+// tests control ordering (GetMessages sorts on SentTimestamp before paginating).
+func (m *MockSQSClient) AddMessageWithTimestamp(queueURL, messageID, body, sentTimestamp string) {
 	msg := types.Message{
 		MessageId:     aws.String(messageID),
 		Body:          aws.String(body),
 		ReceiptHandle: aws.String(fmt.Sprintf("receipt-%s", messageID)),
 		Attributes: map[string]string{
-			"SentTimestamp": "1640995200000",
+			"SentTimestamp": sentTimestamp,
 		},
 	}
 	m.messages[queueURL] = append(m.messages[queueURL], msg)
