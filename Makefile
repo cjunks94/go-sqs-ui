@@ -1,4 +1,4 @@
-.PHONY: build test test-frontend test-backend test-all lint fmt clean run kill dev-start dev-stop dev-restart dev-status help
+.PHONY: build test test-frontend test-backend test-all lint lint-js lint-all fmt fmt-js fmt-all fix clean run kill dev-start dev-stop dev-restart dev-status help
 
 # Build the application
 build:

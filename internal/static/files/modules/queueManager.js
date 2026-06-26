@@ -157,11 +157,13 @@ export class QueueManager extends UIComponent {
       loadMoreBtn.disabled = true;
     }
 
-    this.appState.currentOffset += 20;
-
     try {
-      const response = await APIService.getQueues(this.appState.currentOffset + 20);
-      const newQueues = response.slice(this.appState.currentOffset);
+      // Only commit the new offset after the fetch succeeds, so a transient
+      // failure doesn't leave currentOffset ahead and skip a page on retry.
+      const nextOffset = this.appState.currentOffset + 20;
+      const response = await APIService.getQueues(nextOffset + 20);
+      const newQueues = response.slice(nextOffset);
+      this.appState.currentOffset = nextOffset;
 
       if (newQueues.length > 0) {
         this.renderQueues(newQueues, true);

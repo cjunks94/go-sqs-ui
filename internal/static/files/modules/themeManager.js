@@ -27,16 +27,18 @@ class ThemeManager {
 
     if (savedTheme) {
       this.currentTheme = savedTheme;
-    } else {
-      // Use system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      this.currentTheme = prefersDark ? 'dark' : 'light';
+      this.applyTheme(this.currentTheme);
+      return;
     }
 
-    this.applyTheme(this.currentTheme);
+    // Use system preference, but do NOT persist it: persisting here would fill
+    // the storage slot and stop watchSystemTheme() from tracking OS changes.
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    this.currentTheme = prefersDark ? 'dark' : 'light';
+    this.applyTheme(this.currentTheme, false);
   }
 
-  applyTheme(theme) {
+  applyTheme(theme, persist = true) {
     const html = document.documentElement;
 
     // Remove existing theme classes
@@ -48,8 +50,10 @@ class ThemeManager {
     // Update current theme
     this.currentTheme = theme;
 
-    // Save to localStorage
-    localStorage.setItem(this.storageKey, theme);
+    // Save to localStorage (skipped for the bootstrapped system preference)
+    if (persist) {
+      localStorage.setItem(this.storageKey, theme);
+    }
 
     // Update toggle button if it exists
     this.updateToggleButton();

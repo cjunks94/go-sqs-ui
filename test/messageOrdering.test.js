@@ -1,6 +1,6 @@
 /**
  * Message Ordering Tests
- * Tests for ensuring messages are properly sorted by timestamp (oldest first)
+ * Tests for ensuring messages are properly sorted by timestamp (newest first)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';

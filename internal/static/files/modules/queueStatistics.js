@@ -315,6 +315,7 @@ export class QueueStatistics {
    * @returns {boolean} True if DLQ
    */
   isDLQ(queue) {
+    if (!queue) return false;
     return (
       queue.name.endsWith('-dlq') || queue.name.endsWith('-DLQ') || queue.attributes?.RedriveAllowPolicy !== undefined
     );

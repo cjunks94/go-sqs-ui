@@ -367,7 +367,7 @@ export class KeyboardNavigation {
    * Trigger export
    */
   triggerExport() {
-    const exportButton = document.querySelector('.export-button, #exportMessages, button:has-text("Export")');
+    const exportButton = document.querySelector('.export-button, #exportMessages');
     if (exportButton) {
       exportButton.click();
     } else if (window.app?.messageExport) {
@@ -380,7 +380,7 @@ export class KeyboardNavigation {
    * Toggle queue browser
    */
   toggleQueueBrowser() {
-    const browserButton = document.querySelector('.browse-queue-button, button:has-text("Browse Queue")');
+    const browserButton = document.querySelector('.browse-queue-button');
     if (browserButton) {
       browserButton.click();
     } else if (window.app?.queueBrowser) {

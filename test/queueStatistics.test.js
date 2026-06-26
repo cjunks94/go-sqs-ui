@@ -678,9 +678,13 @@ describe('QueueStatistics', () => {
     it('should handle null queue gracefully', () => {
       mockAppState.getCurrentQueue.mockReturnValue(null);
 
-      // The implementation currently crashes when queue is null (isDLQ tries to access queue.name)
-      // This is a known bug - for now we test the actual behavior
-      expect(() => queueStats.exportStatistics()).toThrow();
+      // isDLQ is now null-safe, so export returns a safe payload instead of throwing.
+      let result;
+      expect(() => {
+        result = queueStats.exportStatistics();
+      }).not.toThrow();
+      expect(result.queue).toBeUndefined();
+      expect(result.isDLQ).toBe(false);
     });
   });
 });
