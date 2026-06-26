@@ -299,12 +299,22 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Receive enough messages to cover the requested offset window before
-	// slicing below. SQS caps a single ReceiveMessage at 10, so deep offsets
-	// are not reachable for live queues (inherent SQS limitation); demo/mock
-	// clients honor MaxNumberOfMessages against their full message set.
-	receiveCount := int32(offset) + limit
-	if receiveCount > 10 {
-		receiveCount = 10
+	// slicing below. Live SQS hard-caps a single ReceiveMessage at 10 and does
+	// not return a stable ordered set across calls, so deep offsets are not
+	// reachable for live queues (inherent SQS limitation). Demo/mock clients
+	// hold the full message set, so they can serve the whole offset window.
+	// Compute in int and clamp before the int32 cast to avoid overflow on a
+	// large offset wrapping MaxNumberOfMessages negative.
+	maxReceive := 10
+	if h.isDemo {
+		maxReceive = 1000
+	}
+	receiveCount := offset + int(limit)
+	if receiveCount > maxReceive {
+		receiveCount = maxReceive
+	}
+	if receiveCount < 1 {
+		receiveCount = 1
 	}
 
 	log.Printf("GetMessages: Fetching up to %d messages (offset %d, limit %d) for queue %s", receiveCount, offset, limit, queueURL)
@@ -312,7 +322,7 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.Client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:              aws.String(queueURL),
-		MaxNumberOfMessages:   receiveCount,
+		MaxNumberOfMessages:   int32(receiveCount),
 		WaitTimeSeconds:       1,
 		AttributeNames:        []types.QueueAttributeName{types.QueueAttributeNameAll},
 		MessageAttributeNames: []string{"All"},
