@@ -113,7 +113,7 @@ make dev-restart
 make run
 
 # Or directly
-go run .
+go run ./cmd/sqs-ui
 
 # Then open http://localhost:8080
 ```
@@ -212,7 +212,7 @@ The application automatically detects AWS credentials and switches between Demo 
 ## Building for Production
 
 ```bash
-go build -o sqs-ui .
+go build -o sqs-ui ./cmd/sqs-ui
 ./sqs-ui
 ```
 
@@ -231,7 +231,7 @@ go build -o sqs-ui .
 2. **No Framework**: Kept simple with vanilla JavaScript to minimize complexity and dependencies
 3. **Responsive Design**: CSS Grid and Flexbox for a modern, responsive layout
 4. **AWS-Inspired UI**: Design inspired by AWS Console and DataDog for familiar user experience
-5. **Comprehensive Testing**: 446 frontend tests using Vitest with full coverage of all modules
+5. **Comprehensive Testing**: 458 frontend tests using Vitest with full coverage of all modules
 
 ### Goals
 
@@ -245,7 +245,7 @@ go build -o sqs-ui .
 
 - `GET /api/aws-context` - Get AWS connection context information
 - `GET /api/queues?limit=20` - List queues with tag-based filtering and pagination
-- `GET /api/queues/{queueUrl}/messages?limit=10` - Get messages from a queue with pagination
+- `GET /api/queues/{queueUrl}/messages?limit=10&offset=0` - Get messages from a queue (offset paging works for demo/mock; live SQS is bounded by its 10-message-per-fetch cap)
 - `GET /api/queues/{queueUrl}/statistics` - Get queue statistics and metrics
 - `POST /api/queues/{queueUrl}/messages` - Send a message to a queue
 - `POST /api/queues/{queueUrl}/retry` - Retry a message from DLQ to source queue
@@ -254,14 +254,14 @@ go build -o sqs-ui .
 
 ## Testing
 
-The application includes comprehensive test coverage with 540+ tests across frontend (446 Vitest) and backend (Go).
+The application includes comprehensive test coverage with 560+ tests across frontend (458 Vitest) and backend (Go).
 
 ### Frontend Tests
 
 Run the comprehensive JavaScript test suite:
 
 ```bash
-# Run all tests (446 tests)
+# Run all tests (458 tests)
 npm test
 
 # Run tests in watch mode during development

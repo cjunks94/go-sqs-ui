@@ -1,5 +1,11 @@
 # MVP Status: Message Navigation and Filtering
 
+> **Note (historical):** This is a point-in-time MVP report. The project layout
+> has since changed — the frontend now lives under `internal/static/files/`
+> (embedded into the binary) and the Go entry point is `cmd/sqs-ui/main.go`. The
+> file paths in the "Files Modified" section below reflect the original layout.
+> See `README.md` for the current structure.
+
 ## ✅ Completed Features
 
 ### 1. **Message Filtering** ✅
