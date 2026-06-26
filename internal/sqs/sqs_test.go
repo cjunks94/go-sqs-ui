@@ -40,8 +40,11 @@ func (c *maxHonoringClient) ReceiveMessage(ctx context.Context, params *awssqs.R
 
 func newMaxHonoringClient(queueURL string, n int) *maxHonoringClient {
 	mc := helpers.NewMockSQSClient()
+	// Distinct, increasing timestamps so the handler's newest-first sort is
+	// deterministic: msg-n is newest, msg-1 is oldest.
 	for i := 1; i <= n; i++ {
-		mc.AddMessage(queueURL, fmt.Sprintf("msg-%d", i), fmt.Sprintf("body %d", i))
+		ts := fmt.Sprintf("%d", 1640995200000+i)
+		mc.AddMessageWithTimestamp(queueURL, fmt.Sprintf("msg-%d", i), fmt.Sprintf("body %d", i), ts)
 	}
 	return &maxHonoringClient{MockSQSClient: mc}
 }
@@ -71,8 +74,15 @@ func TestSQSHandler_GetMessages_OffsetDemoVsLive(t *testing.T) {
 	hDemo := &SQSHandler{Client: demo, isDemo: true}
 	rr := httptest.NewRecorder()
 	hDemo.GetMessages(rr, getMessagesReq(queueURL, "?limit=10&offset=20"))
-	if got := len(decodeMessages(t, rr)); got != 10 {
-		t.Errorf("demo offset=20: expected 10 messages, got %d", got)
+	demoMsgs := decodeMessages(t, rr)
+	if len(demoMsgs) != 10 {
+		t.Fatalf("demo offset=20: expected 10 messages, got %d", len(demoMsgs))
+	}
+	// Newest-first sort of msg-1..msg-30 is msg-30..msg-1; offset 20 starts the
+	// page at msg-10 and runs to msg-1 — proving it's the requested page, not
+	// just the first 10.
+	if demoMsgs[0].MessageId != "msg-10" || demoMsgs[9].MessageId != "msg-1" {
+		t.Errorf("demo offset=20: expected page msg-10..msg-1, got %s..%s", demoMsgs[0].MessageId, demoMsgs[9].MessageId)
 	}
 	if demo.lastMax != 30 {
 		t.Errorf("demo: expected receiveCount 30, got %d", demo.lastMax)

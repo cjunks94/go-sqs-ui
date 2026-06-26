@@ -318,7 +318,9 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("GetMessages: Fetching up to %d messages (offset %d, limit %d) for queue %s", receiveCount, offset, limit, queueURL)
-	ctx := context.Background()
+	// Use the request context so the long-poll respects client disconnects and
+	// server deadlines instead of outliving the HTTP request.
+	ctx := r.Context()
 
 	result, err := h.Client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:              aws.String(queueURL),
