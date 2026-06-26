@@ -32,11 +32,13 @@ export class QueueManager extends UIComponent {
   }
 
   renderQueues(queues, append = false) {
-    // Cancel any in-flight append timers from a previous render.
-    this.renderTimers.forEach((timer) => clearTimeout(timer));
-    this.renderTimers = [];
-
     if (!append) {
+      // Full (re)render: cancel in-flight append timers from a prior render so
+      // a refresh can't reappend stale items after the list is cleared.
+      // Append mode must NOT cancel — the first page's staggered timers may
+      // still be pending when "Load More" fires.
+      this.renderTimers.forEach((timer) => clearTimeout(timer));
+      this.renderTimers = [];
       this.setContent('');
       this.removeLoadMoreButton();
     } else {
