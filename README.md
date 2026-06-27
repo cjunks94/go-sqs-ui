@@ -239,7 +239,7 @@ go build -o sqs-ui ./cmd/sqs-ui
 2. **No Framework**: Kept simple with vanilla JavaScript to minimize complexity and dependencies
 3. **Responsive Design**: CSS Grid and Flexbox for a modern, responsive layout
 4. **AWS-Inspired UI**: Design inspired by AWS Console and DataDog for familiar user experience
-5. **Comprehensive Testing**: 458 frontend tests using Vitest with full coverage of all modules
+5. **Comprehensive Testing**: 470+ frontend tests using Vitest with full coverage of all modules
 
 ### Goals
 
@@ -262,14 +262,14 @@ go build -o sqs-ui ./cmd/sqs-ui
 
 ## Testing
 
-The application includes comprehensive test coverage with 560+ tests across frontend (458 Vitest) and backend (Go).
+The application includes comprehensive test coverage with 580+ tests across frontend (470+ Vitest) and backend (Go).
 
 ### Frontend Tests
 
 Run the comprehensive JavaScript test suite:
 
 ```bash
-# Run all tests (458 tests)
+# Run all tests
 npm test
 
 # Run tests in watch mode during development
