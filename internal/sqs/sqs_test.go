@@ -1168,3 +1168,60 @@ func TestSQSHandler_ListQueues_TagFilters(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveRegion(t *testing.T) {
+	t.Run("defaults to us-east-1", func(t *testing.T) {
+		t.Setenv("AWS_REGION", "")
+		t.Setenv("AWS_DEFAULT_REGION", "")
+		if got := resolveRegion(); got != "us-east-1" {
+			t.Errorf("expected us-east-1, got %s", got)
+		}
+	})
+
+	t.Run("prefers AWS_REGION", func(t *testing.T) {
+		t.Setenv("AWS_REGION", "eu-west-1")
+		t.Setenv("AWS_DEFAULT_REGION", "ap-south-1")
+		if got := resolveRegion(); got != "eu-west-1" {
+			t.Errorf("expected eu-west-1, got %s", got)
+		}
+	})
+
+	t.Run("falls back to AWS_DEFAULT_REGION", func(t *testing.T) {
+		t.Setenv("AWS_REGION", "")
+		t.Setenv("AWS_DEFAULT_REGION", "ap-south-1")
+		if got := resolveRegion(); got != "ap-south-1" {
+			t.Errorf("expected ap-south-1, got %s", got)
+		}
+	})
+}
+
+func TestNewSQSHandler_CustomEndpoint(t *testing.T) {
+	t.Setenv("FORCE_DEMO_MODE", "")
+	t.Setenv("FORCE_LIVE_MODE", "")
+	t.Setenv("SQS_ENDPOINT_URL", "http://localhost:9324")
+
+	handler, err := NewSQSHandler()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if handler.isDemo {
+		t.Error("custom endpoint should be live mode, not demo")
+	}
+	if handler.Client == nil {
+		t.Error("expected a configured SQS client")
+	}
+}
+
+func TestNormalizeQueueURL(t *testing.T) {
+	cases := map[string]string{
+		"https:/sqs.us-east-1.amazonaws.com/1/q": "https://sqs.us-east-1.amazonaws.com/1/q",
+		"http:/localhost:9324/000000000000/q":    "http://localhost:9324/000000000000/q",
+		"https://already.ok/q":                   "https://already.ok/q",
+		"http://already.ok/q":                    "http://already.ok/q",
+	}
+	for in, want := range cases {
+		if got := normalizeQueueURL(in); got != want {
+			t.Errorf("normalizeQueueURL(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

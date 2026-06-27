@@ -1,0 +1,21 @@
+# Local SQS-compatible server (ElasticMQ) for exercising live mode without AWS.
+#
+#   docker compose up -d            # start ElasticMQ on :9324 (UI on :9325)
+#   SQS_ENDPOINT_URL=http://localhost:9324 DISABLE_TAG_FILTER=true go run ./cmd/sqs-ui
+#
+# Tag filtering is disabled above because local queues don't carry the
+# businessunit/product/env tags the app filters on by default.
+services:
+  elasticmq:
+    image: softwaremill/elasticmq-native:1.6.11
+    container_name: go-sqs-ui-elasticmq
+    ports:
+      - '9324:9324' # SQS API
+      - '9325:9325' # web console
+    volumes:
+      - ./deploy/elasticmq.conf:/opt/elasticmq.conf:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '-', 'http://localhost:9324/?Action=ListQueues']
+      interval: 5s
+      timeout: 3s
+      retries: 5

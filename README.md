@@ -48,6 +48,16 @@ DISABLE_TAG_FILTER=true go run ./cmd/sqs-ui   # all queues
 
 For staging DLQ-debugging workflows, see the **[User Guide](USER_GUIDE.md)**.
 
+### Local SQS (no AWS account)
+
+Exercise live mode against a local SQS-compatible server (ElasticMQ in Docker — needs Docker/Colima):
+
+```bash
+make local-sqs-up     # start ElasticMQ + sample queues/DLQs
+make local-sqs-run    # run the app against it (SQS_ENDPOINT_URL=http://localhost:9324)
+make local-sqs-down   # stop it
+```
+
 ## Required AWS permissions (live mode)
 
 `sqs:ListQueues`, `sqs:GetQueueAttributes`, `sqs:ListQueueTags`, `sqs:ReceiveMessage`, `sqs:SendMessage`, `sqs:DeleteMessage`.
