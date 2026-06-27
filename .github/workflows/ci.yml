@@ -135,7 +135,9 @@ jobs:
   build:
     name: Build Application
     runs-on: ubuntu-latest
-    needs: [lint-backend, lint-frontend, test-backend, test-frontend]
+    # Only gate the build on tests — lint runs in parallel and still gates the
+    # PR independently, so build need not wait for it.
+    needs: [test-backend, test-frontend]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -236,9 +238,23 @@ jobs:
           sleep 5
           curl -f http://localhost:8080 || exit 1
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-playwright-
+
       - name: Run E2E tests
         run: |
-          npx playwright install --with-deps chromium
+          # On a cache hit only the OS deps are installed (fast); the browser
+          # binary download is skipped.
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
           npm run test:e2e || true
 
   quality-gate:
