@@ -28,7 +28,6 @@ export class SQSApp {
     this.webSocketManager = new WebSocketManager(this.appState, this.messageHandler);
 
     // New enhanced modules
-    this.pagination = null; // Will be initialized when needed
     this.queueBrowser = new QueueBrowser(this.appState);
     this.queueStatistics = new QueueStatistics(this.appState);
     this.messageExport = new MessageExport(this.appState);

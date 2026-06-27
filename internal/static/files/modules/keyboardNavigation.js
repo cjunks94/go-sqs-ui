@@ -404,28 +404,6 @@ export class KeyboardNavigation {
   }
 
   /**
-   * Wait for second key (for multi-key shortcuts)
-   * @param {string} expectedKey - Expected second key
-   * @param {string} action - Action to execute
-   */
-  waitForSecondKey(expectedKey, action) {
-    const timeout = setTimeout(() => {
-      document.removeEventListener('keydown', handler);
-    }, 1000);
-
-    const handler = (e) => {
-      clearTimeout(timeout);
-      document.removeEventListener('keydown', handler);
-      if (e.key === expectedKey) {
-        e.preventDefault();
-        this.executeAction(action);
-      }
-    };
-
-    document.addEventListener('keydown', handler);
-  }
-
-  /**
    * Enable keyboard navigation
    */
   enable() {
