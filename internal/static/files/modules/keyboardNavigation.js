@@ -371,8 +371,8 @@ export class KeyboardNavigation {
     if (exportButton) {
       exportButton.click();
     } else if (window.app?.messageExport) {
-      // Direct export if button not found
-      window.app.messageExport.exportCurrentView();
+      // Open the export menu (JSON/CSV/…) if the button isn't in the DOM.
+      window.app.messageExport.openExportMenu();
     }
   }
 
