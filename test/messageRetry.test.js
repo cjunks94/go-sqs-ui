@@ -62,6 +62,31 @@ describe('MessageRetry', () => {
       );
     });
 
+    it('falls back to the live DLQ map when sourceQueueUrl was not cached', async () => {
+      // DLQ selected before its source page loaded → sourceQueueUrl is null,
+      // but appState's map has since been rebuilt.
+      mockAppState.getCurrentQueue.mockReturnValue({
+        url: 'https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue',
+        name: 'demo-deadletter-queue',
+        sourceQueueUrl: null,
+      });
+      mockAppState.getSourceQueueUrl = vi
+        .fn()
+        .mockReturnValue('https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue');
+      APIService.retryMessage.mockResolvedValue({ messageId: 'new-1' });
+
+      await messageRetry.retryMessage({ messageId: '1', body: '{}', receiptHandle: 'r1' });
+
+      expect(mockAppState.getSourceQueueUrl).toHaveBeenCalledWith(
+        'https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue'
+      );
+      expect(APIService.retryMessage).toHaveBeenCalledWith(
+        'https://sqs.us-east-1.amazonaws.com/123456789012/demo-deadletter-queue',
+        expect.any(Object),
+        'https://sqs.us-east-1.amazonaws.com/123456789012/demo-orders-queue'
+      );
+    });
+
     it('should handle retry errors', async () => {
       const mockMessage = {
         messageId: '123',
