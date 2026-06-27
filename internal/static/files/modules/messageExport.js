@@ -321,6 +321,41 @@ export class MessageExport {
   }
 
   /**
+   * Open the export menu as a dismissible popover. This is the single UI entry
+   * point that exposes every export format (JSON + CSV) and scope; without it,
+   * CSV export was unreachable from the UI.
+   * @returns {HTMLElement|null} The mounted menu element, or null if nothing to export
+   */
+  openExportMenu() {
+    const messages = this.appState.getMessages();
+    if (!messages || messages.length === 0) {
+      return null;
+    }
+
+    // Avoid stacking duplicate menus.
+    document.querySelector('.export-menu')?.remove();
+
+    const menu = this.showExportMenu();
+    document.body.appendChild(menu);
+
+    // Dismiss on outside click or Escape.
+    const dismiss = (e) => {
+      if (e.type === 'keydown' && e.key !== 'Escape') return;
+      if (e.type === 'click' && menu.contains(e.target)) return;
+      menu.remove();
+      document.removeEventListener('click', dismiss, true);
+      document.removeEventListener('keydown', dismiss, true);
+    };
+    // Defer so the click that opened the menu doesn't immediately close it.
+    setTimeout(() => {
+      document.addEventListener('click', dismiss, true);
+      document.addEventListener('keydown', dismiss, true);
+    }, 0);
+
+    return menu;
+  }
+
+  /**
    * Show export menu
    * @returns {HTMLElement} Export menu element
    */

@@ -675,4 +675,47 @@ describe('MessageExport', () => {
       delete global.window.app;
     });
   });
+
+  describe('openExportMenu', () => {
+    it('mounts a dismissible menu exposing both JSON and CSV options', () => {
+      const menu = messageExport.openExportMenu();
+
+      expect(menu).not.toBeNull();
+      expect(document.querySelector('.export-menu')).toBe(menu);
+      const actions = Array.from(menu.querySelectorAll('.export-option')).map((b) => b.dataset.action);
+      expect(actions).toContain('current-json');
+      expect(actions).toContain('current-csv');
+    });
+
+    it('invokes CSV export when the CSV option is clicked', () => {
+      const csvSpy = vi.spyOn(messageExport, 'exportAsCSV').mockReturnValue({});
+      const menu = messageExport.openExportMenu();
+
+      menu.querySelector('[data-action="current-csv"]').click();
+
+      expect(csvSpy).toHaveBeenCalled();
+      expect(document.querySelector('.export-menu')).toBeNull(); // menu closes after action
+    });
+
+    it('invokes JSON export when the JSON option is clicked', () => {
+      const jsonSpy = vi.spyOn(messageExport, 'exportCurrentView').mockReturnValue({});
+      const menu = messageExport.openExportMenu();
+
+      menu.querySelector('[data-action="current-json"]').click();
+
+      expect(jsonSpy).toHaveBeenCalled();
+    });
+
+    it('does nothing (no menu) when there are no messages', () => {
+      mockAppState.getMessages.mockReturnValue([]);
+      expect(messageExport.openExportMenu()).toBeNull();
+      expect(document.querySelector('.export-menu')).toBeNull();
+    });
+
+    it('does not stack multiple menus', () => {
+      messageExport.openExportMenu();
+      messageExport.openExportMenu();
+      expect(document.querySelectorAll('.export-menu').length).toBe(1);
+    });
+  });
 });

@@ -73,7 +73,7 @@ export class SQSApp {
     const exportBtn = document.getElementById('exportMessages');
     if (exportBtn) {
       exportBtn.addEventListener('click', () => {
-        this.messageExport.exportCurrentView();
+        this.messageExport.openExportMenu();
       });
     }
 
