@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +26,35 @@ func main() {
 
 	wsManager := websocket.NewWebSocketManager(sqsHandler.Client)
 
-	r := mux.NewRouter()
+	staticFS, err := static.GetFS()
+	if err != nil {
+		log.Fatal("Failed to get static filesystem:", err)
+	}
+
+	r := newRouter(sqsHandler, wsManager, staticFS)
+
+	// ReadHeaderTimeout guards against slow-loris; no WriteTimeout so the
+	// long-lived WebSocket stream isn't cut off.
+	srv := &http.Server{
+		Addr:              ":" + port,
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	log.Printf("Server starting on port %s", port)
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatal("Server failed to start:", err)
+	}
+}
+
+// newRouter wires up all HTTP routes.
+//
+// SkipClean(true) is essential: queue URLs are embedded in the request path
+// (URL-encoded), so the decoded "//" must NOT be collapsed into a 301 redirect
+// — that redirect drops the body of POST send/retry requests. Handlers restore
+// the scheme separator via normalizeQueueURL.
+func newRouter(sqsHandler *sqs.SQSHandler, wsManager *websocket.WebSocketManager, staticFS fs.FS) *mux.Router {
+	r := mux.NewRouter().SkipClean(true)
 
 	// API routes with logging middleware
 	api := r.PathPrefix("/api").Subrouter()
@@ -44,19 +73,10 @@ func main() {
 		wsManager.HandleWebSocket(w, req)
 	})
 
-	// Static files with logging
-	staticFS, err := static.GetFS()
-	if err != nil {
-		log.Fatal("Failed to get static filesystem:", err)
-	}
-
-	// Serve static files (this will handle root path too)
+	// Serve static files (this handles the root path too)
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.FS(staticFS))))
 
-	log.Printf("Server starting on port %s", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
-		log.Fatal("Server failed to start:", err)
-	}
+	return r
 }
 
 // loggingMiddleware logs all HTTP requests

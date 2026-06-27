@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/cjunks94/go-sqs-ui/internal/demo"
@@ -58,6 +59,17 @@ func NewSQSHandler() (*SQSHandler, error) {
 		}, nil
 	}
 
+	// Custom SQS endpoint (e.g. a local ElasticMQ/LocalStack container). When
+	// set, connect there with dummy static credentials so live mode works
+	// without real AWS credentials. See docker-compose.yml.
+	if endpoint := os.Getenv("SQS_ENDPOINT_URL"); endpoint != "" {
+		handler, err := newCustomEndpointHandler(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		return handler, nil
+	}
+
 	// Try to load AWS config
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -93,6 +105,57 @@ func NewSQSHandler() (*SQSHandler, error) {
 	log.Printf("Successfully connected to AWS SQS")
 	return &SQSHandler{
 		Client: sqsClient,
+		config: cfg,
+		isDemo: false,
+	}, nil
+}
+
+// normalizeQueueURL restores the scheme separator that Gorilla mux collapses
+// ("https:/" -> "https://", "http:/" -> "http://") when the queue URL is
+// embedded in the request path. The http:// case matters for local
+// SQS-compatible servers such as ElasticMQ/LocalStack.
+func normalizeQueueURL(queueURL string) string {
+	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
+		return strings.Replace(queueURL, "https:/", "https://", 1)
+	}
+	if strings.HasPrefix(queueURL, "http:/") && !strings.HasPrefix(queueURL, "http://") {
+		return strings.Replace(queueURL, "http:/", "http://", 1)
+	}
+	return queueURL
+}
+
+// resolveRegion returns AWS_REGION (or AWS_DEFAULT_REGION), falling back to us-east-1.
+func resolveRegion() string {
+	if r := os.Getenv("AWS_REGION"); r != "" {
+		return r
+	}
+	if r := os.Getenv("AWS_DEFAULT_REGION"); r != "" {
+		return r
+	}
+	return "us-east-1"
+}
+
+// newCustomEndpointHandler builds a handler pointed at a custom SQS-compatible
+// endpoint (local ElasticMQ/LocalStack), using dummy static credentials so it
+// works without real AWS credentials. This is live mode against a local server.
+func newCustomEndpointHandler(endpoint string) (*SQSHandler, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(resolveRegion()),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider("local", "local", ""),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client := sqs.NewFromConfig(cfg, func(o *sqs.Options) {
+		o.BaseEndpoint = aws.String(endpoint)
+	})
+
+	log.Printf("Using custom SQS endpoint: %s", endpoint)
+	return &SQSHandler{
+		Client: client,
 		config: cfg,
 		isDemo: false,
 	}, nil
@@ -273,10 +336,7 @@ func (h *SQSHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
 
-	// Fix for Gorilla mux eating one slash in https://
-	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
-		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
-	}
+	queueURL = normalizeQueueURL(queueURL)
 
 	log.Printf("GetMessages: Raw queueUrl from route: %s", queueURL)
 	log.Printf("GetMessages: Full request URL: %s", r.URL.String())
@@ -387,10 +447,7 @@ func (h *SQSHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
 
-	// Fix for Gorilla mux eating one slash in https://
-	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
-		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
-	}
+	queueURL = normalizeQueueURL(queueURL)
 
 	var payload struct {
 		Body string `json:"body"`
@@ -428,10 +485,7 @@ func (h *SQSHandler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
 
-	// Fix for Gorilla mux eating one slash in https://
-	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
-		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
-	}
+	queueURL = normalizeQueueURL(queueURL)
 	receiptHandle := vars["receiptHandle"]
 
 	ctx := context.Background()
@@ -454,10 +508,7 @@ func (h *SQSHandler) RetryMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sourceQueueURL := vars["queueUrl"]
 
-	// Fix for Gorilla mux eating one slash in https://
-	if strings.HasPrefix(sourceQueueURL, "https:/") && !strings.HasPrefix(sourceQueueURL, "https://") {
-		sourceQueueURL = strings.Replace(sourceQueueURL, "https:/", "https://", 1)
-	}
+	sourceQueueURL = normalizeQueueURL(sourceQueueURL)
 
 	var payload struct {
 		Message        internal_types.Message `json:"message"`
@@ -574,10 +625,7 @@ func (h *SQSHandler) GetQueueStatistics(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	queueURL := vars["queueUrl"]
 
-	// Fix for Gorilla mux eating one slash in https://
-	if strings.HasPrefix(queueURL, "https:/") && !strings.HasPrefix(queueURL, "https://") {
-		queueURL = strings.Replace(queueURL, "https:/", "https://", 1)
-	}
+	queueURL = normalizeQueueURL(queueURL)
 
 	log.Printf("GetQueueStatistics: Fetching statistics for queue %s", queueURL)
 	ctx := context.Background()

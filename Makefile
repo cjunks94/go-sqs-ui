@@ -1,4 +1,4 @@
-.PHONY: build test test-frontend test-backend test-all lint lint-js lint-all fmt fmt-js fmt-all fix clean run kill dev-start dev-stop dev-restart dev-status help
+.PHONY: build test test-frontend test-backend test-all lint lint-js lint-all fmt fmt-js fmt-all fix clean run kill dev-start dev-stop dev-restart dev-status help local-sqs-up local-sqs-down local-sqs-run
 
 # Build the application
 build:
@@ -107,6 +107,19 @@ dev-logs:
 run: kill
 	go run ./cmd/sqs-ui
 
+# Start a local SQS server (ElasticMQ) in Docker
+local-sqs-up:
+	docker compose up -d --wait
+	@echo "ElasticMQ ready on http://localhost:9324 (console: http://localhost:9325)"
+
+# Stop and remove the local SQS server
+local-sqs-down:
+	docker compose down
+
+# Run the app against the local SQS server (tag filtering disabled)
+local-sqs-run: kill
+	SQS_ENDPOINT_URL=http://localhost:9324 DISABLE_TAG_FILTER=true go run ./cmd/sqs-ui
+
 # Install development tools
 install-tools:
 	go install golang.org/x/tools/cmd/goimports@latest
@@ -204,6 +217,11 @@ help:
 	@echo "Cleanup:"
 	@echo "  clean              - Clean build artifacts and temp files"
 	@echo "  kill               - Stop all running go-sqs-ui processes"
+	@echo ""
+	@echo "Local SQS (Docker):"
+	@echo "  local-sqs-up       - Start a local SQS server (ElasticMQ)"
+	@echo "  local-sqs-run      - Run the app against the local SQS server"
+	@echo "  local-sqs-down     - Stop the local SQS server"
 	@echo ""
 	@echo "Other:"
 	@echo "  run                - Run the application directly (with cleanup)"
