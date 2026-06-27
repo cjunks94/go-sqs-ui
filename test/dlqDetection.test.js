@@ -4,7 +4,12 @@
  */
 import { describe, it, expect } from 'vitest';
 
-import { isDLQ, getSourceQueue, getDLQIndicator } from '../internal/static/files/modules/dlqDetection.js';
+import {
+  isDLQ,
+  getSourceQueue,
+  getDLQIndicator,
+  buildDlqSourceMap,
+} from '../internal/static/files/modules/dlqDetection.js';
 
 describe('DLQ Detection', () => {
   describe('isDLQ', () => {
@@ -92,6 +97,65 @@ describe('DLQ Detection', () => {
       expect(indicator).toContain('dlq-indicator');
       expect(indicator).toContain('DLQ');
       expect(indicator).toContain('title="Dead Letter Queue"');
+    });
+  });
+
+  describe('isDLQ via RedriveAllowPolicy', () => {
+    it('detects a DLQ with allowAll permission (no sourceQueueArns)', () => {
+      // The common case (and what the demo uses) — must be detected.
+      expect(
+        isDLQ({
+          name: 'demo-deadletter-queue',
+          attributes: { RedriveAllowPolicy: '{"redrivePermission":"allowAll"}' },
+        })
+      ).toBe(true);
+    });
+
+    it('detects a DLQ with byQueue + sourceQueueArns', () => {
+      expect(
+        isDLQ({
+          name: 'whatever',
+          attributes: {
+            RedriveAllowPolicy: '{"redrivePermission":"byQueue","sourceQueueArns":["arn:aws:sqs:us-east-1:1:src"]}',
+          },
+        })
+      ).toBe(true);
+    });
+  });
+
+  describe('buildDlqSourceMap', () => {
+    const dlq = {
+      name: 'demo-deadletter-queue',
+      url: 'https://sqs/dlq',
+      attributes: {
+        QueueArn: 'arn:aws:sqs:us-east-1:123:demo-deadletter-queue',
+        RedriveAllowPolicy: '{"redrivePermission":"allowAll"}',
+      },
+    };
+    const source = {
+      name: 'demo-orders-queue',
+      url: 'https://sqs/orders',
+      attributes: {
+        QueueArn: 'arn:aws:sqs:us-east-1:123:demo-orders-queue',
+        RedrivePolicy:
+          '{"deadLetterTargetArn":"arn:aws:sqs:us-east-1:123:demo-deadletter-queue","maxReceiveCount":"3"}',
+      },
+    };
+
+    it('maps a DLQ url to its source queue url via RedrivePolicy', () => {
+      const map = buildDlqSourceMap([dlq, source]);
+      expect(map.get('https://sqs/dlq')).toBe('https://sqs/orders');
+    });
+
+    it('keeps the first source when several target the same DLQ', () => {
+      const source2 = { ...source, name: 'demo-payments-queue', url: 'https://sqs/payments' };
+      const map = buildDlqSourceMap([dlq, source, source2]);
+      expect(map.get('https://sqs/dlq')).toBe('https://sqs/orders');
+    });
+
+    it('returns an empty map for malformed / missing policies', () => {
+      expect(buildDlqSourceMap(null).size).toBe(0);
+      expect(buildDlqSourceMap([{ url: 'x', attributes: { RedrivePolicy: 'not json' } }]).size).toBe(0);
     });
   });
 });

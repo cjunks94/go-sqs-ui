@@ -4,7 +4,7 @@
  */
 import { UIComponent } from './uiComponent.js';
 import { APIService } from './apiService.js';
-import { enhanceQueueElement } from './dlqDetection.js';
+import { enhanceQueueElement, isDLQ, buildDlqSourceMap } from './dlqDetection.js';
 
 export class QueueManager extends UIComponent {
   constructor(appState) {
@@ -20,6 +20,8 @@ export class QueueManager extends UIComponent {
 
     try {
       const queues = await APIService.getQueues(20);
+      this.appState.setQueues(queues);
+      this.appState.setDlqSourceMap(buildDlqSourceMap(queues));
       this.renderQueues(queues);
 
       if (queues.length === 20) {
@@ -109,6 +111,10 @@ export class QueueManager extends UIComponent {
   }
 
   selectQueue(queue, queueItem) {
+    // Annotate the queue so DLQ-only UI (retry, batch retry) can light up and
+    // target the right source queue.
+    queue.isDLQ = isDLQ(queue);
+    queue.sourceQueueUrl = this.appState.getSourceQueueUrl(queue.url);
     this.appState.setCurrentQueue(queue);
 
     // Update UI state
@@ -174,6 +180,11 @@ export class QueueManager extends UIComponent {
       const response = await APIService.getQueues(nextOffset + 20);
       const newQueues = response.slice(nextOffset);
       this.appState.currentOffset = nextOffset;
+
+      // Keep the DLQ→source map current as more queues come into view.
+      const allQueues = [...this.appState.getQueues(), ...newQueues];
+      this.appState.setQueues(allQueues);
+      this.appState.setDlqSourceMap(buildDlqSourceMap(allQueues));
 
       if (newQueues.length > 0) {
         this.renderQueues(newQueues, true);

@@ -22,11 +22,17 @@ export class MessageRetry {
       throw new Error('No queue selected');
     }
 
-    // If no target queue specified, derive from DLQ name
+    // If no target queue specified, resolve the source queue, preferring the
+    // RedrivePolicy-derived mapping over the brittle name heuristic. Consult
+    // the live map (not just the value cached at selection time) in case the
+    // source queue's page loaded after this DLQ was selected.
     if (!targetQueue) {
-      targetQueue = this.getSourceQueueUrl(currentQueue.name);
+      targetQueue =
+        currentQueue.sourceQueueUrl ||
+        this.appState.getSourceQueueUrl?.(currentQueue.url) ||
+        this.getSourceQueueUrl(currentQueue.name);
       if (!targetQueue) {
-        throw new Error('Could not determine source queue from DLQ name');
+        throw new Error('Could not determine source queue for this DLQ');
       }
     }
 
