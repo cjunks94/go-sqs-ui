@@ -31,15 +31,16 @@ With no AWS credentials it runs in **demo mode** (sample queues, no AWS needed).
 
 All optional, via environment variables:
 
-| Variable                                                 | Purpose                                                  |
-| -------------------------------------------------------- | -------------------------------------------------------- |
-| `PORT`                                                   | Server port (default `8080`)                             |
-| `AWS_REGION` / `AWS_PROFILE`                             | AWS connection (default: from AWS config)                |
-| `FORCE_DEMO_MODE=true`                                   | Always use demo mode                                     |
-| `FORCE_LIVE_MODE=true`                                   | Require live AWS (fail if unavailable)                   |
-| `DISABLE_TAG_FILTER=true`                                | Show all queues (skip tag filtering)                     |
-| `FILTER_BUSINESS_UNIT` / `FILTER_PRODUCT` / `FILTER_ENV` | Custom tag filters (comma-separated)                     |
-| `ALLOWED_WEBSOCKET_ORIGINS`                              | Extra WebSocket `Origin` allow-list (default: localhost) |
+| Variable                                                 | Purpose                                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `PORT`                                                   | Server port (default `8080`)                                                 |
+| `AWS_REGION` / `AWS_PROFILE`                             | AWS connection (region falls back to `AWS_DEFAULT_REGION`, then `us-east-1`) |
+| `SQS_ENDPOINT_URL`                                       | Point at a local SQS-compatible server (e.g. `http://localhost:9324`)        |
+| `FORCE_DEMO_MODE=true`                                   | Always use demo mode                                                         |
+| `FORCE_LIVE_MODE=true`                                   | Require live AWS (fail if unavailable)                                       |
+| `DISABLE_TAG_FILTER=true`                                | Show all queues (skip tag filtering)                                         |
+| `FILTER_BUSINESS_UNIT` / `FILTER_PRODUCT` / `FILTER_ENV` | Custom tag filters (comma-separated)                                         |
+| `ALLOWED_WEBSOCKET_ORIGINS`                              | Extra WebSocket `Origin` allow-list (default: localhost)                     |
 
 ```bash
 FORCE_DEMO_MODE=true go run ./cmd/sqs-ui      # demo

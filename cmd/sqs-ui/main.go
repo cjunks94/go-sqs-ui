@@ -33,8 +33,16 @@ func main() {
 
 	r := newRouter(sqsHandler, wsManager, staticFS)
 
+	// ReadHeaderTimeout guards against slow-loris; no WriteTimeout so the
+	// long-lived WebSocket stream isn't cut off.
+	srv := &http.Server{
+		Addr:              ":" + port,
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
 	log.Printf("Server starting on port %s", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
 }

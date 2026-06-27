@@ -109,7 +109,7 @@ run: kill
 
 # Start a local SQS server (ElasticMQ) in Docker
 local-sqs-up:
-	docker compose up -d
+	docker compose up -d --wait
 	@echo "ElasticMQ ready on http://localhost:9324 (console: http://localhost:9325)"
 
 # Stop and remove the local SQS server
