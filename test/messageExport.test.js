@@ -717,5 +717,16 @@ describe('MessageExport', () => {
       messageExport.openExportMenu();
       expect(document.querySelectorAll('.export-menu').length).toBe(1);
     });
+
+    it('detaches its document listeners after a selection (no leak)', () => {
+      vi.spyOn(messageExport, 'exportAsCSV').mockReturnValue({});
+      const removeSpy = vi.spyOn(document, 'removeEventListener');
+      const menu = messageExport.openExportMenu();
+
+      menu.querySelector('[data-action="current-csv"]').click();
+
+      expect(removeSpy).toHaveBeenCalledWith('click', expect.any(Function), true);
+      expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function), true);
+    });
   });
 });

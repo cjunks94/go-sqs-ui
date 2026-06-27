@@ -338,14 +338,21 @@ export class MessageExport {
     const menu = this.showExportMenu();
     document.body.appendChild(menu);
 
+    const cleanup = () => {
+      document.removeEventListener('click', dismiss, true);
+      document.removeEventListener('keydown', dismiss, true);
+    };
     // Dismiss on outside click or Escape.
     const dismiss = (e) => {
       if (e.type === 'keydown' && e.key !== 'Escape') return;
       if (e.type === 'click' && menu.contains(e.target)) return;
       menu.remove();
-      document.removeEventListener('click', dismiss, true);
-      document.removeEventListener('keydown', dismiss, true);
+      cleanup();
     };
+    // The option/cancel buttons remove the menu themselves, so also detach our
+    // document listeners then to avoid leaking them after a selection.
+    menu.querySelectorAll('.export-option, .export-cancel').forEach((btn) => btn.addEventListener('click', cleanup));
+
     // Defer so the click that opened the menu doesn't immediately close it.
     setTimeout(() => {
       document.addEventListener('click', dismiss, true);
