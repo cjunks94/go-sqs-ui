@@ -22,10 +22,14 @@ A lightweight, web-based UI for managing AWS SQS queues built with Go and vanill
 - 📄 **Message Pagination**: Efficient browsing of large message sets
 - 🔍 **Smart Filtering**: Real-time search by content and attributes
 - ⌨️ **Keyboard Navigation**: Full keyboard shortcut support (press `?` for help)
-- 💾 **Export**: Download messages in JSON/CSV formats
+- 💾 **Export**: Download messages in JSON/CSV formats (via the Export menu)
 - 🖼️ **Queue Browser**: Full-screen message viewing modal
-- ✅ **Batch Operations**: Multi-select for bulk actions
+- ✅ **Batch Operations**: Multi-select for bulk delete/retry (retry shown for DLQs)
 - 🎭 **Demo Mode**: Fully functional demo without AWS credentials
+- 🌗 **Light/Dark Theme**: Toggle with auto-detection of your OS preference
+- ⏸️ **Pause/Resume Live Updates**: Freeze the WebSocket-driven message list while inspecting
+- 🔎 **Enhanced Message View**: JSON syntax highlighting, copy body/details, and receive-count badges
+- 🧭 **AWS Context Panel**: Shows the active mode (Demo/Live), region, profile, and account
 
 ## Prerequisites
 
@@ -162,6 +166,10 @@ make help
 - `FILTER_BUSINESS_UNIT` - Custom businessunit values (comma-separated)
 - `FILTER_PRODUCT` - Custom product values (comma-separated)
 - `FILTER_ENV` - Custom env values (comma-separated)
+
+#### Security
+
+- `ALLOWED_WEBSOCKET_ORIGINS` - Comma-separated allow-list of `Origin` headers accepted by the WebSocket endpoint (defaults to same-origin / localhost). Set this when serving the UI behind a non-localhost host.
 
 Example:
 
